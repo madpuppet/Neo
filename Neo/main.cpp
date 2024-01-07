@@ -1,5 +1,6 @@
-#define GLFW_INCLUDE_VULKAN
-#include <GLFW/glfw3.h>
+#include <SDL.h>
+#include <SDL_vulkan.h>
+#include <vulkan/vulkan.h>
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -36,6 +37,9 @@ const std::string MODEL_PATH = "models/viking_room.obj";
 const std::string TEXTURE_PATH = "textures/viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
+
+#define APP_TITLE "NEO"
+#define VERSION "2023.01"
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -137,7 +141,7 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 proj;
 };
 
-class HelloTriangleApplication {
+class Application {
 public:
     void run() {
         initWindow();
@@ -147,7 +151,7 @@ public:
     }
 
 private:
-    GLFWwindow* window;
+    SDL_Window* window;
 
     VkInstance instance;
     VkDebugUtilsMessengerEXT debugMessenger;
@@ -210,20 +214,32 @@ private:
     uint32_t currentFrame = 0;
 
     bool framebufferResized = false;
+    bool m_quit = false;
 
-    void initWindow() {
-        glfwInit();
+    void initWindow() 
+    {
+        if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER) < 0)
+        {
+//            Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
+            exit(0);
+        }
 
-        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+        window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
+//        m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
 
-        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-        glfwSetWindowUserPointer(window, this);
-        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-    }
+        
+        //        glfwInit();
+//
+//        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
+//
+//        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
+//        glfwSetWindowUserPointer(window, this);
+//        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
+//    }
 
-    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
-        app->framebufferResized = true;
+//    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
+//        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
+//        app->framebufferResized = true;
     }
 
     void initVulkan() {
@@ -254,13 +270,28 @@ private:
         createSyncObjects();
     }
 
-    void mainLoop() {
-        while (!glfwWindowShouldClose(window)) {
-            glfwPollEvents();
+    void HandleEvent(SDL_Event* e)
+    {
+        switch (e->type)
+        {
+            case SDL_QUIT:
+                m_quit = true;
+                break;
+        }
+    }
+
+    void mainLoop()
+    {
+        SDL_Event e;
+        while (!m_quit)
+        {
+            while (SDL_PollEvent(&e))
+            {
+                HandleEvent(&e);
+            }
             drawFrame();
         }
-
-        vkDeviceWaitIdle(device);
+       vkDeviceWaitIdle(device);
     }
 
     void cleanupSwapChain() {
@@ -328,18 +359,19 @@ private:
         vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
 
-        glfwDestroyWindow(window);
+//        glfwDestroyWindow(window);
 
-        glfwTerminate();
+//        glfwTerminate();
     }
 
     void recreateSwapChain() {
-        int width = 0, height = 0;
-        glfwGetFramebufferSize(window, &width, &height);
-        while (width == 0 || height == 0) {
-            glfwGetFramebufferSize(window, &width, &height);
-            glfwWaitEvents();
-        }
+
+//        int width = 0, height = 0;
+//        glfwGetFramebufferSize(window, &width, &height);
+//        while (width == 0 || height == 0) {
+//            glfwGetFramebufferSize(window, &width, &height);
+//            glfwWaitEvents();
+//        }
 
         vkDeviceWaitIdle(device);
 
@@ -411,10 +443,12 @@ private:
         }
     }
 
-    void createSurface() {
-        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create window surface!");
-        }
+    void createSurface() 
+    {
+        SDL_Vulkan_CreateSurface(window, instance, &surface);
+
+//        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
+//        }
     }
 
     void pickPhysicalDevice() {
@@ -1593,8 +1627,9 @@ private:
             return capabilities.currentExtent;
         }
         else {
-            int width, height;
-            glfwGetFramebufferSize(window, &width, &height);
+            int width = 640;
+            int height = 480;
+//            glfwGetFramebufferSize(window, &width, &height);
 
             VkExtent2D actualExtent = {
                 static_cast<uint32_t>(width),
@@ -1603,7 +1638,6 @@ private:
 
             actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
             actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
-
             return actualExtent;
         }
     }
@@ -1697,17 +1731,20 @@ private:
         return indices;
     }
 
-    std::vector<const char*> getRequiredExtensions() {
-        uint32_t glfwExtensionCount = 0;
-        const char** glfwExtensions;
-        glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionCount);
+    std::vector<const char*> getRequiredExtensions() 
+    {
+        const char* sdl_extensions[256];
+        uint32_t sdl_extensionCount = 256;
 
-        std::vector<const char*> extensions(glfwExtensions, glfwExtensions + glfwExtensionCount);
-
+        SDL_Vulkan_GetInstanceExtensions(window, &sdl_extensionCount,  sdl_extensions);
+        
+        std::vector<const char*> extensions;
+        for (uint32_t i = 0; i < sdl_extensionCount; i++)
+            extensions.push_back(sdl_extensions[i]);
+        
         if (enableValidationLayers) {
             extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
         }
-
         return extensions;
     }
 
@@ -1761,8 +1798,9 @@ private:
     }
 };
 
-int main() {
-    HelloTriangleApplication app;
+int main(int argc, char* args[])
+{
+    Application app;
 
     try {
         app.run();
