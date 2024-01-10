@@ -1,3 +1,5 @@
+#include "neo.h"
+
 #include <SDL.h>
 #include <SDL_vulkan.h>
 #include <vulkan/vulkan.h>
@@ -29,6 +31,8 @@
 #include <optional>
 #include <set>
 #include <unordered_map>
+
+#include "Application.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -141,7 +145,7 @@ struct UniformBufferObject {
     alignas(16) glm::mat4 proj;
 };
 
-class Application {
+class NeoCore {
 public:
     void run() {
         initWindow();
@@ -282,6 +286,8 @@ private:
 
     void mainLoop()
     {
+        Application* app = new Application();
+
         SDL_Event e;
         while (!m_quit)
         {
@@ -1800,10 +1806,10 @@ private:
 
 int main(int argc, char* args[])
 {
-    Application app;
+    NeoCore core;
 
     try {
-        app.run();
+        core.run();
     }
     catch (const std::exception& e) {
         std::cerr << e.what() << std::endl;
@@ -1812,3 +1818,25 @@ int main(int argc, char* args[])
 
     return EXIT_SUCCESS;
 }
+
+void Log(const String& msg)
+{
+#if defined(PLATFORM_Windows)
+    OutputDebugString(msg.c_str());
+#else
+    printf("%s\n", msg.c_str());
+#endif
+
+}
+
+#if defined(_DEBUG)
+
+void Error(const String& msg)
+{
+    printf("ERROR: %s\n", msg.c_str());
+#if WINDOWS
+    OutputDebugStringA(msg.c_str());
+#endif
+}
+
+#endif
