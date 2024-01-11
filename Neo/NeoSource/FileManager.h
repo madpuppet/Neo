@@ -3,6 +3,7 @@
 #include "Singleton.h"
 #include "FileSystem.h"
 #include "Thread.h"
+#include "Array.h"
 
 class FileManager : public Singleton<FileManager>
 {
@@ -87,7 +88,7 @@ protected:
 		ExcludeType_Ext,
 		ExcludeType_File
 	};
-	std::vector<u64> m_excludeFolders;
-	std::vector<u64> m_excludeExtenstions;
+	Array<u64> m_excludeFolders;
+	Array<u64> m_excludeExtenstions;
 	u32 m_nextUniqueFileHandle;
 };

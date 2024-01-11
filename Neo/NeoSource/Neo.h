@@ -66,3 +66,6 @@ size_t getAddress(std::function<T(U...)> f) {
     return (size_t)*fnPointer;
 }
 
+#include "Array.h"
+#include "FastDelegate.h"
+

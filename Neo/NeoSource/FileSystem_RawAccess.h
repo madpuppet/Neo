@@ -56,5 +56,5 @@ protected:
 		} mode;
 		FILE *fh;
 	};
-	std::vector<FileStream*> m_activeStreams;
+	Array<FileStream*> m_activeStreams;
 };

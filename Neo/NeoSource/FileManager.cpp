@@ -336,7 +336,7 @@ void FileManager::RemoveFileChangeCallback(const FileSystem_FileChangeCallback &
 	SCOPED_MUTEX;
 	for (std::vector<FileSystem_FileChangeCallback>::const_iterator it = m_onFileChange.begin(); it != m_onFileChange.end(); ++it)
 	{
-		if (getAddress(*it) == getAddress(callback))
+		if (*it == callback)
 		{
 			m_onFileChange.erase(it);
 			return;

@@ -263,7 +263,11 @@
     <ClInclude Include="include\SDL_version.h" />
     <ClInclude Include="include\SDL_video.h" />
     <ClInclude Include="include\SDL_vulkan.h" />
+    <ClInclude Include="include\stb_image.h" />
+    <ClInclude Include="include\tiny_obj_loader.h" />
     <ClInclude Include="NeoSource\Application.h" />
+    <ClInclude Include="NeoSource\Array.h" />
+    <ClInclude Include="NeoSource\FastDelegate.h" />
     <ClInclude Include="NeoSource\FileExcludes.h" />
     <ClInclude Include="NeoSource\FileManager.h" />
     <ClInclude Include="NeoSource\FileSystem.h" />

@@ -374,6 +374,18 @@
     <ClInclude Include="NeoSource\Math.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
+    <ClInclude Include="include\stb_image.h">
+      <Filter>NeoSource\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="include\tiny_obj_loader.h">
+      <Filter>NeoSource\misc</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Array.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\FastDelegate.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Application.cpp">

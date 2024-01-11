@@ -18,5 +18,5 @@ protected:
 		ExcludeType_Ext,
 		ExcludeType_MAX
 	};
-	std::vector<u64> m_excludes[ExcludeType_MAX];
+	Array<u64> m_excludes[ExcludeType_MAX];
 };
