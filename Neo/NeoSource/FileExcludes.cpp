@@ -1,7 +1,8 @@
 #include "Neo.h"
 #include "FileExcludes.h"
+#include "StringUtils.h"
 
-FileExcludes::FileExcludes(const String &path)
+FileExcludes::FileExcludes(const std::string &path)
 {
 	ExcludeType excludeType = ExcludeType_Ext;
 	FILE *fh = fopen(path.c_str(), "r");
@@ -28,8 +29,8 @@ FileExcludes::FileExcludes(const String &path)
 			{
 				if (excludeType == ExcludeType_Dir)
 				{
-					String sanitizedDir = SZ(buf).Replace('\\', '/');
-					m_excludes[excludeType].push_back(sanitizedDir.Hash64());
+					std::string sanitizedDir = StringReplace(buf, '\\', '/');
+					m_excludes[excludeType].push_back(StringHash64(sanitizedDir));
 				}
 				else
 				{

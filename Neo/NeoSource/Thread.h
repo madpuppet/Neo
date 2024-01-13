@@ -20,17 +20,32 @@ delete pMyThread;
 #include <condition_variable>
 #include <mutex>
 #include <functional>
-#include "String.h"
 
 #define NULL_THREAD thread::id()
 typedef std::thread::id ThreadID;
+
+enum class NeoThreads
+{
+    Main,
+    Test,
+    MAX
+};
 
 class Thread
 {
 public:
     static ThreadID CurrentThreadID();
 
-    Thread(const String &name);
+    // each thread can register a static unique ID for identifying later what thread any code is running on
+    static void RegisterThread(int guid, const std::string& name);
+
+    // check what the current thread guid is.  -1 for unknown thread (thread wasn't registered)
+    static int GetCurrentThreadGUID();
+
+    // check what the current thread name is. empty() for unknow thread (thread wasn't registered)
+    static std::string GetCurrentThreadName();
+
+    Thread(int guid, const std::string &name);
     virtual ~Thread();
 
     /**
@@ -61,7 +76,7 @@ public:
     virtual int Go() = 0;
 
     // name of thread..
-    const String &GetName() { return m_name; }
+    const std::string &GetName() { return m_name; }
 
     // run the thread (called from Main thread routine 
     // - calls Go() internally, and then exits the thread with the return code from Go())
@@ -73,7 +88,9 @@ protected:
     int m_result;                   // thread quit result
     volatile bool m_finished;       // this is set if the thread has finished
     volatile bool m_terminate;
-    String m_name;                // thread name - appears in dev studio list
+
+    int m_guid;                        // unique ID of thread
+    std::string m_name;                // thread name - appears in dev studio list
 };
 
 class Semaphore
@@ -152,7 +169,7 @@ public:
     {
         m_tasks.Lock();
         int nextWrite = (m_write + 1) % MaxTasks;
-        Assert(nextWrite != m_read, STR("%d Tasks exceeded in thread %s!\n", MaxTasks, m_name.CStr()));
+        Assert(nextWrite != m_read, STR("%d Tasks exceeded in thread %s!\n", MaxTasks, m_name.c_str()));
         m_taskList[m_write] = task;
         m_taskSignals.Signal();
         m_write = nextWrite;
@@ -169,4 +186,3 @@ public:
         }
     }
 };
-

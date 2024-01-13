@@ -7,42 +7,42 @@
 class FileSystem_FlatArchive : public FileSystem
 {
 public:
-	FileSystem_FlatArchive(const String &name, const String &path, int priority);
+	FileSystem_FlatArchive(const std::string &name, const std::string &path, int priority);
 	~FileSystem_FlatArchive();
 
 	// write an archive file
 	// outputFile - full path name of output archive (ie ".\data.rkv")
-	static void WriteArchive(const String &outputFile);
+	static void WriteArchive(const std::string &outputFile);
 
 	virtual bool CanWrite() const { return false; }
 	virtual int Priority() const { return m_priority; }
-	virtual const String &Name() const { return m_name; }
+	virtual const std::string &Name() const { return m_name; }
 
-	virtual bool Read(const String &name, MemBlock &block);
-	virtual bool Exists(const String &name);
-	virtual bool GetSize(const String &name, u32 &size);
-	virtual bool GetTime(const String &name, u64 &time);
-	virtual void GetListByExt(const String &ext, std::vector<String> &list);
+	virtual bool Read(const std::string &name, MemBlock &block);
+	virtual bool Exists(const std::string &name);
+	virtual bool GetSize(const std::string &name, u32 &size);
+	virtual bool GetTime(const std::string &name, u64 &time);
+	virtual void GetListByExt(const std::string &ext, std::vector<std::string> &list);
 
-	virtual bool StreamReadBegin(FileHandle handle, const String &name);
+	virtual bool StreamReadBegin(FileHandle handle, const std::string &name);
 	virtual bool StreamRead(FileHandle handle, u8 *mem, u32 size, u32 &sizeRead);
 	virtual bool StreamReadEnd(FileHandle handle);
 
 	// not supported by archives...
 	virtual void Rescan() {}
-	virtual bool GetAbsolutePath(const String &name, String &path) { return false; }
-	virtual bool Write(const String &name, MemBlock &block) { return false; }
-	virtual bool Delete(const String &name) { return false; }
-	virtual bool Rename(const String &oldName, const String &newName) { return false; }
-	virtual bool StreamWriteBegin(FileHandle handle, const String &name) { return false; }
+	virtual bool GetAbsolutePath(const std::string &name, std::string &path) { return false; }
+	virtual bool Write(const std::string &name, MemBlock &block) { return false; }
+	virtual bool Delete(const std::string &name) { return false; }
+	virtual bool Rename(const std::string &oldName, const std::string &newName) { return false; }
+	virtual bool StreamWriteBegin(FileHandle handle, const std::string &name) { return false; }
 	virtual bool StreamWrite(FileHandle handle, u8 *mem, u32 size) { return false; }
 	virtual bool StreamFlush(FileHandle handle) { return false; }
 	virtual bool StreamWriteEnd(FileHandle handle) { return false; }
-	virtual void GetListByFolder(const String &folder, std::vector<String> &files, GetFolderListMode folderMode);
-	virtual void GetListByExcludes(FileExcludes *excludes, std::vector<String> &files);
-	virtual void GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<String> &files);
+	virtual void GetListByFolder(const std::string &folder, std::vector<std::string> &files, GetFolderListMode folderMode);
+	virtual void GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &files);
+	virtual void GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &files);
 
-	virtual bool PopChangedFile(String &name) { return false;	}
+	virtual bool PopChangedFile(std::string &name) { return false;	}
 
 protected:
 	struct TOCEntry
@@ -54,8 +54,8 @@ protected:
 		char name[4]; // name can be carry past end of this structure
 	};
 	std::map<u64,TOCEntry*> m_entries;
-	String m_name;
-	String m_path;
+	std::string m_name;
+	std::string m_path;
 	MemBlock m_tocMem;
 	u32 m_dataStart;
 	FILE *m_fh;

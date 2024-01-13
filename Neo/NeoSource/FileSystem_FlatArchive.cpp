@@ -2,17 +2,16 @@
 #include "FileSystem_FlatArchive.h"
 #include "FileManager.h"
 #include "Thread.h"
-#include "Math.h"
+#include "MathUtils.h"
+#include "StringUtils.h"
 
-#include <algorithm>
-
-FileSystem_FlatArchive::FileSystem_FlatArchive(const String &name, const String &path, int priority)
+FileSystem_FlatArchive::FileSystem_FlatArchive(const std::string &name, const std::string &path, int priority)
 	: m_name(name), m_path(path), m_priority(priority), m_dataStart(0)
 {
-	Log(STR("MOUNT ARCHIVE: %s", name.CStr()));
+	Log(std::format("MOUNT ARCHIVE: {}", name));
 
 	m_threadID = Thread::CurrentThreadID();
-	m_fh = fopen(path.CStr(), "rb");
+	m_fh = fopen(path.c_str(), "rb");
 	if (m_fh != 0)
 	{
 		u32 tocSize;
@@ -32,17 +31,17 @@ FileSystem_FlatArchive::FileSystem_FlatArchive(const String &name, const String 
 					m_entries.insert(std::pair<u64, TOCEntry*>(hash, entry));
 					tocPtr += entry->tocEntrySize;
 
-					Log(STR("TOC: <%d->%d> %s", entry->compressedSize, entry->decompressedSize, entry->name));
+					Log(std::format("TOC: <{}->{}> {}", entry->compressedSize, entry->decompressedSize, entry->name));
 				}
 			}
 			else
 			{
-				Error(STR("Error reading archive: %s", path.CStr()));
+				Error(std::format("Error reading archive: {}", path));
 			}
 		}
 		else
 		{
-			Error(STR("Possibly bad archive! Toc size is %d", tocSize));
+			Error(std::format("Possibly bad archive! Toc size is {}", tocSize));
 		}
 	}
 }
@@ -53,10 +52,11 @@ FileSystem_FlatArchive::~FileSystem_FlatArchive()
 		fclose(m_fh);
 }
 
-bool FileSystem_FlatArchive::Read(const String &name, MemBlock &block)
+bool FileSystem_FlatArchive::Read(const std::string &name, MemBlock &block)
 {
 	// check if entry is in the TOC
-	auto it = m_entries.find(name.Hash64());
+	u64 hash = StringHash64(name);
+	auto it = m_entries.find(hash);
 	if (it == m_entries.end())
 		return false;
 
@@ -65,7 +65,7 @@ bool FileSystem_FlatArchive::Read(const String &name, MemBlock &block)
 	auto entry = it->second;
 	if (!block.Resize(entry->decompressedSize))
 	{
-		Error(STR("Unable to fit file %s in supplied memory!", name.CStr()));
+		Error(std::format("Unable to fit file {} in supplied memory!", name));
 		return false;
 	}
 
@@ -79,21 +79,21 @@ bool FileSystem_FlatArchive::Read(const String &name, MemBlock &block)
 	else
 	{
 		// different thread, so we need to open a new file instance to be safe...
-		FILE *fh = fopen(m_path.CStr(), "rb");
+		FILE *fh = fopen(m_path.c_str(), "rb");
 		if (!fh)
 		{
-			Error(STR("ERROR opening RKV %s", m_path.CStr()));
+			Error(std::format("ERROR opening RKV {}", m_path));
 			return false;
 		}
 		int seekPos = m_dataStart + entry->offset;
 		if (fseek(fh, seekPos, SEEK_SET) != 0)
 		{
-			Error(STR("ERROR SEEKING RKV TO %d for file %s", m_dataStart + entry->offset, entry->name));
+			Error(std::format("ERROR SEEKING RKV TO {} for file {}", m_dataStart + entry->offset, entry->name));
 			return false;
 		}
 		if (fread(temp.Mem(), temp.Size(), 1, fh) != 1)
 		{
-			Error(STR("ERROR READING File %s from Archive %s", entry->name, m_path.CStr()));
+			Error(std::format("ERROR READING File {} from Archive {}", entry->name, m_path));
 			return false;
 		}
 		ftell(fh);
@@ -103,24 +103,24 @@ bool FileSystem_FlatArchive::Read(const String &name, MemBlock &block)
 	return true;
 }
 
-bool FileSystem_FlatArchive::Exists(const String &name)
+bool FileSystem_FlatArchive::Exists(const std::string &name)
 {
 	// check if entry is in the TOC
-	auto it = m_entries.find(name.Hash64());
+	auto it = m_entries.find(StringHash64(name));
 	return (it != m_entries.end());
 }
 
-void FileSystem_FlatArchive::GetListByFolder(const String &folder, std::vector<String> &files, GetFolderListMode folderMode)
+void FileSystem_FlatArchive::GetListByFolder(const std::string &folder, std::vector<std::string> &files, GetFolderListMode folderMode)
 {
 	Log("GetListByFolder NOT IMPLEMENTED!");
 }
 
-void FileSystem_FlatArchive::GetListByExcludes(FileExcludes *excludes, std::vector<String> &files)
+void FileSystem_FlatArchive::GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &files)
 {
 	Log("GetListByExcludes NOT IMPLEMENTED!");
 }
 
-void FileSystem_FlatArchive::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<String> &list)
+void FileSystem_FlatArchive::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &list)
 {
 	for (auto entry : m_entries)
 	{
@@ -129,17 +129,17 @@ void FileSystem_FlatArchive::GetListByDelegate(const FileSystem_FilenameFilterDe
 	}
 }
 
-bool FileSystem_FlatArchive::GetSize(const String &name, u32 &size)
+bool FileSystem_FlatArchive::GetSize(const std::string &name, u32 &size)
 {
 	// check if entry is in the TOC
-	auto it = m_entries.find(name.Hash64());
+	auto it = m_entries.find(StringHash64(name));
 	if (it == m_entries.end())
 		return false;
 	size = it->second->decompressedSize;
 	return true;
 }
 
-bool FileSystem_FlatArchive::GetTime(const String &name, u64 &time)
+bool FileSystem_FlatArchive::GetTime(const std::string &name, u64 &time)
 {
 	// check if entry is in the TOC
 	if (Exists(name))
@@ -150,13 +150,13 @@ bool FileSystem_FlatArchive::GetTime(const String &name, u64 &time)
 	return false;
 }
 
-void FileSystem_FlatArchive::GetListByExt(const String &ext, std::vector<String> &list)
+void FileSystem_FlatArchive::GetListByExt(const std::string &ext, std::vector<std::string> &list)
 {
 	for (auto entry : m_entries)
 	{
 		const char *_ext = strrchr(entry.second->name, '.');
         auto name = (const char *)entry.second->name;
-        auto is_equal = [name](const String& other) { return other == name; };
+        auto is_equal = [name](const std::string& other) { return other == name; };
 		if (_ext && ext == _ext && !std::any_of(list.begin(), list.end(), is_equal))
 		{
 			list.push_back(entry.second->name);
@@ -164,7 +164,7 @@ void FileSystem_FlatArchive::GetListByExt(const String &ext, std::vector<String>
 	}
 }
 
-bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const String &name)
+bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const std::string &name)
 {
 	if (!Exists(name))
 		return false;
@@ -172,7 +172,7 @@ bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const String &na
 	auto fileStream = new FileStream;
 	if (Read(name, fileStream->memory))
 	{
-		Log(STR("STREAM READ BEGIN %s -> %d", name.CStr(), fileStream->memory.Size()));
+		Log(std::format("STREAM READ BEGIN {} -> {}", name, fileStream->memory.Size()));
 		fileStream->id = handle;
 		fileStream->readPtr = fileStream->memory.Mem();
 		fileStream->remaining = fileStream->memory.Size();
@@ -181,7 +181,7 @@ bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const String &na
 	}
 	else
 	{
-		Error(STR("Load Error on Archive: %s - loading file %s", m_name.CStr(), name.CStr()));
+		Error(std::format("Load Error on Archive: {} - loading file {}", m_name, name));
 	}
 	return false;
 }
@@ -222,21 +222,21 @@ bool FileSystem_FlatArchive::StreamReadEnd(FileHandle handle)
 
 struct BTOCEntry
 {
-	String filename;
+	std::string filename;
 	MemBlock compressed;
 	u32 tocEntryOffset;
 	u32 tocEntrySize;
 };
 
-void FileSystem_FlatArchive::WriteArchive(const String &outputFile)
+void FileSystem_FlatArchive::WriteArchive(const std::string &outputFile)
 {
 	FileManager &fm = FileManager::Instance();
 
 	// first we build a list of all known files that match our excludes criteria
-	String archiveName = outputFile + ".rkv";
-	String excludesFile = outputFile + ".exclude";
+	std::string archiveName = outputFile + ".rkv";
+	std::string excludesFile = outputFile + ".exclude";
 	auto excludes = new FileExcludes(excludesFile);
-	std::vector<String> files;
+	std::vector<std::string> files;
 	fm.GetListByExcludes(excludes, files);
 
 	// first pass - calculate the toc size
@@ -246,7 +246,7 @@ void FileSystem_FlatArchive::WriteArchive(const String &outputFile)
 	{
 		BTOCEntry *btoc = new BTOCEntry;
 		btoc->filename = filename;
-		u32 nameSize = Max(4, (filename.Length()+1 + 3) & 0xfffc);
+		u32 nameSize = Max(4, (int)((filename.size()+1 + 3) & 0xfffc));
 		btoc->tocEntryOffset = tocSize;
 		btoc->tocEntrySize = sizeof(TOCEntry) + nameSize - 4;
 		tocSize += btoc->tocEntrySize;
@@ -271,7 +271,7 @@ void FileSystem_FlatArchive::WriteArchive(const String &outputFile)
 
 		toc->compressedSize = btoc->compressed.Size();
 		toc->decompressedSize = tmpMem.Size();
-		strcpy(toc->name, btoc->filename.CStr());
+		strcpy(toc->name, btoc->filename.c_str());
 		toc->offset = dataOffset;
 		toc->tocEntrySize = btoc->tocEntrySize;
 		dataOffset += toc->compressedSize;
@@ -279,7 +279,7 @@ void FileSystem_FlatArchive::WriteArchive(const String &outputFile)
 	}
 
 	// finally ready to write out the toc and those files out
-	FILE *fh = fopen(archiveName.CStr(), "wb");
+	FILE *fh = fopen(archiveName.c_str(), "wb");
 	if (fh)
 	{
 		fwrite(&tocSize, 4, 1, fh);
@@ -292,6 +292,6 @@ void FileSystem_FlatArchive::WriteArchive(const String &outputFile)
 	}
 	else
 	{
-		Error(STR("Unable to create archive: %s", outputFile.CStr()));
+		Error(std::format("Unable to create archive: {}", outputFile));
 	}
 }

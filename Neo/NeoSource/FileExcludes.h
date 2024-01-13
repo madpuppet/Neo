@@ -1,11 +1,11 @@
 #pragma once
 
-class String;
+class std::string;
 
 class FileExcludes
 {
 public:
-	FileExcludes(const String &path);
+	FileExcludes(const std::string &path);
 	~FileExcludes();
 
 	bool IsExcluded(const char *dir, const char *filename, const char *ext);
@@ -18,5 +18,5 @@ protected:
 		ExcludeType_Ext,
 		ExcludeType_MAX
 	};
-	Array<u64> m_excludes[ExcludeType_MAX];
+	std::vector<u64> m_excludes[ExcludeType_MAX];
 };

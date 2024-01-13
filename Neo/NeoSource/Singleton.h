@@ -3,18 +3,18 @@
 template<class T>
 class Singleton
 {
-	static T *   s_instance;
+	static T* s_instance;
 
 public:
 	Singleton()
 	{
-//		DMASSERT( !Exists(), "Multiple definitions of a single singleton??" );
+		Assert( !Exists(), "Multiple definitions of a single singleton??" );
 		s_instance = (T*)this;
 	}
 
 	~Singleton()
 	{
-//		DMASSERT( s_instance == this, "Multiple definitions of a single singleton??" );
+		Assert( s_instance == this, "Multiple definitions of a single singleton??" );
 		s_instance = NULL;
 	}
 

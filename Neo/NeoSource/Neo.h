@@ -4,19 +4,11 @@
 #include <format>
 #include <cstdint>
 #include <functional>
+#include <sys/stat.h>
+#include <sys/types.h>
 #include <vector>
 #include <map>
-
-typedef uint64_t            u64;
-typedef int64_t             i64;
-typedef uint32_t            u32;
-typedef int32_t             i32;
-typedef uint16_t            u16;
-typedef int16_t             i16;
-typedef uint8_t              u8;
-typedef int8_t               i8;
-typedef float               f32;
-typedef double              f64;
+#include <algorithm>
 
 #if defined(_WIN32)
 #define PLATFORM_Windows
@@ -43,29 +35,28 @@ typedef double              f64;
 #define PLATFORM_Switch
 #endif
 
-#include "String.h"
+typedef uint64_t            u64;
+typedef int64_t             i64;
+typedef uint32_t            u32;
+typedef int32_t             i32;
+typedef uint16_t            u16;
+typedef int16_t             i16;
+typedef uint8_t              u8;
+typedef int8_t               i8;
+typedef float               f32;
+typedef double              f64;
 
-void Log(const String&);
+#include "FastDelegate.h"
+
+#define STR(...) std::format(__VA_ARGS__)
+
+void Log(const std::string &msg);
 
 #if defined(_DEBUG)
-
-#define Assert(expr, msg) { if (expr) Error(msg); }
-void Error(const String&);
-
+void Error(const std::string &msg);
+inline void Assert(bool cond, const std::string &msg) { if (cond) Error(msg); }
 #else
-
-inline void Assert(bool, const String&) {}
-inline void Error(const String&) {}
-
+inline void Assert(bool, const std::string& msg) {};
+inline void Error(const std::string& msg) {}
 #endif
-
-template<typename T, typename... U>
-size_t getAddress(std::function<T(U...)> f) {
-    typedef T(fnType)(U...);
-    fnType** fnPointer = f.template target<fnType*>();
-    return (size_t)*fnPointer;
-}
-
-#include "Array.h"
-#include "FastDelegate.h"
 

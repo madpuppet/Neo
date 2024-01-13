@@ -17,8 +17,9 @@ void ThreadFunc(void *threadPtr)
     thread->Begin();
 }
 
-Thread::Thread(const String &name)
+Thread::Thread(int guid, const std::string &name)
 {
+    m_guid = guid;
     m_name = name;
     m_terminate = false;
     m_result = 0;
@@ -81,6 +82,7 @@ void Thread::Begin()
     }
 #endif
 
+    RegisterThread(m_guid, m_name);
     Go();
 }
 
@@ -131,3 +133,36 @@ void Mutex::Release()
     m_mutex.unlock();
 }
 
+
+// THREAD registry code
+// just a simple map of  threadId -> guid,name
+// useful for if we need certain things to happen on certain threads (typical main or render thread)
+struct ThreadInfo
+{
+    int guid;
+    std::string name;
+};
+static std::map<ThreadID, ThreadInfo> s_threadRegistry;
+Mutex s_threadRegistryLock;
+
+void Thread::RegisterThread(int guid, const std::string& name)
+{
+    ScopedMutexLock lock(s_threadRegistryLock);
+    s_threadRegistry.emplace(std::pair<ThreadID, ThreadInfo>(CurrentThreadID(), { guid, name }));
+}
+
+int Thread::GetCurrentThreadGUID()
+{
+    ScopedMutexLock lock(s_threadRegistryLock);
+
+    auto it = s_threadRegistry.find(Thread::CurrentThreadID());
+    return (it != s_threadRegistry.end()) ? it->second.guid : -1;
+}
+
+std::string Thread::GetCurrentThreadName()
+{
+    ScopedMutexLock lock(s_threadRegistryLock);
+
+    auto it = s_threadRegistry.find(Thread::CurrentThreadID());
+    return (it != s_threadRegistry.end()) ? it->second.name : "";
+}

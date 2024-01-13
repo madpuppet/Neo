@@ -6,49 +6,49 @@
 class FileSystem_RawAccess : public FileSystem
 {
 public:
-	FileSystem_RawAccess(const String &name, int priority, bool writable);
+	FileSystem_RawAccess(const std::string &name, int priority, bool writable);
 	~FileSystem_RawAccess();
 
 	void EnableMonitorFileChanges(bool enable);
 
 	virtual bool CanWrite() const { return m_writable; }
 	virtual int Priority() const { return m_priority; }
-	virtual const String &Name() const { return m_name; }
+	virtual const std::string &Name() const { return m_name; }
 
-	virtual bool GetAbsolutePath(const String &name, String &path);
-	virtual bool Read(const String &name, MemBlock &block);
-	virtual bool Write(const String &name, MemBlock &block);
-	virtual bool Exists(const String &name);
-	virtual bool GetSize(const String &name, u32 &size);
-	virtual bool GetTime(const String &name, u64 &time);
-	virtual bool Delete(const String &name);
-	virtual bool Rename(const String &oldName, const String &newName);
-	virtual void GetListByExt(const String &ext, std::vector<String> &list);
-	virtual void GetListByExcludes(FileExcludes *excludes, std::vector<String> &files);
-	virtual void GetListByFolder(const String &folder, std::vector<String> &files, GetFolderListMode folderMode);
-	virtual void GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<String> &files);
+	virtual bool GetAbsolutePath(const std::string &name, std::string &path);
+	virtual bool Read(const std::string &name, MemBlock &block);
+	virtual bool Write(const std::string &name, MemBlock &block);
+	virtual bool Exists(const std::string &name);
+	virtual bool GetSize(const std::string &name, u32 &size);
+	virtual bool GetTime(const std::string &name, u64 &time);
+	virtual bool Delete(const std::string &name);
+	virtual bool Rename(const std::string &oldName, const std::string &newName);
+	virtual void GetListByExt(const std::string &ext, std::vector<std::string> &list);
+	virtual void GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &files);
+	virtual void GetListByFolder(const std::string &folder, std::vector<std::string> &files, GetFolderListMode folderMode);
+	virtual void GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &files);
 	virtual void Rescan() {}
 
-	virtual bool StreamWriteBegin(FileHandle handle, const String &name);
+	virtual bool StreamWriteBegin(FileHandle handle, const std::string &name);
 	virtual bool StreamWrite(FileHandle handle, u8 *mem, u32 size);
 	virtual bool StreamFlush(FileHandle handle);
 	virtual bool StreamWriteEnd(FileHandle handle);
 
-	virtual bool StreamReadBegin(FileHandle handle, const String &name);
+	virtual bool StreamReadBegin(FileHandle handle, const std::string &name);
 	virtual bool StreamRead(FileHandle handle, u8 *mem, u32 size, u32 &sizeRead);
 	virtual bool StreamReadEnd(FileHandle handle);
 
-	virtual bool PopChangedFile(String &name) { return false;	}
+	virtual bool PopChangedFile(std::string &name) { return false;	}
 
 protected:
 	bool m_writable;
 	int m_priority;
-	String m_name;
+	std::string m_name;
 
 	struct FileStream
 	{
 		FileHandle id;
-		String path;
+		std::string path;
 		enum Mode
 		{
 			Read,
@@ -56,5 +56,5 @@ protected:
 		} mode;
 		FILE *fh;
 	};
-	Array<FileStream*> m_activeStreams;
+	std::vector<FileStream*> m_activeStreams;
 };

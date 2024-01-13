@@ -112,6 +112,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Neo.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -152,6 +153,7 @@
       <LanguageStandard>stdcpp20</LanguageStandard>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>Neo.h</PrecompiledHeaderFile>
+      <MultiProcessorCompilation>true</MultiProcessorCompilation>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -266,7 +268,6 @@
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\tiny_obj_loader.h" />
     <ClInclude Include="NeoSource\Application.h" />
-    <ClInclude Include="NeoSource\Array.h" />
     <ClInclude Include="NeoSource\FastDelegate.h" />
     <ClInclude Include="NeoSource\FileExcludes.h" />
     <ClInclude Include="NeoSource\FileManager.h" />
@@ -274,11 +275,16 @@
     <ClInclude Include="NeoSource\FileSystem_FlatArchive.h" />
     <ClInclude Include="NeoSource\FileSystem_FlatFolder.h" />
     <ClInclude Include="NeoSource\FileSystem_RawAccess.h" />
-    <ClInclude Include="NeoSource\Math.h" />
+    <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Neo.h" />
+    <ClInclude Include="NeoSource\RefCounted.h" />
+    <ClInclude Include="NeoSource\Resource.h" />
+    <ClInclude Include="NeoSource\ResourceBuilderManager.h" />
+    <ClInclude Include="NeoSource\ResourceFactory.h" />
+    <ClInclude Include="NeoSource\ResourceRef.h" />
     <ClInclude Include="NeoSource\Singleton.h" />
-    <ClInclude Include="NeoSource\String.h" />
+    <ClInclude Include="NeoSource\StringUtils.h" />
     <ClInclude Include="NeoSource\Thread.h" />
     <ClInclude Include="NeoSource\zlib\crc32.h" />
     <ClInclude Include="NeoSource\zlib\deflate.h" />
@@ -304,7 +310,7 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="NeoSource\MemBlock.cpp" />
-    <ClCompile Include="NeoSource\String.cpp" />
+    <ClCompile Include="NeoSource\StringUtils.cpp" />
     <ClCompile Include="NeoSource\Thread.cpp" />
     <ClCompile Include="NeoSource\zlib\adler32.c">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">zlib.h</PrecompiledHeaderFile>

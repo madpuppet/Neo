@@ -68,9 +68,6 @@
     <ClInclude Include="NeoSource\FileExcludes.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\String.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\zlib\crc32.h">
       <Filter>NeoSource\zlib</Filter>
     </ClInclude>
@@ -371,7 +368,7 @@
     <ClInclude Include="include\SDL_vulkan.h">
       <Filter>NeoSource\sdl</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\Math.h">
+    <ClInclude Include="NeoSource\MathUtils.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="include\stb_image.h">
@@ -380,10 +377,25 @@
     <ClInclude Include="include\tiny_obj_loader.h">
       <Filter>NeoSource\misc</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\Array.h">
+    <ClInclude Include="NeoSource\FastDelegate.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\FastDelegate.h">
+    <ClInclude Include="NeoSource\StringUtils.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\RefCounted.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Resource.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ResourceFactory.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ResourceRef.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ResourceBuilderManager.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
   </ItemGroup>
@@ -413,9 +425,6 @@
       <Filter>NeoSource</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\FileExcludes.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
-    <ClCompile Include="NeoSource\String.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\adler32.c">
@@ -453,6 +462,9 @@
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\zutil.c">
       <Filter>NeoSource\zlib</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\StringUtils.cpp">
+      <Filter>NeoSource</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

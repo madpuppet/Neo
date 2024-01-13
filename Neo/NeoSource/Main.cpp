@@ -34,6 +34,8 @@
 
 #include "Application.h"
 
+#include "Thread.h"
+
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -1804,8 +1806,28 @@ private:
     }
 };
 
+
+class ThreadTest : public Thread
+{
+    int Go() {
+        Log(std::format("Running on thead {} : {}\n", Thread::GetCurrentThreadGUID(), Thread::GetCurrentThreadName()));
+        return 0;
+    };
+
+public:
+    ThreadTest(int guid, const std::string& name) : Thread(guid, name) {}
+};
+
+
 int main(int argc, char* args[])
 {
+    Thread::RegisterThread((int)NeoThreads::Main, "Main");
+    auto testThread = new ThreadTest((int)NeoThreads::Test, std::string("Test"));
+
+    Log(std::format("MAIN running on: {} : {}\n", Thread::GetCurrentThreadGUID(), Thread::GetCurrentThreadName()));
+    testThread->Start();
+
+
     NeoCore core;
 
     try {
@@ -1819,7 +1841,7 @@ int main(int argc, char* args[])
     return EXIT_SUCCESS;
 }
 
-void Log(const String& msg)
+void Log(const std::string& msg)
 {
 #if defined(PLATFORM_Windows)
     OutputDebugString(msg.c_str());
@@ -1831,9 +1853,9 @@ void Log(const String& msg)
 
 #if defined(_DEBUG)
 
-void Error(const String& msg)
+void Error(const std::string &msg)
 {
-    printf("ERROR: %s\n", msg.c_str());
+    printf("ERROR: %s\n",msg.c_str());
 #if WINDOWS
     OutputDebugStringA(msg.c_str());
 #endif

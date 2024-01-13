@@ -1,13 +1,11 @@
 #include "Neo.h"
 #include "FileSystem_RawAccess.h"
-#include <sys/stat.h>
-#include <sys/types.h>
-#include <map>
+#include "StringUtils.h"
 
-FileSystem_RawAccess::FileSystem_RawAccess(const String &name, int priority, bool writable)
+FileSystem_RawAccess::FileSystem_RawAccess(const std::string &name, int priority, bool writable)
 	: m_name(name), m_priority(priority), m_writable(writable)
 {
-	Log(STR("Mount Raw Access [%s]",name.CStr()));
+	Log(std::format("Mount Raw Access [{}]",name));
 }
 
 FileSystem_RawAccess::~FileSystem_RawAccess()
@@ -18,9 +16,9 @@ FileSystem_RawAccess::~FileSystem_RawAccess()
 	}
 }
 
-bool FileSystem_RawAccess::Read(const String &name, MemBlock &block)
+bool FileSystem_RawAccess::Read(const std::string &name, MemBlock &block)
 {
-	FILE *fh = fopen(name.CStr(), "rb");
+	FILE *fh = fopen(name.c_str(), "rb");
 	if (!fh)
 		return false;
 
@@ -36,29 +34,29 @@ bool FileSystem_RawAccess::Read(const String &name, MemBlock &block)
 
 	if (sizeRead != size)
 	{
-		Error(STR("ERROR Only read %d bytes from file: %s", sizeRead, name.CStr()));
+		Error(std::format("ERROR Only read {} bytes from file: {}", sizeRead, name));
 		return false;
 	}
 
 	return true;
 }
 
-bool FileSystem_RawAccess::GetAbsolutePath(const String &name, String &path)
+bool FileSystem_RawAccess::GetAbsolutePath(const std::string &name, std::string &path)
 {
 	path = name;
-	FILE *fh = fopen(name.CStr(), "rb");
+	FILE *fh = fopen(name.c_str(), "rb");
 	if (!fh)
 		return false;
 	fclose(fh);
 	return true;
 }
 
-bool FileSystem_RawAccess::Write(const String &name, MemBlock &block)
+bool FileSystem_RawAccess::Write(const std::string &name, MemBlock &block)
 {
 	if (!m_writable)
 		return false;
 
-	FILE *fh = fopen(name.CStr(), "wb");
+	FILE *fh = fopen(name.c_str(), "wb");
 	if (fh == 0)
 		return false;
 
@@ -67,24 +65,24 @@ bool FileSystem_RawAccess::Write(const String &name, MemBlock &block)
 
 	if (writeSize != block.Size())
 	{
-		Error(STR("ERROR Only wrote %d/%d bytes to file: %s", writeSize, block.Size(), name.CStr()));
+		Error(std::format("ERROR Only wrote {}/{} bytes to file: {}", writeSize, block.Size(), name));
 		return false;
 	}
 	return true;
 }
 
-bool FileSystem_RawAccess::Exists(const String &name)
+bool FileSystem_RawAccess::Exists(const std::string &name)
 {
-	FILE *fh = fopen(name.CStr(), "rb");
+	FILE *fh = fopen(name.c_str(), "rb");
 	if (fh == 0)
 		return false;
 	fclose(fh);
 	return true;
 }
 
-bool FileSystem_RawAccess::GetSize(const String &name, u32 &size)
+bool FileSystem_RawAccess::GetSize(const std::string &name, u32 &size)
 {
-	FILE *fh = fopen(name.CStr(), "rb");
+	FILE *fh = fopen(name.c_str(), "rb");
 	if (!fh)
 		return false;
 
@@ -94,10 +92,10 @@ bool FileSystem_RawAccess::GetSize(const String &name, u32 &size)
 	return true;
 }
 
-bool FileSystem_RawAccess::GetTime(const String &name, u64 &timestamp)
+bool FileSystem_RawAccess::GetTime(const std::string &name, u64 &timestamp)
 {
 #if defined(PLATFORM_Windows)
-	HANDLE fh = CreateFileA(name.CStr(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE fh = CreateFileA(name.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	if (fh != INVALID_HANDLE_VALUE)
 	{
 		BY_HANDLE_FILE_INFORMATION info;
@@ -110,13 +108,13 @@ bool FileSystem_RawAccess::GetTime(const String &name, u64 &timestamp)
 	return false;
 }
 
-bool FileSystem_RawAccess::Delete(const String &name)
+bool FileSystem_RawAccess::Delete(const std::string &name)
 {
 #if defined(PLATFORM_Windows)
 	if (Exists(name))
 	{
-		String winName = name.Replace('/', '\\');
-		if (remove(winName.CStr()) != 0)
+		std::string winName = StringReplace(name, '/', '\\');
+		if (remove(winName.c_str()) != 0)
 			return true;
 	}
 	return false;
@@ -125,7 +123,7 @@ bool FileSystem_RawAccess::Delete(const String &name)
 	{
 		NSError *error;
 		NSFileManager *fileMgr = [NSFileManager defaultManager];
-		NSString *nsFilePath = [[NSString alloc] initWithUTF8String:name.CStr()];
+		NSString *nsFilePath = [[NSString alloc] initWithUTF8String:name.c_str()];
 		if ([fileMgr removeItemAtPath : nsFilePath error : &error] == YES)
 			return true;
 	}
@@ -136,7 +134,7 @@ bool FileSystem_RawAccess::Delete(const String &name)
 #endif
 }
 
-bool FileSystem_RawAccess::Rename(const String &oldName, const String &newName)
+bool FileSystem_RawAccess::Rename(const std::string &oldName, const std::string &newName)
 {
 	if (oldName == newName)
 		return true;
@@ -146,24 +144,24 @@ bool FileSystem_RawAccess::Rename(const String &oldName, const String &newName)
 
 #if defined(PLATFORM_Windows)
 
-	String winExisting = oldName.Replace('/', '\\');
-	String winNew = newName.Replace('/', '\\');
-	if (MoveFileA(winExisting.CStr(), winNew.CStr()))
+	std::string winExisting = StringReplace(oldName, '/', '\\');
+	std::string winNew = StringReplace(newName, '/', '\\');
+	if (MoveFileA(winExisting.c_str(), winNew.c_str()))
 		return true;
 	return false;
 
 #elif defined(PLATFORM_IOS) || defined(PLATFORM_OSX)
 
-	String iosExisting = oldName.Replace('\\', '/');
-	String iosNew = newName.Replace('\\', '/');
+	std::string iosExisting = oldName.Replace('\\', '/');
+	std::string iosNew = newName.Replace('\\', '/');
 	
 	NSError *error;
 
 	// Create file manager
 	NSFileManager *fileMgr = [NSFileManager defaultManager];
 
-	NSString *nsSrcPath = [NSString stringWithUTF8String : iosExisting.CStr()];
-	NSString *nsDestPath = [NSString stringWithUTF8String : iosNew.CStr()];
+	NSString *nsSrcPath = [NSString stringWithUTF8String : iosExisting.c_str()];
+	NSString *nsDestPath = [NSString stringWithUTF8String : iosNew.c_str()];
 
 	// Attempt the move
 	if ([fileMgr moveItemAtPath : nsSrcPath toPath : nsDestPath error : &error] != YES)
@@ -179,31 +177,31 @@ bool FileSystem_RawAccess::Rename(const String &oldName, const String &newName)
 #endif
 }
 
-void FileSystem_RawAccess::GetListByExt(const String &ext, std::vector<String> &list)
+void FileSystem_RawAccess::GetListByExt(const std::string &ext, std::vector<std::string> &list)
 {
 	// not supported by this FS
 	// - generally not an error ... other filesystems will pick up the slack
 }
 
-void FileSystem_RawAccess::GetListByExcludes(FileExcludes *excludes, std::vector<String> &list)
+void FileSystem_RawAccess::GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &list)
 {
 	// not supported by this FS
 	// - generally not an error ... other filesystems will pick up the slack
 }
 
-void FileSystem_RawAccess::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<String> &files)
+void FileSystem_RawAccess::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &files)
 {
 	// not supported by this FS
 	// - generally not an error ... other filesystems will pick up the slack
 }
 
-void FileSystem_RawAccess::GetListByFolder(const String &folder, std::vector<String> &list, GetFolderListMode folderMode)
+void FileSystem_RawAccess::GetListByFolder(const std::string &folder, std::vector<std::string> &list, GetFolderListMode folderMode)
 {
 #if defined(PLATFORM_Windows)
-	String pattern = folder + "/*.*";
+	std::string pattern = folder + "/*.*";
 	_finddata_t buffer;
 	intptr_t handle;
-	if ((handle = _findfirst(pattern.CStr(), &buffer)) != -1)
+	if ((handle = _findfirst(pattern.c_str(), &buffer)) != -1)
 	{
 		do
 		{
@@ -211,7 +209,7 @@ void FileSystem_RawAccess::GetListByFolder(const String &folder, std::vector<Str
 			{
 				if (buffer.name[0] != '.')
 				{
-					String path = folder.AddPath(buffer.name);
+					std::string path = StringAddPath(folder, buffer.name);
 					if (folderMode == GetFolderListMode_FoldersOnly)
 						list.push_back(path);
 					else if (folderMode == GetFolderListMode_FilesOnlyRecurse)
@@ -222,7 +220,7 @@ void FileSystem_RawAccess::GetListByFolder(const String &folder, std::vector<Str
 			{
 				if (folderMode == GetFolderListMode_FilesOnly || folderMode == GetFolderListMode_FilesOnlyRecurse)
 				{
-					String path = folder.AddPath(buffer.name);
+					std::string path = StringAddPath(folder, buffer.name);
 					list.push_back(path);
 				}
 			}
@@ -230,14 +228,14 @@ void FileSystem_RawAccess::GetListByFolder(const String &folder, std::vector<Str
 	}
 	_findclose(handle);
 #elif defined(PLATFORM_OSX) || defined(PLATFORM_IOS)
-	NSString * resourcePath = [NSString stringWithUTF8String:folder.CStr()];
+	NSString * resourcePath = [NSString stringWithUTF8String:folder.c_str()];
 	NSError * error;
 	NSArray * directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:resourcePath error:&error];
-	String path = [resourcePath UTF8String];
+	std::string path = [resourcePath UTF8String];
 	for (NSString *item in directoryContents)
 	{
-		String entry = [item UTF8String];
-		String path = folder.AddPath(entry);
+		std::string entry = [item UTF8String];
+		std::string path = folder.AddPath(entry);
 		list.push_back(path);
 	}
 #elif defined(PLATFORM_Switch)
@@ -247,12 +245,12 @@ void FileSystem_RawAccess::GetListByFolder(const String &folder, std::vector<Str
 #endif
 }
 
-bool FileSystem_RawAccess::StreamWriteBegin(FileHandle handle, const String &path)
+bool FileSystem_RawAccess::StreamWriteBegin(FileHandle handle, const std::string &path)
 {
 	if (!m_writable)
 		return false;
 
-	FILE *fh = fopen(path.CStr(), "wb");
+	FILE *fh = fopen(path.c_str(), "wb");
 	if (fh != 0)
 	{
 		FileStream *fileStream = new FileStream;
@@ -307,9 +305,9 @@ bool FileSystem_RawAccess::StreamWriteEnd(FileHandle handle)
 	return false;
 }
 
-bool FileSystem_RawAccess::StreamReadBegin(FileHandle handle, const String &path)
+bool FileSystem_RawAccess::StreamReadBegin(FileHandle handle, const std::string &path)
 {
-	FILE *fh = fopen(path.CStr(), "rb");
+	FILE *fh = fopen(path.c_str(), "rb");
 	if (fh != 0)
 	{
 		FileStream *fileStream = new FileStream;
