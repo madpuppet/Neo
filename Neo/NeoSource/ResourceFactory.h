@@ -3,58 +3,54 @@
 #include "AssetRefresh.h"
 #include <map>
 
-namespace Mad
+template <class T>
+class ResourceVisitor
 {
-	template <class T>
-	class ResourceVisitor
+public:
+	virtual ~ResourceVisitor() {}
+	virtual void Visit(T*) {}
+};
+
+template <class T>
+class ResourceFactory
+{
+protected:
+	std::map<u32,T*> m_resources;
+
+public:
+	void Visit(ResourceVisitor<T> &visitor)
 	{
-	public:
-		virtual ~ResourceVisitor() {}
-		virtual void Visit(T*) {}
-	};
+		for (auto it = m_resources.begin(); it != m_resources.end(); ++it)
+			visitor.Visit(it->second);
+	}
 
-	template <class T>
-	class ResourceFactory
+	void Dump()
 	{
-	protected:
-		std::map<u32,T*> m_resources;
+		for (auto &ii : m_resources)
+			Log(std::format("  {} ({:x})", ii.second->GetName().CStr(), ii.first);
+	}
 
-	public:
-		void Visit(ResourceVisitor<T> &visitor)
+	T* Create(const DMString &name, const DMString &source)
+	{
+		u32 hash = name.Hash();
+		auto it = m_resources.find(hash);
+		if (it == m_resources.end())
 		{
-			for (auto it = m_resources.begin(); it != m_resources.end(); ++it)
-				visitor.Visit(it->second);
+			T* resource = new T(name, source);
+			m_resources.insert( std::pair<u32,T*>(hash,resource) );
+			return resource;
 		}
+		it->second->IncRef();
+		return it->second;
+	}
 
-		void Dump()
+	void Destroy(T* resource)
+	{
+		if (resource && resource->DecRef() == 0)
 		{
-			for (auto &ii : m_resources)
-				Log(std::format("  {} ({:x})", ii.second->GetName().CStr(), ii.first);
+			u32 hash = resource->GetName().Hash();
+			m_resources.erase(hash);
+			delete resource;
 		}
-
-		T* Create(const DMString &name, const DMString &source)
-		{
-			u32 hash = name.Hash();
-			auto it = m_resources.find(hash);
-			if (it == m_resources.end())
-			{
-				T* resource = new T(name, source);
-				m_resources.insert( std::pair<u32,T*>(hash,resource) );
-				return resource;
-			}
-			it->second->IncRef();
-			return it->second;
-		}
-
-		void Destroy(T* resource)
-		{
-			if (resource && resource->DecRef() == 0)
-			{
-				u32 hash = resource->GetName().Hash();
-				m_resources.erase(hash);
-				delete resource;
-			}
-		}
-	};
-}
-
+	}
+};

@@ -1821,12 +1821,16 @@ public:
 
 int main(int argc, char* args[])
 {
-    Thread::RegisterThread((int)NeoThreads::Main, "Main");
-    auto testThread = new ThreadTest((int)NeoThreads::Test, std::string("Test"));
+    printf("MAIN\n");
+    {
+        neovector<neostring> strings;
+        neostring tester;
+        strings.emplace_back("test");
+        strings.push_back("test2");
+        strings.push_back(tester);
 
-    Log(std::format("MAIN running on: {} : {}\n", Thread::GetCurrentThreadGUID(), Thread::GetCurrentThreadName()));
-    testThread->Start();
-
+    }
+    printf("DONE TEST\n");
 
     NeoCore core;
 

@@ -2,6 +2,7 @@
 
 #include "Singleton.h"
 
+// callback when resource data has been finally loaded
 typedef FastDelegate::FastDelegate1<ResourceData*> LoadResourceDataCB;
 
 enum class ResourceType
@@ -30,7 +31,5 @@ class ResourceBuilderManager : public Singleton<ResourceBuilderManager>
 public:
 	// gather all data from file systems
 	void LoadResourceDataAsync(const std::string &name, const LoadResourceDataCB& cb);
-
-
 };
 

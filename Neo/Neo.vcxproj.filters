@@ -398,6 +398,9 @@
     <ClInclude Include="NeoSource\ResourceBuilderManager.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\Memory.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Application.cpp">
@@ -464,6 +467,9 @@
       <Filter>NeoSource\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\StringUtils.cpp">
+      <Filter>NeoSource</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Memory.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
   </ItemGroup>

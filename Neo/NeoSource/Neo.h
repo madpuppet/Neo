@@ -46,9 +46,8 @@ typedef int8_t               i8;
 typedef float               f32;
 typedef double              f64;
 
-#include "FastDelegate.h"
-
 #define STR(...) std::format(__VA_ARGS__)
+#define LOG(...) Log(STR(__VA_ARGS__))
 
 void Log(const std::string &msg);
 
@@ -60,3 +59,5 @@ inline void Assert(bool, const std::string& msg) {};
 inline void Error(const std::string& msg) {}
 #endif
 
+#include "FastDelegate.h"
+#include "Memory.h"
