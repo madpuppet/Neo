@@ -40,4 +40,4 @@ public:
 	}
 };
 
-template<class T> T* Singleton<T>::s_instance = NULL;
+template<class T> T* Singleton<T>::s_instance = nullptr;

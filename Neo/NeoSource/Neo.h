@@ -53,7 +53,7 @@ void Log(const std::string &msg);
 
 #if defined(_DEBUG)
 void Error(const std::string &msg);
-inline void Assert(bool cond, const std::string &msg) { if (cond) Error(msg); }
+inline void Assert(bool cond, const std::string &msg) { if (!cond) Error(msg); }
 #else
 inline void Assert(bool, const std::string& msg) {};
 inline void Error(const std::string& msg) {}
@@ -61,3 +61,5 @@ inline void Error(const std::string& msg) {}
 
 #include "FastDelegate.h"
 #include "Memory.h"
+
+extern const char* GAME_NAME;

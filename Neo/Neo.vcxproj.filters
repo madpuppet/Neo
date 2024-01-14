@@ -16,6 +16,9 @@
     <Filter Include="NeoSource\misc">
       <UniqueIdentifier>{fc638e2e-8332-4b88-a5d3-b2a9781a9962}</UniqueIdentifier>
     </Filter>
+    <Filter Include="GameSource">
+      <UniqueIdentifier>{8f26388f-4592-4d2c-bf70-10e1a4ab860c}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.frag">
@@ -35,9 +38,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NeoSource\Application.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\FileManager.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
@@ -401,11 +401,14 @@
     <ClInclude Include="NeoSource\Memory.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\Timer.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="GameSource\Application.h">
+      <Filter>GameSource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NeoSource\Application.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
     <ClCompile Include="NeoSource\FileManager.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
@@ -471,6 +474,9 @@
     </ClCompile>
     <ClCompile Include="NeoSource\Memory.cpp">
       <Filter>NeoSource</Filter>
+    </ClCompile>
+    <ClCompile Include="GameSource\Application.cpp">
+      <Filter>GameSource</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

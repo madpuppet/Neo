@@ -77,7 +77,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>..\Neo;..\Neo\include;C:\VulkanSDK\1.3.268.0\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath);NeoSource\zlib</IncludePath>
+    <IncludePath>$(ProjectDir)include;$(ProjectDir)NeoSource;$(ProjectDir)GameSource;$(ProjectDir)NeoSource\zlib;C:\VulkanSDK\1.3.268.0\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>..\Neo\libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;C:\VulkanSDK\1.3.268.0\Lib</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -85,7 +85,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>..\Neo;..\Neo\include;C:\VulkanSDK\1.3.268.0\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath);NeoSource\zlib</IncludePath>
+    <IncludePath>$(ProjectDir)include;$(ProjectDir)NeoSource;$(ProjectDir)GameSource;$(ProjectDir)NeoSource\zlib;C:\VulkanSDK\1.3.268.0\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>..\Neo\libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;C:\VulkanSDK\1.3.268.0\Lib</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -117,7 +117,7 @@
     <Link>
       <SubSystem>Console</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2.lib;SDL2_ttf.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Dbghelp.lib;SDL2.lib;SDL2_ttf.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>
       </IgnoreAllDefaultLibraries>
       <AdditionalOptions>/NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
@@ -165,7 +165,7 @@
       </AdditionalLibraryDirectories>
       <AdditionalOptions>
       </AdditionalOptions>
-      <AdditionalDependencies>SDL2.lib;SDL2_ttf.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Dbghelp.lib;SDL2.lib;SDL2_ttf.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -176,6 +176,7 @@
     <None Include="shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="GameSource\Application.h" />
     <ClInclude Include="include\begin_code.h" />
     <ClInclude Include="include\close_code.h" />
     <ClInclude Include="include\SDL.h" />
@@ -267,7 +268,6 @@
     <ClInclude Include="include\SDL_vulkan.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\tiny_obj_loader.h" />
-    <ClInclude Include="NeoSource\Application.h" />
     <ClInclude Include="NeoSource\FastDelegate.h" />
     <ClInclude Include="NeoSource\FileExcludes.h" />
     <ClInclude Include="NeoSource\FileManager.h" />
@@ -287,6 +287,7 @@
     <ClInclude Include="NeoSource\Singleton.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
     <ClInclude Include="NeoSource\Thread.h" />
+    <ClInclude Include="NeoSource\Timer.h" />
     <ClInclude Include="NeoSource\zlib\crc32.h" />
     <ClInclude Include="NeoSource\zlib\deflate.h" />
     <ClInclude Include="NeoSource\zlib\inffast.h" />
@@ -300,7 +301,7 @@
     <ClInclude Include="NeoSource\zlib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NeoSource\Application.cpp" />
+    <ClCompile Include="GameSource\Application.cpp" />
     <ClCompile Include="NeoSource\FileExcludes.cpp" />
     <ClCompile Include="NeoSource\FileManager.cpp" />
     <ClCompile Include="NeoSource\FileSystem_FlatArchive.cpp" />

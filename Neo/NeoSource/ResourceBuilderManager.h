@@ -3,7 +3,7 @@
 #include "Singleton.h"
 
 // callback when resource data has been finally loaded
-typedef FastDelegate::FastDelegate1<ResourceData*> LoadResourceDataCB;
+typedef FastDelegate::FastDelegate1<class ResourceData*> LoadResourceDataCB;
 
 enum class ResourceType
 {
@@ -15,14 +15,17 @@ enum class ResourceType
 
 class ResourceData
 {
+protected:
 	std::string m_name;
-	vector<std::string> m_sourceFiles;
-
+	std::vector<std::string> m_sourceFiles;
+public:
 	virtual ~ResourceData() {}
 };
 
 class TextureData : public ResourceData
 {
+public:
+	~TextureData() {}
 };
 
 

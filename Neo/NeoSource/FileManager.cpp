@@ -1,12 +1,35 @@
 #include "Neo.h"
 #include "FileManager.h"
+#include "FileSystem_FlatFolder.h"
 #include "Application.h"
 #include "Thread.h"
 #include "StringUtils.h"
 
 #define SCOPED_MUTEX 	ScopedMutexLock critical(m_accessMutex)
 
-FileManager::FileManager() : m_nextUniqueFileHandle(0) {}
+static FileExcludes* s_excludes;
+FileManager::FileManager() : m_nextUniqueFileHandle(0) 
+{
+	// load excludes file for filtering flatFolder data - this is a synchronous load using std c++ file functions in the current working directory
+	s_excludes = new FileExcludes("all.exclude");
+
+	// mount local filesystem
+#if defined(PLATFORM_Windows)
+	char buffer[256];
+	if (::SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, buffer) == 0)
+	{
+		std::string path = buffer;
+		path = StringAddPath(path, GAME_NAME);
+		::SHCreateDirectoryExA(NULL, path.c_str(), 0);
+		FileSystem_FlatFolder* fflocal = new FileSystem_FlatFolder("local", path, 2, true, s_excludes);
+		fflocal->EnableMonitorFileChanges(true);
+		Mount(fflocal);
+	}
+#else
+	Error("TODO: Mount local folder for this platform!");
+#endif
+
+}
 
 FileManager::~FileManager()
 {

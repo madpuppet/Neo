@@ -36,6 +36,9 @@
 
 #include "Thread.h"
 
+#include "FileManager.h"
+#include "ResourceBuilderManager.h"
+
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
@@ -150,9 +153,12 @@ struct UniformBufferObject {
 class NeoCore {
 public:
     void run() {
+        gMemoryTracker.EnableTracking(true);
         initWindow();
+        initSystems();
         initVulkan();
         mainLoop();
+        gMemoryTracker.Dump();
         cleanup();
     }
 
@@ -246,6 +252,18 @@ private:
 //    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
 //        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
 //        app->framebufferResized = true;
+    }
+
+    void initSystems()
+    {
+        FileManager::Startup();
+        ResourceBuilderManager::Startup();
+    }
+
+    void shutdownSystems()
+    {
+        ResourceBuilderManager::Shutdown();
+        FileManager::Shutdown();
     }
 
     void initVulkan() {
@@ -1821,16 +1839,6 @@ public:
 
 int main(int argc, char* args[])
 {
-    printf("MAIN\n");
-    {
-        neovector<neostring> strings;
-        neostring tester;
-        strings.emplace_back("test");
-        strings.push_back("test2");
-        strings.push_back(tester);
-
-    }
-    printf("DONE TEST\n");
 
     NeoCore core;
 
@@ -1860,9 +1868,10 @@ void Log(const std::string& msg)
 void Error(const std::string &msg)
 {
     printf("ERROR: %s\n",msg.c_str());
-#if WINDOWS
+#if defined(PLATFORM_Windows)
     OutputDebugStringA(msg.c_str());
 #endif
+    __debugbreak();
 }
 
 #endif
