@@ -7,6 +7,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 #include <vector>
+#include <unordered_map>
 #include <map>
 #include <algorithm>
 

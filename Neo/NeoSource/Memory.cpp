@@ -69,7 +69,7 @@ void* MemoryTracker::alloc(std::size_t size)
         m_totalAllocated += block->size;
         m_memoryGroupAllocated[(int)block->group] += block->size;
         m_memoryGroupAllocCount[(int)block->group]++;
-        m_blocks.push_back(block);
+        m_blocks.insert(std::pair<void*,TrackedBlock*>(block->mem,block));
         gMemTrackEnabled = true;
     }
     return mem;
@@ -96,11 +96,12 @@ void MemoryTracker::free(void* mem)
     if (gMemTrackEnabled)
     {
         gMemTrackEnabled = false;
-        for (auto it = m_blocks.begin(); it != m_blocks.end(); it++)
+        auto it = m_blocks.find(mem);
+        if (it != m_blocks.end())
         {
-            if ((*it)->mem == mem)
+//            if ((*it)->mem == mem)
             {
-                auto ptr = (*it);
+                auto ptr = it->second;
                 m_debugOverhead -= sizeof(TrackedBlock);
 #if NEO_STACK_TRACING
                 m_debugOverhead -= ptr->stackTraceSize;
@@ -113,7 +114,6 @@ void MemoryTracker::free(void* mem)
                 std::free(ptr->stackTrace);
 #endif
                 delete ptr;
-                break;
             }
         }
         gMemTrackEnabled = true;
@@ -143,8 +143,9 @@ void MemoryTracker::Dump()
             }
         }
 
-        for (auto b : m_blocks)
+        for (auto it : m_blocks)
         {
+            auto b = it.second;
             out = std::format("\n0x{}: {} bytes [{}]", b->mem, b->size, groupName[(int)b->group]);
             fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
 

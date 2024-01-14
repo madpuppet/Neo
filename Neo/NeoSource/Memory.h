@@ -79,7 +79,7 @@ class MemoryTracker
         int stackTraceSize;
 #endif
     };
-    std::vector<TrackedBlock*> m_blocks;
+    std::unordered_map<void *, TrackedBlock*> m_blocks;
 
 public:
     MemoryTracker();
