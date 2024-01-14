@@ -45,12 +45,14 @@ PeakTimer::Data sFreeTimings;
 
 StackTrace gStackTrace;
 MemoryTracker gMemoryTracker;
+Mutex gMemoryTrackMutex;
 
 void* MemoryTracker::alloc(std::size_t size)
 {
     void* mem = std::malloc(size);
     if (gMemTrackEnabled)
     {
+        ScopedMutexLock lock(gMemoryTrackMutex);
         gMemTrackEnabled = false;
         gStackTrace.Capture();
         TrackedBlock* block = new TrackedBlock();
@@ -95,26 +97,24 @@ void MemoryTracker::free(void* mem)
     std::free(mem);
     if (gMemTrackEnabled)
     {
+        ScopedMutexLock lock(gMemoryTrackMutex);
         gMemTrackEnabled = false;
         auto it = m_blocks.find(mem);
         if (it != m_blocks.end())
         {
-//            if ((*it)->mem == mem)
-            {
-                auto ptr = it->second;
-                m_debugOverhead -= sizeof(TrackedBlock);
+            auto ptr = it->second;
+            m_debugOverhead -= sizeof(TrackedBlock);
 #if NEO_STACK_TRACING
-                m_debugOverhead -= ptr->stackTraceSize;
+            m_debugOverhead -= ptr->stackTraceSize;
 #endif
-                m_totalAllocated -= ptr->size;
-                m_memoryGroupAllocated[(int)ptr->group] -= ptr->size;
-                m_memoryGroupAllocCount[(int)ptr->group]--;
-                m_blocks.erase(it);
+            m_totalAllocated -= ptr->size;
+            m_memoryGroupAllocated[(int)ptr->group] -= ptr->size;
+            m_memoryGroupAllocCount[(int)ptr->group]--;
+            m_blocks.erase(it);
 #if NEO_STACK_TRACING
-                std::free(ptr->stackTrace);
+            std::free(ptr->stackTrace);
 #endif
-                delete ptr;
-            }
+            delete ptr;
         }
         gMemTrackEnabled = true;
     }
@@ -230,8 +230,11 @@ StackTrace::~StackTrace()
         m_initialized = false;
     }
 }
+
+Mutex m_captureMutex;
 void StackTrace::Capture()
 {
+    m_captureMutex.Lock();
     Reset();
     if (m_initialized)
     {
@@ -273,6 +276,8 @@ void StackTrace::Capture()
             symbol->SizeOfStruct = sizeof(SYMBOL_INFO);
             symbol->MaxNameLen = maxFunctionNameLength;
 
+            // NOTE: we can save 40% of capture time using a large char buffer instead of a std::format
+            //       but dynamic string is more robust - we can deal with it if speed becomes an issue
             std::string str;
             if (SymFromAddr(process, stackFrame.AddrPC.Offset, &displacement, symbol))
             {
@@ -285,6 +290,7 @@ void StackTrace::Capture()
             AddStr(str.c_str());
         }
     }
+    m_captureMutex.Release();
 }
 #endif
 
