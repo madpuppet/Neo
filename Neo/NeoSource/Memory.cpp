@@ -3,6 +3,8 @@
 #include "Timer.h"
 #include "FileManager.h"
 
+bool gMemTrackEnabled = false;
+
 class PeakTimer
 {
 public:
@@ -28,10 +30,13 @@ public:
         auto end_time = std::chrono::high_resolution_clock::now();
         u64 duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - m_startTime).count();
 
-        m_data->accum += duration;
-        m_data->count++;
-        if (duration > m_data->max)
-            m_data->max = duration;
+        if (gMemTrackEnabled)
+        {
+            m_data->accum += duration;
+            m_data->count++;
+            if (duration > m_data->max)
+                m_data->max = duration;
+        }
     }
 };
 
@@ -44,50 +49,74 @@ MemoryTracker gMemoryTracker;
 void* MemoryTracker::alloc(std::size_t size)
 {
     void* mem = std::malloc(size);
-    if (m_enabled)
+    if (gMemTrackEnabled)
     {
-        m_enabled = false;
+        gMemTrackEnabled = false;
         gStackTrace.Capture();
         TrackedBlock* block = new TrackedBlock();
         block->mem = mem;
         block->size = size;
+        m_debugOverhead += sizeof(TrackedBlock);
+
+#if NEO_STACK_TRACING
         block->stackTrace = (char *)std::malloc(gStackTrace.DataSize());
-        block->group = m_activeGroup.empty() ? MemoryGroup::General : m_activeGroup.back();
         block->stackTraceSize = gStackTrace.DataSize();
+        memcpy((char*)block->stackTrace, gStackTrace.Data(), gStackTrace.DataSize());
+        m_debugOverhead += block->stackTraceSize;
+#endif
+
+        block->group = m_activeGroup.empty() ? MemoryGroup::General : m_activeGroup.back();
         m_totalAllocated += block->size;
         m_memoryGroupAllocated[(int)block->group] += block->size;
         m_memoryGroupAllocCount[(int)block->group]++;
-        memcpy((char *)block->stackTrace, gStackTrace.Data(), gStackTrace.DataSize());
         m_blocks.push_back(block);
-        m_enabled = true;
-
-        m_debugOverhead += sizeof(TrackedBlock) + block->stackTraceSize;
+        gMemTrackEnabled = true;
     }
     return mem;
+}
+
+MemoryTracker::MemoryTracker()
+{
+    memset(m_memoryGroupAllocated, 0, sizeof(m_memoryGroupAllocated));
+    memset(m_memoryGroupAllocCount, 0, sizeof(m_memoryGroupAllocCount));
+}
+MemoryTracker::~MemoryTracker()
+{
+    gMemTrackEnabled = false;
+}
+
+void MemoryTracker::EnableTracking(bool enable)
+{
+    gMemTrackEnabled = enable;
 }
 
 void MemoryTracker::free(void* mem)
 {
     std::free(mem);
-    if (m_enabled)
+    if (gMemTrackEnabled)
     {
-        m_enabled = false;
+        gMemTrackEnabled = false;
         for (auto it = m_blocks.begin(); it != m_blocks.end(); it++)
         {
             if ((*it)->mem == mem)
             {
                 auto ptr = (*it);
-                m_debugOverhead -= sizeof(TrackedBlock) + ptr->stackTraceSize;
+                m_debugOverhead -= sizeof(TrackedBlock);
+#if NEO_STACK_TRACING
+                m_debugOverhead -= ptr->stackTraceSize;
+#endif
                 m_totalAllocated -= ptr->size;
                 m_memoryGroupAllocated[(int)ptr->group] -= ptr->size;
                 m_memoryGroupAllocCount[(int)ptr->group]--;
                 m_blocks.erase(it);
+#if NEO_STACK_TRACING
                 std::free(ptr->stackTrace);
+#endif
                 delete ptr;
                 break;
             }
         }
-        m_enabled = true;
+        gMemTrackEnabled = true;
     }
 }
 
@@ -96,12 +125,13 @@ void MemoryTracker::Dump()
 {
     auto& fm = FileManager::Instance();
     FileHandle logFile;
-    bool wasEnabled = m_enabled;
-    m_enabled = false;
+    bool wasEnabled = gMemTrackEnabled;
+    gMemTrackEnabled = false;
     if (fm.StreamWriteBegin(logFile, "local:mem.log"))
     {
-        std::string out = std::format("MEM DUMP: {} allocs, {} bytes, Alloc {} x {} nsecs, Free {} x {} nsecs, Debug Overhead {}\n", m_blocks.size(), m_totalAllocated, sAllocTimings.count, sAllocTimings.accum / sAllocTimings.count,
-               sFreeTimings.count, sFreeTimings.accum / sFreeTimings.count, m_debugOverhead);
+        std::string out = std::format("MEM DUMP: {} allocs, {} bytes, Alloc {} x {}/{} = {} nsecs, Free {} x {}/{} = {} nsecs, Debug Overhead {}\n", 
+            m_blocks.size(), m_totalAllocated, sAllocTimings.count, sAllocTimings.accum, sAllocTimings.count, sAllocTimings.accum / sAllocTimings.count,
+               sFreeTimings.count, sFreeTimings.accum, sFreeTimings.count, sFreeTimings.accum / sFreeTimings.count, m_debugOverhead);
         fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
 
         for (int i = 0; i < (int)MemoryGroup::MAX; i++)
@@ -115,13 +145,18 @@ void MemoryTracker::Dump()
 
         for (auto b : m_blocks)
         {
-            out = std::format("\n0x{}: {} bytes [{}]\n{}", b->mem, b->size, groupName[(int)b->group], b->stackTrace);
+            out = std::format("\n0x{}: {} bytes [{}]", b->mem, b->size, groupName[(int)b->group]);
             fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
+
+#if NEO_STACK_TRACING
+            out = std::format("\n{}", b->stackTrace);
+            fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
+#endif
         }
 
         FileManager::Instance().StreamWriteEnd(logFile);
     }
-    m_enabled = wasEnabled;
+    gMemTrackEnabled = wasEnabled;
 }
 
 
@@ -175,33 +210,27 @@ void operator delete(void* ptr, const std::nothrow_t&) noexcept {
 #include <DbgHelp.h>
 
 // Ensure to link against DbgHelp.lib
+#if NEO_STACK_TRACING
 StackTrace::StackTrace()
 {
-#if NEO_MEMORY_TRACKING
     // Initialize the symbol handler
     if (!SymInitialize(GetCurrentProcess(), nullptr, TRUE)) {
         printf("SymInitialize failed. Error code: %u\n", GetLastError());
         return;
     }
     m_initialized = true;
-#endif
 }
-
 StackTrace::~StackTrace()
 {
-#if NEO_MEMORY_TRACKING
     if (m_initialized)
     {
         // Cleanup the symbol handler
         SymCleanup(GetCurrentProcess());
         m_initialized = false;
     }
-#endif
 }
-
 void StackTrace::Capture()
 {
-#if NEO_MEMORY_TRACKING
     Reset();
     if (m_initialized)
     {
@@ -255,6 +284,6 @@ void StackTrace::Capture()
             AddStr(str.c_str());
         }
     }
-#endif
 }
+#endif
 

@@ -9,6 +9,7 @@ void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
 void operator delete(void* ptr, const std::nothrow_t&) noexcept;
 
 #define NEO_MEMORY_TRACKING 1
+#define NEO_STACK_TRACING 0
 
 enum class MemoryGroup
 {
@@ -21,6 +22,7 @@ enum class MemoryGroup
     MAX
 };
 
+#if NEO_STACK_TRACING
 class StackTrace
 {
     static const int MaxSize = 65536;
@@ -45,11 +47,22 @@ public:
     const char* Data() { return m_buffer; }
     int DataSize() { return m_writePos+1; }
 };
+#else
+class StackTrace
+{
+public:
+    void Capture() {}
+    const char* Data() { return nullptr; }
+    int DataSize() { return 0; }
+};
+#endif
 extern StackTrace gStackTrace;
 
+// Memory Tracker records each allocation
+// if NEO_MEMORY_TRACKING then tracking is stored
+// if NEO_STACK_TRACING then a stack trace is stored with each memory block
 class MemoryTracker
 {
-    bool m_enabled = false;
     std::vector<MemoryGroup> m_activeGroup;
     u64 m_totalAllocated = 0;
     u64 m_memoryGroupAllocated[(int)MemoryGroup::MAX];
@@ -61,22 +74,21 @@ class MemoryTracker
         size_t size;
         MemoryGroup group;
         void* mem;
+#if NEO_STACK_TRACING
         char* stackTrace;
         int stackTraceSize;
+#endif
     };
     std::vector<TrackedBlock*> m_blocks;
 
 public:
-    MemoryTracker() { memset(m_memoryGroupAllocated, 0, sizeof(m_memoryGroupAllocated)); memset(m_memoryGroupAllocCount, 0, sizeof(m_memoryGroupAllocCount)); }
-    ~MemoryTracker() { m_enabled = false; }
-
+    MemoryTracker();
+    ~MemoryTracker();
     void* alloc(std::size_t size);
     void free(void* mem);
-
     void PushGroup(MemoryGroup group) { m_activeGroup.push_back(group); }
     void PopGroup() { m_activeGroup.pop_back(); }
-
-    void EnableTracking(bool enable) { m_enabled = enable; }
+    void EnableTracking(bool enable);
     void Dump();
 };
 extern MemoryTracker gMemoryTracker;
