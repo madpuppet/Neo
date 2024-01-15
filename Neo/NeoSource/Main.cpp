@@ -154,6 +154,7 @@ class NeoCore {
 public:
     void run() {
         gMemoryTracker.EnableTracking(true);
+        MEMGROUP(System);
         initWindow();
         initSystems();
         initVulkan();

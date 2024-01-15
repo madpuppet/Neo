@@ -1,5 +1,8 @@
 #pragma once
 
+#define NEO_MEMORY_TRACKING 1
+#define NEO_STACK_TRACING 1
+
 // Custom global operator new
 void* operator new(std::size_t size);
 void operator delete(void* ptr) noexcept;
@@ -8,17 +11,21 @@ void operator delete[](void* ptr) noexcept;
 void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
 void operator delete(void* ptr, const std::nothrow_t&) noexcept;
 
-#define NEO_MEMORY_TRACKING 1
-#define NEO_STACK_TRACING 0
-
 enum class MemoryGroup
 {
     General,
+    System,
     Texture,
     Models,
     Animation,
     Props,
     AI,
+
+    User1,
+    User2,
+    User3,
+    User4,
+
     MAX
 };
 
@@ -101,7 +108,7 @@ public:
     MemoryGroupScope(MemoryGroup group) { gMemoryTracker.PushGroup(group); }
     ~MemoryGroupScope() { gMemoryTracker.PopGroup(); }
 };
-#define MEMGROUP(x) MemoryGroupScope(x)
+#define MEMGROUP(x) MemoryGroupScope __scope(MemoryGroup::x)
 #else
 #define MEMGROUP(x)
 #endif

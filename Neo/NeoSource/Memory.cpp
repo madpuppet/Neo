@@ -120,7 +120,7 @@ void MemoryTracker::free(void* mem)
     }
 }
 
-static const char* groupName[] = { "General","Texture","Models","Animation","Props","AI" };
+static const char* groupName[] = { "General","System","Texture","Models","Animation","Props","AI","User1","User2","User3","User4" };
 void MemoryTracker::Dump()
 {
     auto& fm = FileManager::Instance();
@@ -138,21 +138,43 @@ void MemoryTracker::Dump()
         {
             if (m_memoryGroupAllocCount[i] > 0)
             {
-                out = std::format("[{:10}]: {} allocs, {} bytes allocated\n", groupName[i], m_memoryGroupAllocCount[i], m_memoryGroupAllocated[i]);
-                fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
-            }
-        }
+                // calc block 256/16k/256k/+
+                int blocks[4] = { 0, 0, 0, 0 };
+                for (auto it : m_blocks)
+                {
+                    auto b = it.second;
+                    if ((int)b->group == i)
+                    {
+                        if (b->size <= 256)
+                            blocks[0]++;
+                        else if (b->size <= 16*1024)
+                            blocks[1]++;
+                        else if (b->size <= 256*1024)
+                            blocks[2]++;
+                        else
+                            blocks[3]++;
+                    }
+                }
 
-        for (auto it : m_blocks)
-        {
-            auto b = it.second;
-            out = std::format("\n0x{}: {} bytes [{}]", b->mem, b->size, groupName[(int)b->group]);
-            fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
+                out = std::format("-==== [{}]: {} allocs, {} bytes [{}/{}/{}/{}]====-\n", groupName[i], m_memoryGroupAllocCount[i], m_memoryGroupAllocated[i], blocks[0], blocks[1], blocks[2], blocks[3]);
+                fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
+
+                for (auto it : m_blocks)
+                {
+                    auto b = it.second;
+                    if ((int)b->group == i)
+                    {
+                        out = std::format("0x{}: {} bytes\n", b->mem, b->size);
+                        fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
 
 #if NEO_STACK_TRACING
-            out = std::format("\n{}", b->stackTrace);
-            fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
+                        out = std::format("{}\n", b->stackTrace);
+                        fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
 #endif
+                    }
+                }
+
+            }
         }
 
         FileManager::Instance().StreamWriteEnd(logFile);
