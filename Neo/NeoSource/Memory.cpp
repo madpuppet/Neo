@@ -5,44 +5,6 @@
 
 bool gMemTrackEnabled = false;
 
-class PeakTimer
-{
-public:
-    struct Data
-    {
-        u64 max = 0;
-        u64 accum = 0;
-        u64 count = 0;
-    };
-
-protected:
-    std::chrono::time_point<std::chrono::high_resolution_clock> m_startTime;
-    Data* m_data;
-
-public:
-    PeakTimer(PeakTimer::Data *data)
-    {
-        m_startTime = std::chrono::high_resolution_clock::now();
-        m_data = data;
-    }
-    ~PeakTimer()
-    {
-        auto end_time = std::chrono::high_resolution_clock::now();
-        u64 duration = std::chrono::duration_cast<std::chrono::nanoseconds>(end_time - m_startTime).count();
-
-        if (gMemTrackEnabled)
-        {
-            m_data->accum += duration;
-            m_data->count++;
-            if (duration > m_data->max)
-                m_data->max = duration;
-        }
-    }
-};
-
-PeakTimer::Data sAllocTimings;
-PeakTimer::Data sFreeTimings;
-
 StackTrace gStackTrace;
 MemoryTracker gMemoryTracker;
 Mutex gMemoryTrackMutex;
@@ -129,9 +91,7 @@ void MemoryTracker::Dump()
     gMemTrackEnabled = false;
     if (fm.StreamWriteBegin(logFile, "local:mem.log"))
     {
-        std::string out = std::format("MEM DUMP: {} allocs, {} bytes, Alloc {} x {}/{} = {} nsecs, Free {} x {}/{} = {} nsecs, Debug Overhead {}\n", 
-            m_blocks.size(), m_totalAllocated, sAllocTimings.count, sAllocTimings.accum, sAllocTimings.count, sAllocTimings.accum / sAllocTimings.count,
-               sFreeTimings.count, sFreeTimings.accum, sFreeTimings.count, sFreeTimings.accum / sFreeTimings.count, m_debugOverhead);
+        std::string out = std::format("MEM DUMP: {} allocs, {} bytes, Debug Overhead {}\n", m_blocks.size(), m_totalAllocated, m_debugOverhead);
         fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
 
         for (int i = 0; i < (int)MemoryGroup::MAX; i++)
@@ -192,41 +152,35 @@ void MemoryTracker::Dump()
 #endif
 
 void* operator new(std::size_t size) {
-    PeakTimer pk(&sAllocTimings);
     void* mem = MALLOC(size);
     return mem;
 }
 
 // Custom global operator delete
 void operator delete(void* ptr) noexcept {
-    PeakTimer pk(&sFreeTimings);
     FREE(ptr);
 }
 
 // Custom global operator new[] (array version)
 void* operator new[](std::size_t size)
 {
-    PeakTimer pk(&sAllocTimings);
     void* mem = MALLOC(size);
     return mem;
 }
 
 // Custom global operator delete[] (array version)
 void operator delete[](void* ptr) noexcept {
-    PeakTimer pk(&sFreeTimings);
     FREE(ptr);
 }
 
 // Custom global nothrow operator new
 void* operator new(std::size_t size, const std::nothrow_t&) noexcept {
-    PeakTimer pk(&sAllocTimings);
     void* mem = MALLOC(size);
     return mem;
 }
 
 // Custom global nothrow operator delete
 void operator delete(void* ptr, const std::nothrow_t&) noexcept {
-    PeakTimer pk(&sFreeTimings);
     FREE(ptr);
 }
 

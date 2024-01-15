@@ -419,9 +419,11 @@ void FileSystem_FlatFolder::ScanFolder(const std::string &folder)
 				{
 					if (!AddEntry(buffer.name, StringReplace(path, '\\', '/')))
 					{
-#if defined(_DEBUG)
 						auto existing = m_files.find(StringHash64(buffer.name));
-						Error(std::format("Duplicate Files: %s == %s", path, existing->second->fullPath));
+#if defined(_DEBUG)
+						Error(std::format("Duplicate Files: {} == {}", path, existing->second->fullPath));
+#else
+						Log(std::format("Duplicate Files: {} == {}\n", path, existing->second->fullPath));
 #endif
 					}
 				}

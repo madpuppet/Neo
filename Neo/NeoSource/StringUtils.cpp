@@ -26,7 +26,7 @@ u16 StringPopUTF8(const std::string& source, int& idx)
 
 std::string StringReplace(const std::string& str, char oldChar, char newChar)
 {
-    char* buffer = new char[str.size()];
+    char* buffer = new char[str.size()+1];
     int inIdx = 0;
     int idx = 0;
     int outIdx = 0;
@@ -45,7 +45,9 @@ std::string StringReplace(const std::string& str, char oldChar, char newChar)
         }
     }
     buffer[outIdx++] = 0;
-    return std::string(buffer);
+    std::string result(buffer);
+    delete buffer;
+    return result;
 }
 
 u64 StringHash64(const std::string& str)

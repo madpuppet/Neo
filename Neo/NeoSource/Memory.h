@@ -1,7 +1,7 @@
 #pragma once
 
-#define NEO_MEMORY_TRACKING 1
-#define NEO_STACK_TRACING 1
+#define NEO_MEMORY_TRACKING 0
+#define NEO_STACK_TRACING 0
 
 // Custom global operator new
 void* operator new(std::size_t size);

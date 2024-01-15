@@ -1,6 +1,8 @@
 #include "Neo.h"
 #include "FileManager.h"
 #include "FileSystem_FlatFolder.h"
+#include "FileSystem_FlatArchive.h"
+#include "FileSystem_RawAccess.h"
 #include "Application.h"
 #include "Thread.h"
 #include "StringUtils.h"
@@ -13,7 +15,17 @@ FileManager::FileManager() : m_nextUniqueFileHandle(0)
 	// load excludes file for filtering flatFolder data - this is a synchronous load using std c++ file functions in the current working directory
 	s_excludes = new FileExcludes("all.exclude");
 
-	// mount local filesystem
+	// mount flat data filesystem (no paths)
+	FileSystem_FlatFolder* dataFS = new FileSystem_FlatFolder("data", "./GameData", 1, true, s_excludes);
+	dataFS->EnableMonitorFileChanges(true);
+	Mount(dataFS);
+
+	// mount flat data filesystem (no paths)
+	FileSystem_FlatFolder* srcFS = new FileSystem_FlatFolder("src", "./SourceData", 1, true, s_excludes);
+	srcFS->EnableMonitorFileChanges(true);
+	Mount(srcFS);
+
+	// mount local filesystem (flat - no paths)
 #if defined(PLATFORM_Windows)
 	char buffer[256];
 	if (::SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, buffer) == 0)
@@ -29,6 +41,12 @@ FileManager::FileManager() : m_nextUniqueFileHandle(0)
 	Error("TODO: Mount local folder for this platform!");
 #endif
 
+	// mount archives
+	std::string archiveName;
+	Mount(new FileSystem_FlatArchive("dataRKV", "data.rkv", 10));
+	
+	// raw access to file system (read/write files anyhere with full path)
+	Mount(new FileSystem_RawAccess("raw", 20, true));
 }
 
 FileManager::~FileManager()
