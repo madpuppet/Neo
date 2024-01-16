@@ -636,11 +636,14 @@
     <ClInclude Include="NeoSource\Neo.h" />
     <ClInclude Include="NeoSource\RefCounted.h" />
     <ClInclude Include="NeoSource\Resource.h" />
-    <ClInclude Include="NeoSource\ResourceBuilderManager.h" />
+    <ClInclude Include="NeoSource\AssetManager.h" />
     <ClInclude Include="NeoSource\ResourceFactory.h" />
     <ClInclude Include="NeoSource\ResourceRef.h" />
+    <ClInclude Include="NeoSource\Serializer.h" />
     <ClInclude Include="NeoSource\Singleton.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
+    <ClInclude Include="NeoSource\Texture.h" />
+    <ClInclude Include="NeoSource\TextureFactory.h" />
     <ClInclude Include="NeoSource\Thread.h" />
     <ClInclude Include="NeoSource\Timer.h" />
     <ClInclude Include="NeoSource\zlib\crc32.h" />
@@ -657,6 +660,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameSource\Application.cpp" />
+    <ClCompile Include="NeoSource\AssetManager.cpp" />
     <ClCompile Include="NeoSource\FileExcludes.cpp" />
     <ClCompile Include="NeoSource\FileManager.cpp" />
     <ClCompile Include="NeoSource\FileSystem_FlatArchive.cpp" />
@@ -668,7 +672,10 @@
     </ClCompile>
     <ClCompile Include="NeoSource\MemBlock.cpp" />
     <ClCompile Include="NeoSource\Memory.cpp" />
+    <ClCompile Include="NeoSource\Serializer.cpp" />
     <ClCompile Include="NeoSource\StringUtils.cpp" />
+    <ClCompile Include="NeoSource\Texture.cpp" />
+    <ClCompile Include="NeoSource\TextureFactory.cpp" />
     <ClCompile Include="NeoSource\Thread.cpp" />
     <ClCompile Include="NeoSource\zlib\adler32.c">
       <PrecompiledHeaderFile Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">zlib.h</PrecompiledHeaderFile>

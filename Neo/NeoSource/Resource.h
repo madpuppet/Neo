@@ -1,37 +1,25 @@
 #pragma once
 
-#include "AssetRefresh.h"
-
-namespace Mad
+class Resource
 {
-	template <class T>
-	class Resource
-	{
-	public:
-		Resource(const std::string &name, const std::string&source) : m_name(name), m_source(source), m_refCount(1), m_assetRefresh(name, DELEGATE(Resource::ReloadInternal)) {}
-		virtual ~Resource() {}
+public:
+	Resource(const std::string &name) : m_name(name) {}
+	virtual ~Resource() {}
 
-		int IncRef() { return ++m_refCount; }
-		int DecRef() { return --m_refCount; }
-		int GetRef() { return m_refCount; }
+	int IncRef() { return ++m_refCount; }
+	int DecRef() { return --m_refCount; }
+	int GetRef() { return m_refCount; }
 
-		AssetRefresh *GetAssetRefresh() { return &m_assetRefresh; }
+	std::string GetName() const { return m_name; }
 
-		DMString GetName() const { return m_name; }
-		DMString GetSource() const { return m_source; }
+	bool IsLoaded() { return m_dataLoaded; }
 
-	protected:
-		void ReloadInternal(AssetRefresh*,void*)
-		{
-			m_assetRefresh.ClearFiles();
-			Reload();
-		}
-		virtual void Reload() = 0;
+protected:
+	virtual void Reload() = 0;
 
-		AssetRefresh m_assetRefresh;
-		int m_refCount;
-		std::string m_name;
-		std::string m_source;
-	};
-}
+	int m_refCount = 1;
+	bool m_dataLoaded = false;
+	std::string m_name;
+	std::string m_source;
+};
 

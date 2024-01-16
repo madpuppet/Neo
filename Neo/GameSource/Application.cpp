@@ -8,7 +8,7 @@ const char* GAME_NAME = "TestGame";
 Application::Application()
 {
 	// mount filesystems
-//	tex.Create("t_viking_room");
+	m_testTex.Create("viking_room");
 }
 
 Application::~Application()

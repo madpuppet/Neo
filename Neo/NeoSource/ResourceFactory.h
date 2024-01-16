@@ -1,43 +1,29 @@
 #pragma once
 
-#include "AssetRefresh.h"
 #include <map>
-
-template <class T>
-class ResourceVisitor
-{
-public:
-	virtual ~ResourceVisitor() {}
-	virtual void Visit(T*) {}
-};
+#include "StringUtils.h"
 
 template <class T>
 class ResourceFactory
 {
 protected:
-	std::map<u32,T*> m_resources;
+	std::map<u64,T*> m_resources;
 
 public:
-	void Visit(ResourceVisitor<T> &visitor)
-	{
-		for (auto it = m_resources.begin(); it != m_resources.end(); ++it)
-			visitor.Visit(it->second);
-	}
-
 	void Dump()
 	{
-		for (auto &ii : m_resources)
-			Log(std::format("  {} ({:x})", ii.second->GetName().CStr(), ii.first);
+		for (auto& ii : m_resources)
+			Log(std::format("  {} ({:x})", ii.second->GetName().CStr(), ii.first));
 	}
 
-	T* Create(const DMString &name, const DMString &source)
+	T* Create(const std::string &name, const std::string&source)
 	{
-		u32 hash = name.Hash();
+		u64 hash = StringHash64(name);
 		auto it = m_resources.find(hash);
 		if (it == m_resources.end())
 		{
 			T* resource = new T(name, source);
-			m_resources.insert( std::pair<u32,T*>(hash,resource) );
+			m_resources.insert( std::pair<u64,T*>(hash,resource) );
 			return resource;
 		}
 		it->second->IncRef();

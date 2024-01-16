@@ -29,7 +29,7 @@ void* MemoryTracker::alloc(std::size_t size)
         m_debugOverhead += block->stackTraceSize;
 #endif
 
-        block->group = m_activeGroup.empty() ? MemoryGroup::General : m_activeGroup.back();
+        block->group = m_activeGroup.empty() ? MemoryGroup_General : m_activeGroup.back();
         m_totalAllocated += block->size;
         m_memoryGroupAllocated[(int)block->group] += block->size;
         m_memoryGroupAllocCount[(int)block->group]++;
@@ -94,7 +94,7 @@ void MemoryTracker::Dump()
         std::string out = std::format("MEM DUMP: {} allocs, {} bytes, Debug Overhead {}\n", m_blocks.size(), m_totalAllocated, m_debugOverhead);
         fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
 
-        for (int i = 0; i < (int)MemoryGroup::MAX; i++)
+        for (int i = 0; i < (int)MemoryGroup_MAX; i++)
         {
             if (m_memoryGroupAllocCount[i] > 0)
             {

@@ -24,11 +24,12 @@ delete pMyThread;
 #define NULL_THREAD thread::id()
 typedef std::thread::id ThreadID;
 
-enum class NeoThreads
+enum ThreadGUID
 {
-    Main,
-    Test,
-    MAX
+    ThreadGUID_Main,
+    ThreadGUID_AssetManager,
+
+    ThreadGUID_MAX
 };
 
 class Thread
@@ -37,15 +38,15 @@ public:
     static ThreadID CurrentThreadID();
 
     // each thread can register a static unique ID for identifying later what thread any code is running on
-    static void RegisterThread(int guid, const std::string& name);
+    static void RegisterThread(int guid, const string& name);
 
     // check what the current thread guid is.  -1 for unknown thread (thread wasn't registered)
     static int GetCurrentThreadGUID();
 
     // check what the current thread name is. empty() for unknow thread (thread wasn't registered)
-    static std::string GetCurrentThreadName();
+    static string GetCurrentThreadName();
 
-    Thread(int guid, const std::string &name);
+    Thread(int guid, const string &name);
     virtual ~Thread();
 
     /**
@@ -76,7 +77,7 @@ public:
     virtual int Go() = 0;
 
     // name of thread..
-    const std::string &GetName() { return m_name; }
+    const string &GetName() { return m_name; }
 
     // run the thread (called from Main thread routine 
     // - calls Go() internally, and then exits the thread with the return code from Go())
@@ -90,7 +91,7 @@ protected:
     volatile bool m_terminate;
 
     int m_guid;                        // unique ID of thread
-    std::string m_name;                // thread name - appears in dev studio list
+    string m_name;                // thread name - appears in dev studio list
 };
 
 class Semaphore
@@ -100,7 +101,7 @@ public:
     /**
     * @param initialCount nmbr of signals semaphore is initalised with.
     **/
-    Semaphore(int initialCount);
+    Semaphore(int initialCount = 0);
     ~Semaphore();
 
     /**
@@ -153,15 +154,19 @@ protected:
 
 // a worker thread that executes one off tasks
 template <int MaxTasks>
-class WorkerThread: Thread
+class WorkerThread: public Thread
 {
     Mutex m_tasks;
     Semaphore m_taskSignals;
+
+    // circular list of tasks to execute - typically captured lamda functions
     std::function<void()> m_taskList[MaxTasks];
     int m_read = 0;
     int m_write = 0;
 
 public:
+    WorkerThread(int guid, const std::string &name) : Thread(guid, name) {}
+
     // @param task - typically a lambda function that you want to run on this thread. it will be called once only and then forgotten
     //               the task will need alert the system of its completion via other methods
     //               tasks are always run in order of being added
@@ -184,5 +189,6 @@ public:
             m_taskList[m_read]();
             m_read = (m_read + 1) % MaxTasks;
         }
+        return 0;
     }
 };

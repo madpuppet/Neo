@@ -11,22 +11,22 @@ void operator delete[](void* ptr) noexcept;
 void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
 void operator delete(void* ptr, const std::nothrow_t&) noexcept;
 
-enum class MemoryGroup
+enum MemoryGroup
 {
-    General,
-    System,
-    Texture,
-    Models,
-    Animation,
-    Props,
-    AI,
+    MemoryGroup_General,
+    MemoryGroup_System,
+    MemoryGroup_Texture,
+    MemoryGroup_Models,
+    MemoryGroup_Animation,
+    MemoryGroup_Props,
+    MemoryGroup_AI,
 
-    User1,
-    User2,
-    User3,
-    User4,
+    MemoryGroup_User1,
+    MemoryGroup_User2,
+    MemoryGroup_User3,
+    MemoryGroup_User4,
 
-    MAX
+    MemoryGroup_MAX
 };
 
 #if NEO_STACK_TRACING
@@ -70,10 +70,10 @@ extern StackTrace gStackTrace;
 // if NEO_STACK_TRACING then a stack trace is stored with each memory block
 class MemoryTracker
 {
-    std::vector<MemoryGroup> m_activeGroup;
+    array<MemoryGroup> m_activeGroup;
     u64 m_totalAllocated = 0;
-    u64 m_memoryGroupAllocated[(int)MemoryGroup::MAX];
-    u64 m_memoryGroupAllocCount[(int)MemoryGroup::MAX];
+    u64 m_memoryGroupAllocated[(int)MemoryGroup_MAX];
+    u64 m_memoryGroupAllocCount[(int)MemoryGroup_MAX];
     u64 m_debugOverhead = 0;
 
     struct TrackedBlock
@@ -86,7 +86,7 @@ class MemoryTracker
         int stackTraceSize;
 #endif
     };
-    std::unordered_map<void *, TrackedBlock*> m_blocks;
+    hashtable<void *, TrackedBlock*> m_blocks;
 
 public:
     MemoryTracker();

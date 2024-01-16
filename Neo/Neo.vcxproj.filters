@@ -7,15 +7,6 @@
     <Filter Include="NeoSource">
       <UniqueIdentifier>{b87829a2-9fc5-4301-8d35-f268bf701640}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NeoSource\zlib">
-      <UniqueIdentifier>{98d49d2b-2ea8-4ff3-9849-09da0dbfc4ed}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NeoSource\sdl">
-      <UniqueIdentifier>{3c86b737-011a-4480-8dd0-cf7abf97a22c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="NeoSource\misc">
-      <UniqueIdentifier>{fc638e2e-8332-4b88-a5d3-b2a9781a9962}</UniqueIdentifier>
-    </Filter>
     <Filter Include="GameSource">
       <UniqueIdentifier>{8f26388f-4592-4d2c-bf70-10e1a4ab860c}</UniqueIdentifier>
     </Filter>
@@ -24,6 +15,21 @@
     </Filter>
     <Filter Include="Includes\glm">
       <UniqueIdentifier>{e72a2616-e492-430d-b97b-2ba74d0714e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NeoSource\Filesystem">
+      <UniqueIdentifier>{0ec49fed-f5ea-43ad-b392-01ba523ee692}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NeoSource\Resources">
+      <UniqueIdentifier>{8f22e625-1271-43ee-8870-1dd2333f1b2a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NeoSource\3rdParty">
+      <UniqueIdentifier>{fc638e2e-8332-4b88-a5d3-b2a9781a9962}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NeoSource\3rdParty\sdl">
+      <UniqueIdentifier>{3c86b737-011a-4480-8dd0-cf7abf97a22c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NeoSource\3rdParty\zlib">
+      <UniqueIdentifier>{98d49d2b-2ea8-4ff3-9849-09da0dbfc4ed}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -34,13 +40,13 @@
       <Filter>Shaders</Filter>
     </None>
     <None Include="include\SDL_config.h.cmake">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </None>
     <None Include="include\SDL_config.h.in">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </None>
     <None Include="include\SDL_config_macosx.h.orig">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </None>
     <None Include="glm\gtx\associated_min_max.inl">
       <Filter>Includes\glm</Filter>
@@ -359,21 +365,6 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="NeoSource\FileManager.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\FileSystem.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\FileSystem_FlatArchive.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\FileSystem_FlatFolder.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\FileSystem_RawAccess.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\MemBlock.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
@@ -386,317 +377,314 @@
     <ClInclude Include="NeoSource\Thread.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\FileExcludes.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\zlib\crc32.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\deflate.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\inffast.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\inffixed.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\inflate.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\inftrees.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\trees.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\zconf.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\zconf.in.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\zlib.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\zlib\zutil.h">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClInclude>
     <ClInclude Include="include\begin_code.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\close_code.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_assert.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_atomic.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_audio.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_bits.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_blendmode.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_clipboard.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_android.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_iphoneos.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_macosx.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_minimal.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_pandora.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_psp.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_windows.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_winrt.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_config_wiz.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_copying.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_cpuinfo.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_egl.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_endian.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_error.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_events.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_filesystem.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_gamecontroller.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_gesture.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_guid.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_haptic.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_hidapi.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_hints.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_joystick.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_keyboard.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_keycode.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_loadso.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_locale.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_log.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_main.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_messagebox.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_metal.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_misc.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_mouse.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_mutex.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_name.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengl.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengl_glext.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengles.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengles2.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengles2_gl2.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengles2_gl2ext.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengles2_gl2platform.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_opengles2_khrplatform.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_pixels.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_platform.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_power.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_quit.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_rect.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_render.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_revision.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_rwops.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_scancode.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_sensor.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_shape.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_stdinc.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_surface.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_system.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_syswm.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_assert.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_common.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_compare.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_crc32.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_font.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_fuzzer.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_harness.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_images.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_log.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_md5.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_memory.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_test_random.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_thread.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_timer.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_touch.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_ttf.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_types.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_version.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_video.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="include\SDL_vulkan.h">
-      <Filter>NeoSource\sdl</Filter>
+      <Filter>NeoSource\3rdParty\sdl</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\MathUtils.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="include\stb_image.h">
-      <Filter>NeoSource\misc</Filter>
+      <Filter>NeoSource\3rdParty</Filter>
     </ClInclude>
     <ClInclude Include="include\tiny_obj_loader.h">
-      <Filter>NeoSource\misc</Filter>
+      <Filter>NeoSource\3rdParty</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\FastDelegate.h">
       <Filter>NeoSource</Filter>
@@ -705,18 +693,6 @@
       <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\RefCounted.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\Resource.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\ResourceFactory.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\ResourceRef.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\ResourceBuilderManager.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\Memory.h">
@@ -1478,20 +1454,47 @@
     <ClInclude Include="glm\ext\vector_ulp.hpp">
       <Filter>Includes\glm</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\Texture.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\FileExcludes.h">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\FileManager.h">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\FileSystem.h">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\FileSystem_FlatArchive.h">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\FileSystem_FlatFolder.h">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\FileSystem_RawAccess.h">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Resource.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\AssetManager.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ResourceFactory.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ResourceRef.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\TextureFactory.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Serializer.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="NeoSource\FileManager.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
-    <ClCompile Include="NeoSource\FileSystem_FlatArchive.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
-    <ClCompile Include="NeoSource\FileSystem_FlatFolder.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
-    <ClCompile Include="NeoSource\FileSystem_RawAccess.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
     <ClCompile Include="NeoSource\Main.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
@@ -1501,44 +1504,41 @@
     <ClCompile Include="NeoSource\Thread.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
-    <ClCompile Include="NeoSource\FileExcludes.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
     <ClCompile Include="NeoSource\zlib\adler32.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\compress.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\crc32.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\deflate.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\gzio.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\infback.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\inffast.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\inflate.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\inftrees.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\trees.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\uncompr.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\zlib\zutil.c">
-      <Filter>NeoSource\zlib</Filter>
+      <Filter>NeoSource\3rdParty\zlib</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\StringUtils.cpp">
       <Filter>NeoSource</Filter>
@@ -1548,6 +1548,33 @@
     </ClCompile>
     <ClCompile Include="GameSource\Application.cpp">
       <Filter>GameSource</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Texture.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\FileExcludes.cpp">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\FileManager.cpp">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\FileSystem_FlatArchive.cpp">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\FileSystem_FlatFolder.cpp">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\FileSystem_RawAccess.cpp">
+      <Filter>NeoSource\Filesystem</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\AssetManager.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\TextureFactory.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Serializer.cpp">
+      <Filter>NeoSource</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

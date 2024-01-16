@@ -172,3 +172,20 @@ void StringSplitIntoFSAndPath(const std::string &str, std::string &fs, std::stri
 }
 
 
+
+
+
+class astring : public std::string
+{
+public:
+    astring() = default;
+    astring(const std::string& str) : std::string(str) {}
+
+    void SomeFunc() { }
+};
+
+void TestIt()
+{
+    astring pork, chop, result;
+    result = pork + chop;
+}

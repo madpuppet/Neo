@@ -1,5 +1,7 @@
 #pragma once
 
+#include "TextureFactory.h"
+
 class Application
 {
 public:
@@ -8,5 +10,8 @@ public:
 
 	void Update();
 	void Draw();
+
+protected:
+	TextureRef m_testTex;
 };
 

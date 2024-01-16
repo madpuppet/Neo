@@ -1,0 +1,80 @@
+
+.mat    =>  text file with material definition
+.neomat =>  binary material asset
+
+.png, .tga, .jpg   => src textured
+.neotex =>  binary texture asset
+
+.shad    =>  text shad file
+.newdb   =>  binary database of text items
+
+
+CreateMaterial("roof");
+==> if cached
+		deliver cached resource
+	else
+		get material asset (roof)
+			get date data:roof.neomat,  date source:roof.mat
+			if source is newer
+				load source:roof.mat
+				save data:roof.neomat
+				deliver data
+			else
+				load data:roof.neomat
+				deliver data
+		initialise material
+
+CreateMaterialAlias("roof", "floor")
+= create material "floor"
+  clone material => roof
+  
+
+CreateTexture("pork")
+= get texture asset (pork)
+==> if cached
+		deliver cached resource
+	else
+		get texture asset (pork)
+			get date data:pork.newtex,  date source:pork.png, pork.jpg, pork.tga
+			if source is newer
+				load src:pork.[png|jpg|tga]
+				save data:pork.neotex
+				deliver data
+			else
+				load data:pork.neotex
+				deliver data
+		intialiase texture
+
+
+
+
+
+// REFLECTION
+run engine in reflection mode
+loads all headers
+searches for @REFLECT line
+parses struct until @ENDREFLECT line or struct ends
+example:
+
+...
+// @REFLECT
+struct MoreData
+{
+	float pork;
+	float chop;
+	// @NOREFLECT
+};
+// @REFLECT
+struct MyData
+{
+	std::vector<MoreData> boobies;
+	std::string hello;
+	u32 pork;
+};
+...
+you can then do:
+void *LoadReflectBinary("MoreData")              =>  loads moredata from text file, return MoreData struct pointer
+void *LoadReflectShad("MoreData")                =>  loads moredata from text file, return MoreData struct pointer
+void SaveReflectBinary("MoreData", &moreData);   =>  saves struct moreData to text file
+void SaveReflectShad("MoreData", &moreData);     =>  saves struct moreData to text file
+
