@@ -73,7 +73,7 @@ bool FileSystem_FlatArchive::Read(const std::string &name, MemBlock &block)
 	if (currentThread == m_threadID)
 	{
 		// main thread can just seek and read for speed
-		fseek(m_fh, m_dataStart + entry->offset, SEEK_SET);
+		_fseeki64(m_fh, m_dataStart + entry->offset, SEEK_SET);
 		fread(temp.Mem(), temp.Size(), 1, m_fh);
 	}
 	else
@@ -85,8 +85,8 @@ bool FileSystem_FlatArchive::Read(const std::string &name, MemBlock &block)
 			Error(std::format("ERROR opening RKV {}", m_path));
 			return false;
 		}
-		int seekPos = m_dataStart + entry->offset;
-		if (fseek(fh, seekPos, SEEK_SET) != 0)
+		u64 seekPos = m_dataStart + entry->offset;
+		if (_fseeki64(fh, seekPos, SEEK_SET) != 0)
 		{
 			Error(std::format("ERROR SEEKING RKV TO {} for file {}", m_dataStart + entry->offset, entry->name));
 			return false;
@@ -96,7 +96,6 @@ bool FileSystem_FlatArchive::Read(const std::string &name, MemBlock &block)
 			Error(std::format("ERROR READING File {} from Archive {}", entry->name, m_path));
 			return false;
 		}
-		ftell(fh);
 		fclose(fh);
 	}
 	temp.DecompressTo(block);
@@ -175,7 +174,7 @@ bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const std::strin
 		Log(std::format("STREAM READ BEGIN {} -> {}", name, fileStream->memory.Size()));
 		fileStream->id = handle;
 		fileStream->readPtr = fileStream->memory.Mem();
-		fileStream->remaining = fileStream->memory.Size();
+		fileStream->remaining = (u32)fileStream->memory.Size();
 		m_activeStreams.push_back(fileStream);
 		return true;
 	}
@@ -224,7 +223,7 @@ struct BTOCEntry
 {
 	std::string filename;
 	MemBlock compressed;
-	u32 tocEntryOffset;
+	u64 tocEntryOffset;
 	u32 tocEntrySize;
 };
 
@@ -240,7 +239,7 @@ void FileSystem_FlatArchive::WriteArchive(const std::string &outputFile)
 	fm.GetListByExcludes(excludes, files);
 
 	// first pass - calculate the toc size
-	u32 tocSize = 0;
+	u64 tocSize = 0;
 	std::vector<BTOCEntry*> btocsList;
 	for (auto filename : files)
 	{
@@ -269,8 +268,8 @@ void FileSystem_FlatArchive::WriteArchive(const std::string &outputFile)
 		// clear the toc so that trailing space is blank - we want the archive to generate EXACTLY the same every time
 		memset(toc, 0, btoc->tocEntrySize);
 
-		toc->compressedSize = btoc->compressed.Size();
-		toc->decompressedSize = tmpMem.Size();
+		toc->compressedSize = (u32)btoc->compressed.Size();
+		toc->decompressedSize = (u32)tmpMem.Size();
 		strcpy(toc->name, btoc->filename.c_str());
 		toc->offset = dataOffset;
 		toc->tocEntrySize = btoc->tocEntrySize;

@@ -47,8 +47,8 @@ public:
 protected:
 	struct TOCEntry
 	{
+		u64 offset;
 		u32 tocEntrySize;
-		u32 offset;
 		u32 compressedSize;
 		u32 decompressedSize;
 		char name[4]; // name can be carry past end of this structure

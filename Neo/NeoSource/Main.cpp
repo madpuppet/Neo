@@ -1853,6 +1853,7 @@ void Log(const std::string& msg)
 {
 #if defined(PLATFORM_Windows)
     OutputDebugString(msg.c_str());
+    OutputDebugString("\n");
 #else
     printf("%s\n", msg.c_str());
 #endif

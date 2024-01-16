@@ -66,6 +66,7 @@ public:
 		Serializer_BinaryRead stream(block);
 		m_type = (AssetType)stream.ReadU16();
 		Assert(m_type == AssetType_Texture, std::format("Bad texture asset type - got {}, expected {}!", (int)m_type, AssetType_Texture));
+
 		m_version = stream.ReadU16();
 		m_width = stream.ReadU16();
 		m_height = stream.ReadU16();
