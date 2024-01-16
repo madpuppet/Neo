@@ -12,6 +12,7 @@ Texture::~Texture()
 
 void Texture::OnAssetDeliver(AssetData* data)
 {
+	Assert(data->m_type == AssetType_Texture, "Bad Asset Type");
 	TextureData* texData = dynamic_cast<TextureData*>(data);
 
 }

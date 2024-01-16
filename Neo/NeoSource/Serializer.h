@@ -2,6 +2,7 @@
 
 #include "FileManager.h"
 #include "zlib.h"
+#include "MemBlock.h"
 
 enum SerializerError
 {
@@ -51,7 +52,7 @@ public:
 	virtual u32 DataUsed() = 0;
 	virtual u32 DataTotal() = 0;
 	virtual u8 *DataStart() { return 0; }
-	virtual int DataSize() { return 0; }
+	virtual u32 DataSize() { return 0; }
 
 	//=====================================================================================
 	// write interface wrappers
@@ -160,12 +161,12 @@ class Serializer_BinaryWrite : public Serializer
 {
 public:
 	Serializer_BinaryWrite();
-	Serializer_BinaryWrite(u8 *mem, int size);
+	Serializer_BinaryWrite(u8 *mem, u32 size);
 	void Init(u8 *mem, int size);
 
 	// get current binary memory for writing
-	u8 *DataStart() { return (u8*)m_pMem; }
-	int DataSize() { return m_memUsage; }
+	u8 *DataStart() { return (u8*)m_mem; }
+	u32 DataSize() { return m_memUsage; }
 
 	virtual bool IsReadMode() { return false; }
 	virtual void WriteU8(u8 value);
@@ -188,7 +189,7 @@ public:
     virtual void Restart() { Error("cannot restart a writer"); }
 
 protected:
-	char *m_pMem;
+	char *m_mem;
 	u32 m_memSize;
 	u32 m_memUsage;
 	bool m_ownMemory;
@@ -204,13 +205,14 @@ public:
 	Serializer_BinaryWriteGrow();
 
 	// get current binary memory for writing
-	u8 *DataStart() { return mem.empty() ? NULL : (u8*)&(mem[0]); }
-	int DataSize() { return (int)mem.size(); }
+	u8 *DataStart() { return m_mem.empty() ? NULL : (u8*)&(m_mem[0]); }
+	u32 DataSize() { return (u32)m_mem.size(); }
 
 	virtual bool IsReadMode() { return false; }
 
 	virtual void WriteU8(u8 value);
 	virtual void WriteMemory(const u8* pMem, u32 size);
+	virtual void WriteMemory(const MemBlock& block);
 
 	// chunks include size and allow validation and skipping of the chunk
 	virtual void StartBlock();
@@ -221,13 +223,15 @@ public:
 	virtual void ReadMemory(u8 *pMem, u32 size) {};
 	virtual bool HasBufferRemaining(u32) { return true; }
 
-	virtual u32 DataUsed() { return (u32)mem.size();  }
-	virtual u32 DataTotal() { return (u32)mem.capacity(); }
+	virtual u32 DataUsed() { return (u32)m_mem.size();  }
+	virtual u32 DataTotal() { return (u32)m_mem.capacity(); }
 
     virtual void Restart() { Error("cannot restart a writer"); }
 
+	MemBlock ToMemBlock() { MemBlock::CloneMem(DataStart(), DataSize()); }
+
 protected:
-	array<u8> mem;
+	array<u8> m_mem;
 	static const int MaxChunks = 16;
 	int m_chunkStackSize;
 	int m_chunkStack[MaxChunks];
@@ -239,7 +243,7 @@ public:
 	Serializer_BinarySize();
 	void Init(u8 *mem, int size);
 
-	int DataSize() { return m_memUsage; }
+	u32 DataSize() { return m_memUsage; }
 
 	virtual bool IsReadMode() { return false; }
 
@@ -270,6 +274,7 @@ class Serializer_BinaryRead : public Serializer
 {
 public:
 	Serializer_BinaryRead(u8 *mem, u32 size);
+	Serializer_BinaryRead(const MemBlock &block);
 
 	virtual bool IsReadMode() { return true; }
 	virtual bool HasBufferRemaining(u32 size = 1);
@@ -277,6 +282,7 @@ public:
 
 	virtual u8 ReadU8();
 	virtual void ReadMemory(u8 *pMem, u32 size);
+	virtual MemBlock ReadMemory();
 
 	// chunks include size and allow validation and skipping of the chunk
 	virtual void StartBlock();
@@ -287,8 +293,8 @@ public:
 	virtual void WriteMemory(const u8 *pMem, u32 size) {};
 
 	// get the remaining memory in the buffer
-	u8 *DataStart() { return (u8*)(&m_pMem[m_memUsage]); }
-	int DataSize() { return (int)(m_memSize-m_memUsage); }
+	u8 *DataStart() { return (u8*)(&m_mem[m_memUsage]); }
+	u32 DataSize() { return (int)(m_memSize-m_memUsage); }
 
 	virtual u32 DataUsed() { return m_memUsage;  }
 	virtual u32 DataTotal() { return m_memSize; }
@@ -297,7 +303,7 @@ public:
 
 protected:
 	bool BufferRemaining(int size);
-	char *m_pMem;
+	const u8 *m_mem;
 	u32 m_memSize;
 	u32 m_memUsage;
 	int m_bitMarker;
@@ -320,7 +326,7 @@ public:
 	virtual ~Serializer_BinaryStreamWrite();
 
 	virtual bool IsReadMode() { return false; }
-	virtual int GetMemoryUsage() { return m_memUsed; }
+	virtual u32 GetMemoryUsage() { return m_memUsed; }
 
 	virtual void WriteU8(u8 value);
 	virtual void WriteMemory(const u8* pMem, u32 size);

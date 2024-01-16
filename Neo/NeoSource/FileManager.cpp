@@ -79,17 +79,18 @@ void FileManager::Unmount(FileSystem *fs)
 }
 
 // get the absolute path of a file if we can...  not all filesystems support this - ie. archives will return false
-bool FileManager::GetAbsolutePath(const std::string &name, std::string &path)
+bool FileManager::GetAbsolutePath(const string &name, string &path)
 {
 	SCOPED_MUTEX;
 
-	std::string _fs, _d, _f, _e;
-	StringSplitIntoFileParts(name, &_fs, &_d, &_f, &_e);
-	std::string _path = StringAddPath(_d, _f + _e);
+	string filesys, dir, filename, ext;
+	StringSplitIntoFileParts(name, &filesys, &dir, &filename, &ext);
+
+	string localPath = StringAddPath(dir, filesys + ext);
 
 	for (auto fs : m_fileSystems)
 	{
-		if ((!_fs.empty() || _fs == fs->Name()) && fs->GetAbsolutePath(_path, path))
+		if ((!filesys.empty() || filesys == fs->Name()) && fs->GetAbsolutePath(localPath, path))
 			return true;
 	}
 	return false;
@@ -99,31 +100,26 @@ bool FileManager::GetAbsolutePath(const std::string &name, std::string &path)
 bool FileManager::Read(const std::string &name, MemBlock &block)
 {
 	SCOPED_MUTEX;
-
-	std::string _fs, _path;
-	StringSplitIntoFSAndPath(name, _fs, _path);
+	std::string fsName, path;
+	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
 	{
-        if ((_fs.empty() || _fs == fs->Name()) && fs->Read(_path, block))
-        {
-            return true;
-        }
+		if ((fsName.empty() || fsName == fs->Name()) && fs->Read(path, block))
+			return true;
 	}
-        
-    return false;
+	return false;
 }
 
 bool FileManager::Write(const std::string &name, MemBlock &block)
 {
 	SCOPED_MUTEX;
-
-	std::string _fs, _path;
-	StringSplitIntoFSAndPath(name, _fs, _path);
+	std::string fsName, path;
+	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
 	{
-		if ((_fs.empty() || _fs == fs->Name()) && fs->Write(_path, block))
+		if ((fsName.empty() || fsName == fs->Name()) && fs->Write(path, block))
 			return true;
 	}
 	return false;
@@ -132,24 +128,26 @@ bool FileManager::Write(const std::string &name, MemBlock &block)
 bool FileManager::Exists(const std::string &name)
 {
 	SCOPED_MUTEX;
-
-	std::string _fs, _path;
-	StringSplitIntoFSAndPath(name, _fs, _path);
+	std::string fsName, path;
+	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
 	{
-		if ((_fs.empty() || _fs == fs->Name()) && fs->Exists(_path))
+		if ((fsName.empty() || fsName == fs->Name()) && fs->Exists(path))
 			return true;
 	}
 	return false;
 }
 
-bool FileManager::GetSize(const std::string &name, u32 &size)
+bool FileManager::GetSize(const string &name, u32 &size)
 {
 	SCOPED_MUTEX;
+	std::string fsName, path;
+	StringSplitIntoFSAndPath(name, fsName, path);
+
 	for (auto fs : m_fileSystems)
 	{
-		if (fs->GetSize(name,size))
+		if ((fsName.empty() || fsName == fs->Name()) && fs->GetSize(path, size))
 			return true;
 	}
 	return false;
@@ -158,9 +156,12 @@ bool FileManager::GetSize(const std::string &name, u32 &size)
 bool FileManager::GetTime(const std::string &name, u64 &time)
 {
 	SCOPED_MUTEX;
+	std::string fsName, path;
+	StringSplitIntoFSAndPath(name, fsName, path);
+
 	for (auto fs : m_fileSystems)
 	{
-		if (fs->GetTime(name, time))
+		if ((fsName.empty() || fsName == fs->Name()) && fs->GetTime(path, time))
 			return true;
 	}
 	return false;
@@ -169,9 +170,12 @@ bool FileManager::GetTime(const std::string &name, u64 &time)
 bool FileManager::Delete(const std::string &name)
 {
 	SCOPED_MUTEX;
+	std::string fsName, path;
+	StringSplitIntoFSAndPath(name, fsName, path);
+
 	for (auto fs : m_fileSystems)
 	{
-		if (fs->Delete(name))
+		if ((fsName.empty() || fsName == fs->Name()) && fs->Delete(path))
 			return true;
 	}
 	return false;
@@ -180,9 +184,21 @@ bool FileManager::Delete(const std::string &name)
 bool FileManager::Rename(const std::string &oldName, const std::string &newName)
 {
 	SCOPED_MUTEX;
+	std::string oldfsName, oldpath;
+	StringSplitIntoFSAndPath(oldName, oldfsName, oldpath);
+
+	std::string newfsName, newpath;
+	StringSplitIntoFSAndPath(newName, newfsName, newpath);
+
+	if (!newfsName.empty() && oldfsName != newfsName)
+	{
+		Error(std::format("Attempted to rename across file systems: {} -> {}", oldName, newName));
+		return false;
+	}
+
 	for (auto fs : m_fileSystems)
 	{
-		if (fs->Rename(oldName, newName))
+		if ((oldfsName.empty() || oldfsName == fs->Name()) && fs->Rename(oldpath, newpath))
 			return true;
 	}
 	return false;

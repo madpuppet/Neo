@@ -2,6 +2,7 @@
 #include "AssetManager.h"
 #include "FileManager.h"
 #include "Thread.h"
+#include "Serializer.h"
 #include <stb_image.h>
 
 AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, string("AssetManager"))
@@ -9,7 +10,7 @@ AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, string("Ass
 	m_assetTasks.Start();
 }
 
-int GetTime(const string name, const array<string> extensions, u64& time)
+int GetTime(const string name, const array<string> &extensions, u64& time)
 {
 	auto& fm = FileManager::Instance();
 	for (int i = 0; i < extensions.size(); i++)
@@ -34,7 +35,8 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 				{
 					// get time of current data asset
 					u64 assetTime = 0;
-					fm.GetTime(string("data:") + name + ".neotex", assetTime);
+					string assetDataPath = string("data:") + name + ".neotex";
+					fm.GetTime(assetDataPath, assetTime);
 
 					// get time of child assets
 					u64 srcImageTime = 0;
@@ -62,12 +64,35 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 
 						// src image has been altered, so convert it...
 						int texWidth, texHeight, texChannels;
-						stbi_uc* image = stbi_load_from_memory(memblock.Mem(), memblock.Size(), &texWidth, &texHeight, &texChannels, STBI_default);
+						stbi_uc* stbi_uc = stbi_load_from_memory(memblock.Mem(), (int)memblock.Size(), &texWidth, &texHeight, &texChannels, STBI_default);
 
+						// pack it into an asset
+						auto texAsset = new TextureData;
+						texAsset->m_width = texWidth;
+						texAsset->m_height = texHeight;
+						texAsset->m_depth = texChannels;
+						texAsset->m_images.push_back(MemBlock((u8*)stbi_uc, texWidth * texHeight * texChannels, false));
 
-						//					stbi_uc* pixels = stbi_load(TEXTURE_PATH.c_str(), &texWidth, &texHeight, &texChannels, STBI_rgb_alpha);
+						// write the texture asset to data
+						MemBlock serializedBlock = texAsset->AssetToMemory();
+						if (!fm.Write(assetDataPath, serializedBlock))
+						{
+							Error(std::format("Error trying to right texture asset to path: {}", assetDataPath));
+						}
+						cb(texAsset);
 					}
 
+					// asset is latest, just load and serve the asset
+					else
+					{
+						MemBlock serializedBlock;
+						if (fm.Read(assetDataPath, serializedBlock))
+						{
+							auto texAsset = new TextureData;
+							texAsset->MemoryToAsset(serializedBlock);
+							cb(texAsset);
+						}
+					}
 				}
 				break;
 

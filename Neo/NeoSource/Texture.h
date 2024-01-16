@@ -13,7 +13,7 @@ enum TextureType
 
 class Texture : public Resource
 {
-	void OnAssetDeliver(AssetData* data);
+	void OnAssetDeliver(struct AssetData *data);
 	virtual void Reload() override;
 
 public:

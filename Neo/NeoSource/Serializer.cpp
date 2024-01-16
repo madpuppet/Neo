@@ -190,7 +190,7 @@ void Serializer::SerializeMemory(u8* &pMem, u32 &size)
 {
 	if (IsReadMode())
 	{
-		size = ReadU32();
+		size = (u32)ReadU32();
 		if (size > 0)
 		{
 			pMem = (u8 *)malloc(size);
@@ -201,9 +201,9 @@ void Serializer::SerializeMemory(u8* &pMem, u32 &size)
 	}
 	else
 	{
-		WriteU32(size);
-		if (size > 0)
-			WriteMemory(pMem,size);
+		WriteU32((u32)size);
+		if ((u32)size > 0)
+			WriteMemory(pMem, (u32)size);
 	}
 }
 
@@ -212,10 +212,10 @@ void Serializer::SerializeMemory(u8* &pMem, u32 &size)
 // BINARY WRITE
 //=============================================================================================
 
-Serializer_BinaryWrite::Serializer_BinaryWrite(u8 *mem, int size)
+Serializer_BinaryWrite::Serializer_BinaryWrite(u8 *mem, u32 size)
 {
 	// write to this file...
-	m_pMem = (char *)mem;
+	m_mem = (char *)mem;
 	m_memSize = size;
 	m_memUsage = 0;
 	m_chunkStackSize = 0;
@@ -224,14 +224,14 @@ Serializer_BinaryWrite::Serializer_BinaryWrite(u8 *mem, int size)
 void Serializer_BinaryWrite::WriteMemory(const u8 *pMem, u32 size)
 {
 	Assert(m_memUsage+size <= m_memSize, "Serializer Write out of memory!");
-	memcpy(m_pMem+m_memUsage, pMem, size);
+	memcpy(m_mem+m_memUsage, pMem, size);
 	m_memUsage += size;
 }
 
 void Serializer_BinaryWrite::WriteU8(u8 value)
 {
 	Assert(m_memUsage+1 <= m_memSize, "Serializer Write out of memory!");
-	m_pMem[m_memUsage] = (char)value;
+	m_mem[m_memUsage] = (char)value;
 	m_memUsage += 1;
 }
 
@@ -247,10 +247,10 @@ void Serializer_BinaryWrite::EndBlock()
 	Assert(m_chunkStackSize > 0, "No open chunks!");
 	int offset = m_chunkStack[--m_chunkStackSize];
 	int value = m_memUsage - offset - 4;
-	m_pMem[offset+0] = (u8)(value >> 24);
-	m_pMem[offset+1] = (u8)(value >> 16);
-	m_pMem[offset+2] = (u8)(value >> 8);
-	m_pMem[offset+3] = (u8)value;
+	m_mem[offset+0] = (u8)(value >> 24);
+	m_mem[offset+1] = (u8)(value >> 16);
+	m_mem[offset+2] = (u8)(value >> 8);
+	m_mem[offset+3] = (u8)value;
 }
 
 //=============================================================================================
@@ -264,37 +264,49 @@ Serializer_BinaryWriteGrow::Serializer_BinaryWriteGrow()
 
 void Serializer_BinaryWriteGrow::WriteMemory(const u8 *pMem, u32 size)
 {
-	u32 oldSize = (int)mem.size();
+	u32 oldSize = (u32)m_mem.size();
 	u32 newSize = oldSize + size;
-	mem.reserve(Max(oldSize * 2, newSize));
-	mem.resize(newSize);
-	memcpy(&mem[oldSize], pMem, size);
+	if (newSize < m_mem.capacity())
+	{
+		m_mem.reserve(Max(oldSize * 2, newSize));
+	}
+	m_mem.resize(newSize);
+	memcpy(&m_mem[oldSize], pMem, size);
+}
+
+void Serializer_BinaryWriteGrow::WriteMemory(const MemBlock& block)
+{
+	WriteU32((u32)block.Size());
+	WriteMemory(block.Mem(), (u32)block.Size());
 }
 
 void Serializer_BinaryWriteGrow::WriteU8(u8 value)
 {
-	mem.push_back((char)value);
+	m_mem.push_back((char)value);
 }
 
 void Serializer_BinaryWriteGrow::StartBlock()
 {
-	m_chunkStack[m_chunkStackSize++] = (int)mem.size();
+	m_chunkStack[m_chunkStackSize++] = (int)m_mem.size();
 
-	int oldSize = (int)mem.size();
-	int newSize = oldSize + 4;
-	mem.reserve(Max(oldSize * 2, newSize));
-	mem.resize( newSize );
+	u32 oldSize = (int)m_mem.size();
+	u32 newSize = oldSize + 4;
+	if (m_mem.capacity() < newSize)
+	{
+		m_mem.reserve(Max(oldSize * 2, newSize));
+	}
+	m_mem.resize( newSize );
 }
 
 void Serializer_BinaryWriteGrow::EndBlock()
 {
 	Assert(m_chunkStackSize > 0, "No open chunks!");
 	int offset = m_chunkStack[--m_chunkStackSize];
-	int value = (int)mem.size() - offset - 4;
-	mem[offset+0] = (u8)(value >> 24);
-	mem[offset+1] = (u8)(value >> 16);
-	mem[offset+2] = (u8)(value >> 8);
-	mem[offset+3] = (u8)value;
+	int value = (int)m_mem.size() - offset - 4;
+	m_mem[offset+0] = (u8)(value >> 24);
+	m_mem[offset+1] = (u8)(value >> 16);
+	m_mem[offset+2] = (u8)(value >> 8);
+	m_mem[offset+3] = (u8)value;
 }
 
 //=============================================================================================
@@ -331,14 +343,35 @@ void Serializer_BinarySize::EndBlock()
 // BINARY READ
 //=============================================================================================
 
-Serializer_BinaryRead::Serializer_BinaryRead(u8 *mem, u32 size) : m_pMem((char *)mem), m_memSize(size), m_memUsage(0),
+Serializer_BinaryRead::Serializer_BinaryRead(u8 *mem, u32 size) : m_mem(mem), m_memSize(size), m_memUsage(0),
 	m_bitMarker(0), m_chunkStackSize(0) {}
 
 void Serializer_BinaryRead::ReadMemory(u8 *pMem, u32 size)
 {
 	Assert(m_memUsage+size <= m_memSize, "Out of buffer in serializer!");
-	memcpy(pMem, (u8*)m_pMem + m_memUsage, size);
+	memcpy(pMem, (u8*)m_mem + m_memUsage, size);
 	m_memUsage += size;
+}
+
+Serializer_BinaryRead::Serializer_BinaryRead(const MemBlock& block)
+{
+	m_mem = block.Mem();
+	m_memSize = (u32)block.Size();
+	m_memUsage = 0;
+	m_bitMarker = 0;
+	m_chunkStackSize = 0;
+}
+
+MemBlock Serializer_BinaryRead::ReadMemory()
+{
+	Assert(m_memUsage + 4 <= m_memSize, "Out of buffer in serializer!");
+	u32 size = ReadU32();
+	Assert(m_memUsage + size <= m_memSize, "Out of buffer in serializer!");
+
+	MemBlock block(size);
+	memcpy(block.Mem(), (u8*)m_mem + m_memUsage, size);
+	m_memUsage += size;
+	return block;
 }
 
 u8 Serializer_BinaryRead::ReadU8()
@@ -350,7 +383,7 @@ u8 Serializer_BinaryRead::ReadU8()
 		return 0;
 	}
 
-	return m_pMem[m_memUsage++];
+	return m_mem[m_memUsage++];
 }
 
 void Serializer_BinaryRead::StartBlock()
@@ -709,7 +742,7 @@ void Serializer_BinaryStreamRead::EndBlock()
 
 bool Serializer_BinaryStreamRead::HasBufferRemaining(u32 size)
 {
-	int memSize = (m_chunkStackSize > 0) ? m_chunkStack[m_chunkStackSize-1] : m_memSize;
+	u32 memSize = (m_chunkStackSize > 0) ? m_chunkStack[m_chunkStackSize-1] : m_memSize;
 	int remaining = memSize-m_memUsed;
 	return (remaining >= 0) && ((u32)remaining >= size);
 }

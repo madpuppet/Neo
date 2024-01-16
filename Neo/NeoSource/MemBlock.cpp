@@ -2,7 +2,7 @@
 #include "MemBlock.h"
 #include "zlib.h"
 
-bool MemBlock::Resize(u32 size)
+bool MemBlock::Resize(size_t size)
 {
 	if (m_external)
 		return (m_size >= size);
@@ -10,7 +10,7 @@ bool MemBlock::Resize(u32 size)
 	AllocMem(size);
 	return true;
 }
-bool MemBlock::Expand(u32 size)
+bool MemBlock::Expand(size_t size)
 {
 	if (m_external)
 		return (m_size >= size);
@@ -25,7 +25,7 @@ bool MemBlock::Expand(u32 size)
 	m_size = size;
 	return true;
 }
-void MemBlock::SetExternal(u8 *mem, u32 size)
+void MemBlock::SetExternal(u8 *mem, size_t size)
 {
 	FreeMem();
 	m_mem = mem;
@@ -43,7 +43,7 @@ bool MemBlock::FreeMem()
 	}
 	return false;
 }
-void MemBlock::AllocMem(u32 size)
+void MemBlock::AllocMem(size_t size)
 {
 	if (size > 0)
 	{
@@ -69,7 +69,7 @@ void MemBlock::DecompressTo(MemBlock &dest)
 		strm.avail_in = 0;
 		strm.next_in = Z_NULL;
 		inflateInit(&strm);
-		strm.avail_in = m_size - 4;
+		strm.avail_in = (u32)(m_size - 4);
 		strm.next_in = (Bytef*)(m_mem + 4);
 		strm.avail_out = decompressSize;
 		strm.next_out = dest.Mem();
@@ -95,7 +95,7 @@ void MemBlock::CompressTo(MemBlock &dest)
 		return;
 	}
 
-	u32 outBufferSize = m_size + 256;
+	u32 outBufferSize = (u32)m_size + 256;
 	u8 *compressBuffer = new u8[outBufferSize];
 
 	// compress
@@ -104,23 +104,23 @@ void MemBlock::CompressTo(MemBlock &dest)
 	strm.zfree = Z_NULL;
 	strm.opaque = Z_NULL;
 	deflateInit(&strm, Z_DEFAULT_COMPRESSION);
-	strm.avail_in = m_size;
+	strm.avail_in = (u32)m_size;
 	strm.next_in = (Bytef*)m_mem;
 	strm.avail_out = outBufferSize;
 	strm.next_out = compressBuffer;
 	deflate(&strm, Z_FINISH);
 	u32 compressedSize = outBufferSize - strm.avail_out;
-	if (compressedSize < m_size-4)
+	if (compressedSize < (u32)(m_size-4))
 	{
 		dest.Resize(compressedSize + 4);
-		*((u32*)dest.Mem()) = m_size;
+		*((u32*)dest.Mem()) = (u32)m_size;
 		memcpy(dest.Mem() + 4, compressBuffer, compressedSize);
 	}
 	else
 	{
-		dest.Resize(m_size + 4);
-		*((u32*)dest.Mem()) = m_size;
-		memcpy(dest.Mem() + 4, m_mem, m_size);
+		dest.Resize((u32)m_size + 4);
+		*((u32*)dest.Mem()) = (u32)m_size;
+		memcpy(dest.Mem() + 4, m_mem, (u32)m_size);
 	}
 
 	deflateEnd(&strm);
