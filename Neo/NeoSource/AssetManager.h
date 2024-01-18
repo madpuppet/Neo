@@ -41,15 +41,18 @@ struct AssetData
 class AssetTypeInfo
 {
 public:
+	// function to create an asset from its asset data file
+	std::function<AssetData* (MemBlock assetMem)> m_assetCreateFromData;
+
 	// function to turn the source files into a single asset file
-	std::function<AssetData* (const vector<MemBlock>& srcBlocks)> m_assetCreator;
+	std::function<AssetData* (const vector<MemBlock>& srcBlocks)> m_assetCreateFromSource;
 
 	// extension for asset file
 	string m_assetExt;
 
 	// list of extensions for source files
 	// some source files could be one of many extensions (ie.  png, tga, jpg)
-	vector<stringlist> m_sourceExt;
+	vector<std::pair<stringlist,bool>> m_sourceExt;
 };
 
 

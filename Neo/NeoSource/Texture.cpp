@@ -1,6 +1,7 @@
 #include "neo.h"
 #include "Texture.h"
 #include "StringUtils.h"
+#include <stb_image.h>
 
 DECLARE_MODULE(TextureFactory, NeoModulePri_TextureFactory);
 
@@ -27,9 +28,11 @@ void Texture::Reload()
 TextureFactory::TextureFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreator = [](const vector<MemBlock>& srcBlocks) -> AssetData* { return TextureAssetData::Create(srcBlocks);  };
+	ati->m_assetCreateFromData = [](MemBlock memBlock) -> AssetData* { auto assetData = new TextureAssetData; assetData->MemoryToAsset(memBlock); return assetData; };
+	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks) -> AssetData* { return TextureAssetData::Create(srcBlocks);  };
 	ati->m_assetExt = ".neotex";
-	ati->m_sourceExt.push_back({ ".png", ".tga", ".jpg" });
+	ati->m_sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
+	ati->m_sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
 	AssetManager::Instance().RegisterAssetType(AssetType_Texture, ati);
 }
 
@@ -60,6 +63,16 @@ void TextureFactory::Destroy(Texture* texture)
 
 AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles)
 {
-	return nullptr;
+	// src image has been altered, so convert it...
+	int texWidth, texHeight, texChannels;
+	stbi_uc* stbi_uc = stbi_load_from_memory(srcFiles[0].Mem(), (int)srcFiles[0].Size(), &texWidth, &texHeight, &texChannels, STBI_default);
+
+	// pack it into an asset
+	auto texAsset = new TextureAssetData;
+	texAsset->m_width = texWidth;
+	texAsset->m_height = texHeight;
+	texAsset->m_depth = texChannels;
+	texAsset->m_images.push_back(MemBlock((u8*)stbi_uc, texWidth * texHeight * texChannels, false));
+	return texAsset;
 }
 

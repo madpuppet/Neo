@@ -3,8 +3,6 @@
 #include "FileManager.h"
 #include "Thread.h"
 #include "Serializer.h"
-#include <stb_image.h>
-#include "Texture.h"
 
 DECLARE_MODULE(AssetManager, NeoModulePri_AssetManager);
 
@@ -13,7 +11,7 @@ AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, string("Ass
 	m_assetTasks.Start();
 }
 
-int GetTime(const string name, const vector<string> &extensions, u64& time)
+static int GetTime(const string name, const vector<string> &extensions, u64& time)
 {
 	auto& fm = FileManager::Instance();
 	for (int i = 0; i < extensions.size(); i++)
@@ -24,84 +22,108 @@ int GetTime(const string name, const vector<string> &extensions, u64& time)
 	return -1;
 }
 
-static vector<string> s_textureExtensions = { ".png", ".tga", ".jpg" };
 void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name, const DeliverAssetDataCB& cb)
 {
+//	Assert(m_assetTypeInfoMap.contains(assetType), std::format("Cannot create asset: {} - unregistered asset type: {}", name, assetType));
+
+	auto assetTypeInfo = m_assetTypeInfoMap[assetType];
 	m_assetTasks.AddTask
 	(
-		[assetType, name, cb]()
+		[assetType, assetTypeInfo, name, cb]()
 		{
 			auto& fm = FileManager::Instance();
-			switch (assetType)
+
+			// get datestamp of current asset file
+			u64 assetDateStamp = 0;
+			string assetDataPath = string("data:") + name + assetTypeInfo->m_assetExt;
+			fm.GetTime(assetDataPath, assetDateStamp);
+
+			// get datestamp of each source file
+			vector<string> srcFiles;
+			bool missingSrcFile = false;
+			int idx = 0;
+			u64 earliestSourceDateStamp = 0;
+
+			for (auto& srcExt : assetTypeInfo->m_sourceExt)
 			{
-				case AssetType_Texture:
+				u64 srcDateStamp;
+				int ext = GetTime(string("src:") + name, srcExt.first, srcDateStamp);
+				srcFiles.push_back((ext == -1) ? "" : string("src:") + name + srcExt.first[ext]);
+				if (srcDateStamp > 0 && (idx == 0 || srcDateStamp < earliestSourceDateStamp))
+					earliestSourceDateStamp = srcDateStamp;
+
+				// if this is a non-optional source file and it wasn't found, then we can't convert the asset
+				if (srcExt.second && (ext == -1 || srcDateStamp == 0))
 				{
-					// get time of current data asset
-					u64 assetTime = 0;
-					string assetDataPath = string("data:") + name + ".neotex";
-					fm.GetTime(assetDataPath, assetTime);
+					Log(std::format("Asset {} [{}] missing src file {}", name, assetType, idx));
+					missingSrcFile = true;
+				}
+				idx++;
+			}
 
-					// get time of child assets
-					u64 srcImageTime = 0;
-					int ext = GetTime(string("src:") + name, s_textureExtensions, srcImageTime);
+			// missing at least one non-optional source file
+			if (missingSrcFile)
+			{
+				Error("Asset conversion aborted due to missing source files!");
+				cb(nullptr);
+				return;
+			}
 
-					// no valid src asset - deliver null asset
-					if (ext == -1 || srcImageTime == 0)
+			// if no asset, or any src file is newer than the asset, we need to build the asset
+			if (assetDateStamp == 0 || earliestSourceDateStamp < assetDateStamp)
+			{
+				// first we load each src file into an array of memblocks
+				vector<MemBlock> srcFileMem;
+				for (auto &src : srcFiles)
+				{
+					MemBlock memblock;
+					if (src.empty())
 					{
-						Error(std::format("No valid source asset found for texture: {}", name));
-						cb(nullptr);
-						return;
+						// just push an empty memblock - the asset creator should be prepared for these if it had optional src files
+						srcFileMem.emplace_back(memblock);
 					}
-
-					// no asset, or src image is newer than asset
-					else if (assetTime == 0 || srcImageTime < assetTime)
+					else
 					{
-						MemBlock memblock;
-						string srcFile = string("src:") + name + s_textureExtensions[ext];
-						if (!fm.Read(srcFile, memblock))
+						if (!fm.Read(src, memblock))
 						{
-							Error(std::format("Error trying to load image: {}", srcFile));
+							Error(std::format("Asset building error trying to load src: {}", src));
+							srcFiles.clear();
 							cb(nullptr);
 							return;
 						}
-
-						// src image has been altered, so convert it...
-						int texWidth, texHeight, texChannels;
-						stbi_uc* stbi_uc = stbi_load_from_memory(memblock.Mem(), (int)memblock.Size(), &texWidth, &texHeight, &texChannels, STBI_default);
-
-						// pack it into an asset
-						auto texAsset = new TextureAssetData;
-						texAsset->m_width = texWidth;
-						texAsset->m_height = texHeight;
-						texAsset->m_depth = texChannels;
-						texAsset->m_images.push_back(MemBlock((u8*)stbi_uc, texWidth * texHeight * texChannels, false));
-
-						// write the texture asset to data
-						MemBlock serializedBlock = texAsset->AssetToMemory();
-						if (!fm.Write(assetDataPath, serializedBlock))
-						{
-							Error(std::format("Error trying to right texture asset to path: {}", assetDataPath));
-						}
-						cb(texAsset);
-					}
-
-					// asset is latest, just load and serve the asset
-					else
-					{
-						MemBlock serializedBlock;
-						if (fm.Read(assetDataPath, serializedBlock))
-						{
-							auto texAsset = new TextureAssetData;
-							texAsset->MemoryToAsset(serializedBlock);
-							cb(texAsset);
-						}
+						srcFileMem.emplace_back(memblock);
 					}
 				}
-				break;
 
-				default:
-					break;
-					// todo more asset types
+				// now create the AssetData from the src files
+				AssetData *assetData = assetTypeInfo->m_assetCreateFromSource(srcFileMem);
+
+				// write out the asset to then data folder
+						// write the texture asset to data
+				MemBlock serializedBlock = assetData->AssetToMemory();
+				if (!fm.Write(assetDataPath, serializedBlock))
+				{
+					// non fatal error, since we have converted the asset ok, we just can't write it
+					Error(std::format("Error trying to write asset to path: {}\nCheck disk space and permissions.", assetDataPath));
+				}
+
+				// finally we can deliver the asset back to the resource
+				cb(assetData);
+			}
+
+			// asset is newer than its src files, so just load and serve the asset
+			else
+			{
+				MemBlock serializedBlock;
+				if (!fm.Read(assetDataPath, serializedBlock))
+				{
+					Error(std::format("Error reading asset data file: {}\nTry deleting that file and run again.", assetDataPath));
+					cb(nullptr);
+					return;
+				}
+
+				AssetData* assetData = assetTypeInfo->m_assetCreateFromData(serializedBlock);
+				cb(assetData);
 			}
 		}
 	);
