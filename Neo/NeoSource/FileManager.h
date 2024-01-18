@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Singleton.h"
+#include "Module.h"
 #include "FileSystem.h"
 #include "Thread.h"
 
-class FileManager : public Singleton<FileManager>
+class FileManager : public Module<FileManager>
 {
 public:
 	FileManager();

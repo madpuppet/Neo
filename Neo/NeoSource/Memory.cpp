@@ -49,9 +49,11 @@ MemoryTracker::~MemoryTracker()
     gMemTrackEnabled = false;
 }
 
-void MemoryTracker::EnableTracking(bool enable)
+bool MemoryTracker::EnableTracking(bool enable)
 {
+    bool oldVal = enable;
     gMemTrackEnabled = enable;
+    return oldVal;
 }
 
 void MemoryTracker::free(void* mem)

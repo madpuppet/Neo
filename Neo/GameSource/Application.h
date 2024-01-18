@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TextureFactory.h"
+#include "Texture.h"
 
 class Application
 {

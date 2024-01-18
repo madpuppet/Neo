@@ -231,7 +231,7 @@ public:
 	MemBlock ToMemBlock() { MemBlock::CloneMem(DataStart(), DataSize()); }
 
 protected:
-	array<u8> m_mem;
+	vector<u8> m_mem;
 	static const int MaxChunks = 16;
 	int m_chunkStackSize;
 	int m_chunkStack[MaxChunks];
@@ -241,7 +241,6 @@ class Serializer_BinarySize : public Serializer
 {
 public:
 	Serializer_BinarySize();
-	void Init(u8 *mem, int size);
 
 	u32 DataSize() { return m_memUsage; }
 

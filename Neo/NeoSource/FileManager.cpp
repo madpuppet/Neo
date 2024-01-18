@@ -7,6 +7,8 @@
 #include "Thread.h"
 #include "StringUtils.h"
 
+DECLARE_MODULE(FileManager, NeoModulePri_FileManager);
+
 #define SCOPED_MUTEX 	ScopedMutexLock critical(m_accessMutex)
 
 static FileExcludes* s_excludes;
@@ -43,7 +45,7 @@ FileManager::FileManager() : m_nextUniqueFileHandle(0)
 
 	// mount archives
 	std::string archiveName;
-	Mount(new FileSystem_FlatArchive("dataRKV", "data.rkv", 10));
+	Mount(new FileSystem_FlatArchive("datarkv", "data.rkv", 10));
 	
 	// raw access to file system (read/write files anyhere with full path)
 	Mount(new FileSystem_RawAccess("raw", 20, true));

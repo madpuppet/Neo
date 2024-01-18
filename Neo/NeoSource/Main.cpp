@@ -31,7 +31,6 @@
 
 #include "FileManager.h"
 #include "AssetManager.h"
-#include "TextureFactory.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -146,18 +145,22 @@ struct UniformBufferObject {
 
 class NeoCore {
 public:
+    static NeoCore* s_instance;
+    static NeoCore& Instance() { return *s_instance; };
+    NeoCore() { s_instance = this; }
+
     void run() {
         gMemoryTracker.EnableTracking(true);
         MEMGROUP(System);
         initWindow();
-        initSystems();
+        StartupModules();
         initVulkan();
         mainLoop();
         gMemoryTracker.Dump();
         cleanup();
+        ShutdownModules();
     }
 
-private:
     SDL_Window* window;
 
     VkInstance instance;
@@ -247,19 +250,6 @@ private:
 //    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
 //        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
 //        app->framebufferResized = true;
-    }
-
-    void initSystems()
-    {
-        FileManager::Startup();
-        AssetManager::Startup();
-        TextureFactory::Startup();
-    }
-
-    void shutdownSystems()
-    {
-        AssetManager::Shutdown();
-        FileManager::Shutdown();
     }
 
     void initVulkan() {
@@ -1284,7 +1274,8 @@ private:
         uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
         uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
 
-        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+        {
             createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, uniformBuffers[i], uniformBuffersMemory[i]);
 
             vkMapMemory(device, uniformBuffersMemory[i], 0, bufferSize, 0, &uniformBuffersMapped[i]);
@@ -1819,6 +1810,7 @@ private:
         return VK_FALSE;
     }
 };
+NeoCore* NeoCore::s_instance = nullptr;
 
 
 class ThreadTest : public Thread
@@ -1833,9 +1825,9 @@ public:
 };
 
 
+
 int main(int argc, char* args[])
 {
-
     NeoCore core;
 
     try {
@@ -1851,11 +1843,11 @@ int main(int argc, char* args[])
 
 void Log(const std::string& msg)
 {
+    NOMEMTRACK();
+    string outStr = msg + "\n";
+    printf("%s", outStr.c_str());
 #if defined(PLATFORM_Windows)
-    OutputDebugString(msg.c_str());
-    OutputDebugString("\n");
-#else
-    printf("%s\n", msg.c_str());
+    OutputDebugString(outStr.c_str());
 #endif
 
 }
@@ -1864,11 +1856,56 @@ void Log(const std::string& msg)
 
 void Error(const std::string &msg)
 {
-    printf("ERROR: %s\n",msg.c_str());
+    NOMEMTRACK();
+    string errorStr = string("ERROR: ") + msg + "\n";
+    printf("%s", errorStr.c_str());
 #if defined(PLATFORM_Windows)
-    OutputDebugStringA(msg.c_str());
+    OutputDebugStringA(errorStr.c_str());
 #endif
     __debugbreak();
 }
 
 #endif
+
+class TexturePlatformData
+{
+public:
+    VkImage textureImage;
+    VkDeviceMemory textureImageMemory;
+    VkImageView textureImageView;
+};
+
+TexturePlatformData* TexturePlatformData_Create(TextureAssetData *assetData)
+{
+    TexturePlatformData* platformData = new TexturePlatformData;
+
+    auto& neo = NeoCore::Instance();
+
+    VkDeviceSize imageSize = assetData->m_images[0].Size();
+    VkBuffer stagingBuffer;
+    VkDeviceMemory stagingBufferMemory;
+    neo.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+    void* data;
+    vkMapMemory(neo.device, stagingBufferMemory, 0, imageSize, 0, &data);
+    memcpy(data, assetData->m_images[0].Mem(), static_cast<size_t>(imageSize));
+    vkUnmapMemory(neo.device, stagingBufferMemory);
+
+    neo.createImage(assetData->m_width, assetData->m_height, 0, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
+
+    neo.transitionImageLayout(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
+    neo.copyBufferToImage(stagingBuffer, platformData->textureImage, static_cast<uint32_t>(assetData->m_width), static_cast<uint32_t>(assetData->m_height));
+
+    vkDestroyBuffer(neo.device, stagingBuffer, nullptr);
+    vkFreeMemory(neo.device, stagingBufferMemory, nullptr);
+
+    platformData->textureImageView = neo.createImageView(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+
+    return platformData;
+};
+
+void TexturePlatformData_Destroy(class TexturePlatformData* platformData)
+{
+}
+
+

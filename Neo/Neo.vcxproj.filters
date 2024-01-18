@@ -371,9 +371,6 @@
     <ClInclude Include="NeoSource\Neo.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\Singleton.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\Thread.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
@@ -690,9 +687,6 @@
       <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\StringUtils.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\RefCounted.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\Memory.h">
@@ -1487,10 +1481,10 @@
     <ClInclude Include="NeoSource\ResourceRef.h">
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\TextureFactory.h">
-      <Filter>NeoSource\Resources</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\Serializer.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Module.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1570,10 +1564,10 @@
     <ClCompile Include="NeoSource\AssetManager.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="NeoSource\TextureFactory.cpp">
-      <Filter>NeoSource\Resources</Filter>
-    </ClCompile>
     <ClCompile Include="NeoSource\Serializer.cpp">
+      <Filter>NeoSource</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Module.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
   </ItemGroup>

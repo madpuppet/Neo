@@ -1,6 +1,6 @@
 #pragma once
 
-#define NEO_MEMORY_TRACKING 0
+#define NEO_MEMORY_TRACKING 1
 #define NEO_STACK_TRACING 0
 
 // Custom global operator new
@@ -70,7 +70,7 @@ extern StackTrace gStackTrace;
 // if NEO_STACK_TRACING then a stack trace is stored with each memory block
 class MemoryTracker
 {
-    array<MemoryGroup> m_activeGroup;
+    vector<MemoryGroup> m_activeGroup;
     u64 m_totalAllocated = 0;
     u64 m_memoryGroupAllocated[(int)MemoryGroup_MAX];
     u64 m_memoryGroupAllocCount[(int)MemoryGroup_MAX];
@@ -95,7 +95,7 @@ public:
     void free(void* mem);
     void PushGroup(MemoryGroup group) { m_activeGroup.push_back(group); }
     void PopGroup() { m_activeGroup.pop_back(); }
-    void EnableTracking(bool enable);
+    bool EnableTracking(bool enable);
     void Dump();
 };
 extern MemoryTracker gMemoryTracker;
@@ -108,7 +108,17 @@ public:
     MemoryGroupScope(MemoryGroup group) { gMemoryTracker.PushGroup(group); }
     ~MemoryGroupScope() { gMemoryTracker.PopGroup(); }
 };
-#define MEMGROUP(x) MemoryGroupScope __scope(MemoryGroup::x)
+class MemoryTrackDisableScope
+{
+public:
+    bool oldState;
+    MemoryTrackDisableScope() { oldState = gMemoryTracker.EnableTracking(false); }
+    ~MemoryTrackDisableScope() { gMemoryTracker.EnableTracking(oldState); }
+};
+
+#define MEMGROUP(x) MemoryGroupScope __scopeMGS(MemoryGroup_##x)
+#define NOMEMTRACK() MemoryTrackDisableScope __scopeMTDS
 #else
 #define MEMGROUP(x)
+#define NOMEMTRACK()
 #endif

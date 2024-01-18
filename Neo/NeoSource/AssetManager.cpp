@@ -4,13 +4,16 @@
 #include "Thread.h"
 #include "Serializer.h"
 #include <stb_image.h>
+#include "Texture.h"
+
+DECLARE_MODULE(AssetManager, NeoModulePri_AssetManager);
 
 AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, string("AssetManager"))
 {
 	m_assetTasks.Start();
 }
 
-int GetTime(const string name, const array<string> &extensions, u64& time)
+int GetTime(const string name, const vector<string> &extensions, u64& time)
 {
 	auto& fm = FileManager::Instance();
 	for (int i = 0; i < extensions.size(); i++)
@@ -21,7 +24,7 @@ int GetTime(const string name, const array<string> &extensions, u64& time)
 	return -1;
 }
 
-static array<string> s_textureExtensions = { ".png", ".tga", ".jpg" };
+static vector<string> s_textureExtensions = { ".png", ".tga", ".jpg" };
 void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name, const DeliverAssetDataCB& cb)
 {
 	m_assetTasks.AddTask
@@ -67,7 +70,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 						stbi_uc* stbi_uc = stbi_load_from_memory(memblock.Mem(), (int)memblock.Size(), &texWidth, &texHeight, &texChannels, STBI_default);
 
 						// pack it into an asset
-						auto texAsset = new TextureData;
+						auto texAsset = new TextureAssetData;
 						texAsset->m_width = texWidth;
 						texAsset->m_height = texHeight;
 						texAsset->m_depth = texChannels;
@@ -88,7 +91,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 						MemBlock serializedBlock;
 						if (fm.Read(assetDataPath, serializedBlock))
 						{
-							auto texAsset = new TextureData;
+							auto texAsset = new TextureAssetData;
 							texAsset->MemoryToAsset(serializedBlock);
 							cb(texAsset);
 						}

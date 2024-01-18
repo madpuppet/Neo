@@ -69,10 +69,12 @@ typedef glm::ivec4      ivec4;
 typedef glm::mat3x4     mat3x4;
 typedef glm::mat4x4     mat4x4;
 
-using string = std::string;
-template<typename T> using array = std::vector<T>;
-template<typename K, typename D> using treemap = std::map<K, D>;
+template<typename T> using vector = std::vector<T>;
+template<typename T, size_t S> using array = std::array<T, S>;
+template<typename K, typename D> using map = std::map<K, D>;
 template<typename K, typename D> using hashtable = std::unordered_map<K, D>;
+using string = std::string;
+using stringlist = vector<string>;
 
 #define STR(...) std::format(__VA_ARGS__)
 #define LOG(...) Log(STR(__VA_ARGS__))
@@ -91,3 +93,7 @@ inline void Error(const string& msg) {}
 #include "Memory.h"
 
 extern const char* GAME_NAME;
+
+// platform data creation methods - these implemented differently per platform
+extern class TexturePlatformData* TexturePlatformData_Create(class TextureAssetData *assetData);
+extern void TexturePlatformData_Destroy(class TexturePlatformData* platformData);

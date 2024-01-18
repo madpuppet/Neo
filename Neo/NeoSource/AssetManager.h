@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Singleton.h"
+#include "Module.h"
 #include "Thread.h"
 #include "MemBlock.h"
 #include "Serializer.h"
@@ -31,63 +31,45 @@ struct AssetData
 	AssetType m_type;
 	u16 m_version;
 	string m_name;
-	array<string> m_sourceFiles;
+	vector<string> m_sourceFiles;
 
 	virtual MemBlock AssetToMemory() = 0;
 	virtual void MemoryToAsset(const MemBlock& block) = 0;
 };
 
-class TextureData : public AssetData
+// asset type info creates all the functions and data needed to create this asset type
+class AssetTypeInfo
 {
 public:
-	~TextureData() {}
+	// function to turn the source files into a single asset file
+	std::function<AssetData* (const vector<MemBlock>& srcBlocks)> m_assetCreator;
 
-	u16 m_width;
-	u16 m_height;
-	u16 m_depth;
-	array<MemBlock> m_images;		// one for each mip level
+	// extension for asset file
+	string m_assetExt;
 
-	MemBlock AssetToMemory() override
-	{
-		Serializer_BinaryWriteGrow stream;
-		stream.WriteU16(AssetType_Texture);
-		stream.WriteU16(0);
-		stream.WriteU16(m_width);
-		stream.WriteU16(m_height);
-		stream.WriteU16(m_depth);
-		stream.WriteU16((u16)m_images.size());
-		for (auto& block : m_images)
-			stream.WriteMemory(block);
-
-		return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
-	}
-	void MemoryToAsset(const MemBlock& block) override
-	{
-		Serializer_BinaryRead stream(block);
-		m_type = (AssetType)stream.ReadU16();
-		Assert(m_type == AssetType_Texture, std::format("Bad texture asset type - got {}, expected {}!", (int)m_type, AssetType_Texture));
-
-		m_version = stream.ReadU16();
-		m_width = stream.ReadU16();
-		m_height = stream.ReadU16();
-		m_depth = stream.ReadU16();
-		int miplevels = stream.ReadU16();
-		for (int i = 0; i < miplevels; i++)
-		{
-			m_images.push_back(stream.ReadMemory());
-		}
-	}
+	// list of extensions for source files
+	// some source files could be one of many extensions (ie.  png, tga, jpg)
+	vector<stringlist> m_sourceExt;
 };
+
+
 
 // callback when resource data has been finally loaded
 typedef FastDelegate::FastDelegate1<AssetData*> DeliverAssetDataCB;
 
-class AssetManager : public Singleton<AssetManager>
+class AssetManager : public Module<AssetManager>
 {
+	// asset delivery thread can handle a maximum number of tasks at once
 	WorkerThread<256> m_assetTasks;
+
+	// map of asset type creators
+	map<int, AssetTypeInfo*> m_assetTypeInfoMap;
 
 public:
 	AssetManager();
+
+	// register an asset type that can be delivered
+	void RegisterAssetType(int assetType, AssetTypeInfo* assetCreator) { m_assetTypeInfoMap.insert(std::pair<int, AssetTypeInfo*>(assetType, assetCreator)); }
 
 	// gather all data from file systems
 	void DeliverAssetDataAsync(AssetType assetType, const std::string &name, const DeliverAssetDataCB& cb);
