@@ -1891,7 +1891,7 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData *assetData)
     memcpy(data, assetData->m_images[0].Mem(), static_cast<size_t>(imageSize));
     vkUnmapMemory(neo.device, stagingBufferMemory);
 
-    neo.createImage(assetData->m_width, assetData->m_height, 0, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
+    neo.createImage(assetData->m_width, assetData->m_height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
 
     neo.transitionImageLayout(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
     neo.copyBufferToImage(stagingBuffer, platformData->textureImage, static_cast<uint32_t>(assetData->m_width), static_cast<uint32_t>(assetData->m_height));
