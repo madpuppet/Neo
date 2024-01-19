@@ -40,9 +40,6 @@ const std::string TEXTURE_PATH = "sourceData/textures/viking_room.png";
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-#define APP_TITLE "NEO"
-#define VERSION "2023.01"
-
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
@@ -150,15 +147,13 @@ public:
     NeoCore() { s_instance = this; }
 
     void run() {
-        gMemoryTracker.EnableTracking(true);
-        MEMGROUP(System);
-        initWindow();
+//        initWindow();
         StartupModules();
-        initVulkan();
+//        initVulkan();
         mainLoop();
-        gMemoryTracker.Dump();
-        cleanup();
-        ShutdownModules();
+//        gMemoryTracker.Dump();
+ //       cleanup();
+ //       ShutdownModules();
     }
 
     SDL_Window* window;
@@ -301,9 +296,9 @@ public:
             {
                 HandleEvent(&e);
             }
-            drawFrame();
+//            drawFrame();
         }
-       vkDeviceWaitIdle(device);
+//       vkDeviceWaitIdle(device);
     }
 
     void cleanupSwapChain() {
@@ -1828,6 +1823,8 @@ public:
 
 int main(int argc, char* args[])
 {
+    gMemoryTracker.EnableTracking(true);
+
     NeoCore core;
 
     try {
@@ -1906,6 +1903,12 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData *assetData)
 
 void TexturePlatformData_Destroy(class TexturePlatformData* platformData)
 {
+}
+
+CallbackHandle AllocUniqueCallbackHandle()
+{
+    static u64 global_unique_callback = 0;
+    return (CallbackHandle)++global_unique_callback; 
 }
 
 

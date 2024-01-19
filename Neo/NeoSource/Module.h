@@ -7,6 +7,8 @@ enum NeoModulePri
 	NeoModulePri_FileManager,
 	NeoModulePri_AssetManager,
 	NeoModulePri_TextureManager,
+	NeoModulePri_GIL,
+	NeoModulePri_GraphicsThread,
 
 	NeoModulePri_MAX
 };

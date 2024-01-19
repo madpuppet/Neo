@@ -623,13 +623,15 @@
     <ClInclude Include="include\SDL_vulkan.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\tiny_obj_loader.h" />
-    <ClInclude Include="NeoSource\FastDelegate.h" />
     <ClInclude Include="NeoSource\FileExcludes.h" />
     <ClInclude Include="NeoSource\FileManager.h" />
     <ClInclude Include="NeoSource\FileSystem.h" />
     <ClInclude Include="NeoSource\FileSystem_FlatArchive.h" />
     <ClInclude Include="NeoSource\FileSystem_FlatFolder.h" />
     <ClInclude Include="NeoSource\FileSystem_RawAccess.h" />
+    <ClInclude Include="NeoSource\GIL_Common.h" />
+    <ClInclude Include="NeoSource\GIL_Vulkan.h" />
+    <ClInclude Include="NeoSource\GraphicsThread.h" />
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
@@ -664,6 +666,8 @@
     <ClCompile Include="NeoSource\FileSystem_FlatArchive.cpp" />
     <ClCompile Include="NeoSource\FileSystem_FlatFolder.cpp" />
     <ClCompile Include="NeoSource\FileSystem_RawAccess.cpp" />
+    <ClCompile Include="NeoSource\GIL_Vulkan.cpp" />
+    <ClCompile Include="NeoSource\GraphicsThread.cpp" />
     <ClCompile Include="NeoSource\Main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>

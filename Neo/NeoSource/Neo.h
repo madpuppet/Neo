@@ -20,8 +20,12 @@
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
 
-#if defined(_WIN32)
+//===============================================================
+//========== WINDOWS ============================================
+//===============================================================
+#if defined(_WIN32) 
 #define PLATFORM_Windows
+#define GRAPHICS_Vulkan
 #define WIN32_LEAN_AND_MEAN
 #include "windows.h"
 #include "shlobj.h"
@@ -29,24 +33,45 @@
 // some macros clash with glm
 #undef max
 #undef min
+
+//===============================================================
+//========== IOS/MACOS ==========================================
+//===============================================================
 #elif defined(__APPLE__)
 #import "Foundation/Foundation.h"
 #include "TargetConditionals.h"
 #if TARGET_OS_IPHONE
 #define PLATFORM_IOS
+#define GRAPHICS_Metal
 #elif TARGET_OS_MAC
 #define PLATFORM_OSX
+#define GRAPHICS_Metal
 #endif
 
+//===============================================================
+//========== ANDROID ============================================
+//===============================================================
 #elif defined(ANDROID)
 #define PLATFORM_Android
+#define GRAPHICS_Vulkan
 
+//===============================================================
+//========== LINUX ==============================================
+//===============================================================
 #elif __linux || __unix || __posix
 #define PLATFORM_Unix
+#define GRAPHICS_Vulkan
 
+//===============================================================
+//========== NSWITCH ============================================
+//===============================================================
 #elif defined(_NSWITCH)
 #define PLATFORM_Switch
+#define GRAPHICS_NVN
 #endif
+
+#define APP_TITLE "NEO"
+#define VERSION "2023.01"
 
 typedef uint64_t        u64;
 typedef int64_t         i64;
@@ -76,6 +101,10 @@ template<typename K, typename D> using hashtable = std::unordered_map<K, D>;
 using string = std::string;
 using stringlist = vector<string>;
 
+// this used by any callback system that allows adding & removing callbacks
+typedef u64             CallbackHandle;
+CallbackHandle AllocUniqueCallbackHandle();
+
 #define STR(...) std::format(__VA_ARGS__)
 #define LOG(...) Log(STR(__VA_ARGS__))
 
@@ -89,11 +118,8 @@ inline void Assert(bool, const string& msg) {};
 inline void Error(const string& msg) {}
 #endif
 
-#include "FastDelegate.h"
 #include "Memory.h"
+#include "Module.h"
+#include "GIL_Common.h"
 
 extern const char* GAME_NAME;
-
-// platform data creation methods - these implemented differently per platform
-extern class TexturePlatformData* TexturePlatformData_Create(class TextureAssetData *assetData);
-extern void TexturePlatformData_Destroy(class TexturePlatformData* platformData);

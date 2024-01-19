@@ -70,8 +70,8 @@ public:
 	bool StreamRead(FileHandle handle, u8 *mem, u32 size, u32 &sizeRead);
 	bool StreamReadEnd(FileHandle handle);
 
-	void AddFileChangeCallback(const FileSystem_FileChangeCallback &callback);
-	void RemoveFileChangeCallback(const FileSystem_FileChangeCallback &callback);
+	CallbackHandle AddFileChangeCallback(const FileSystem_FileChangeCallback &callback);
+	void RemoveFileChangeCallback(CallbackHandle handle);
 
 	// called each frame by Application
 	void Update();
@@ -79,15 +79,15 @@ public:
 protected:
 	Mutex m_accessMutex;
 
-	std::vector<FileSystem*> m_fileSystems;
-	std::vector<FileSystem_FileChangeCallback> m_onFileChange;
+	vector<FileSystem*> m_fileSystems;
+	vector<std::pair<CallbackHandle, FileSystem_FileChangeCallback>> m_onFileChange;
 	enum ExcludeType
 	{
 		ExcludeType_Folder,
 		ExcludeType_Ext,
 		ExcludeType_File
 	};
-	std::vector<u64> m_excludeFolders;
-	std::vector<u64> m_excludeExtenstions;
+	vector<u64> m_excludeFolders;
+	vector<u64> m_excludeExtenstions;
 	u32 m_nextUniqueFileHandle;
 };

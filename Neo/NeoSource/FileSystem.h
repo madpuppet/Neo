@@ -13,8 +13,8 @@ enum GetFolderListMode
 
 typedef u32 FileHandle;
 
-typedef FastDelegate::FastDelegate2<class FileSystem*, const std::string&> FileSystem_FileChangeCallback;
-typedef FastDelegate::FastDelegate1<const std::string&, bool> FileSystem_FilenameFilterDelegate;
+typedef std::function<void(class FileSystem*, const string&)> FileSystem_FileChangeCallback;
+typedef std::function<bool(const string &)> FileSystem_FilenameFilterDelegate;
 
 class FileSystem
 {

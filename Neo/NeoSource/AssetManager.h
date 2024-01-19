@@ -56,9 +56,8 @@ public:
 };
 
 
-
 // callback when resource data has been finally loaded
-typedef FastDelegate::FastDelegate1<AssetData*> DeliverAssetDataCB;
+typedef std::function<void(AssetData*)> DeliverAssetDataCB;
 
 class AssetManager : public Module<AssetManager>
 {

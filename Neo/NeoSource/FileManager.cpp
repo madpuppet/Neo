@@ -377,16 +377,20 @@ bool FileManager::StreamReadEnd(FileHandle handle)
 	return false;
 }
 
-void FileManager::AddFileChangeCallback(const FileSystem_FileChangeCallback &callback)
+CallbackHandle FileManager::AddFileChangeCallback(const FileSystem_FileChangeCallback &callback)
 {
 	SCOPED_MUTEX;
-	m_onFileChange.push_back(callback);
+	auto handle = AllocUniqueCallbackHandle();
+	m_onFileChange.emplace_back( handle,callback );
+	return handle;
 }
 
-void FileManager::RemoveFileChangeCallback(const FileSystem_FileChangeCallback &callback)
+void FileManager::RemoveFileChangeCallback(CallbackHandle handle)
 {
 	SCOPED_MUTEX;
-	auto it = std::find(m_onFileChange.begin(), m_onFileChange.end(), callback);
+
+	auto filter = [handle](const std::pair<CallbackHandle, FileSystem_FileChangeCallback> &item) { return item.first == handle; };
+	auto it = std::find_if(m_onFileChange.begin(), m_onFileChange.end(), filter);
 	Assert(it != m_onFileChange.end(), "Attempt to delete a callback that doesn't exist!");
 	m_onFileChange.erase(it);
 }
@@ -427,7 +431,7 @@ void FileManager::Update()
 		{
 			for (auto it = m_onFileChange.begin(); it != m_onFileChange.end(); ++it)
 			{
-				(*it)(change.fs, change.filename);
+				it->second(change.fs, change.filename);
 			}
 		}
 		m_accessMutex.Lock();

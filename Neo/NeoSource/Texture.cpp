@@ -7,7 +7,7 @@ DECLARE_MODULE(TextureFactory, NeoModulePri_TextureFactory);
 
 Texture::Texture(const std::string& name) : Resource(name)
 {
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, DELEGATE(Texture::OnAssetDeliver));
+	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, [this](AssetData* data) { OnAssetDeliver(data); } );
 }
 
 Texture::~Texture()
@@ -18,7 +18,9 @@ void Texture::OnAssetDeliver(AssetData* data)
 {
 	Assert(data->m_type == AssetType_Texture, "Bad Asset Type");
 	m_assetData = dynamic_cast<TextureAssetData*>(data);
-	m_platformData = TexturePlatformData_Create(m_assetData);
+
+	//TODO: this needs to be done on the graphics thread
+//	m_platformData = TexturePlatformData_Create(m_assetData);
 }
 
 void Texture::Reload()

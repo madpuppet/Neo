@@ -31,6 +31,9 @@
     <Filter Include="NeoSource\3rdParty\zlib">
       <UniqueIdentifier>{98d49d2b-2ea8-4ff3-9849-09da0dbfc4ed}</UniqueIdentifier>
     </Filter>
+    <Filter Include="NeoSource\Rendering">
+      <UniqueIdentifier>{f5ea82ee-437d-4229-a184-dcf43cc056c1}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\shader.frag">
@@ -682,9 +685,6 @@
     </ClInclude>
     <ClInclude Include="include\tiny_obj_loader.h">
       <Filter>NeoSource\3rdParty</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\FastDelegate.h">
-      <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\StringUtils.h">
       <Filter>NeoSource</Filter>
@@ -1487,6 +1487,15 @@
     <ClInclude Include="NeoSource\Module.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\GraphicsThread.h">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\GIL_Vulkan.h">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\GIL_Common.h">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1569,6 +1578,12 @@
     </ClCompile>
     <ClCompile Include="NeoSource\Module.cpp">
       <Filter>NeoSource</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\GraphicsThread.cpp">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\GIL_Vulkan.cpp">
+      <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>
