@@ -54,6 +54,7 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
+#if 0 //T
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
@@ -63,6 +64,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
 }
+#endif
 
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -248,8 +250,8 @@ public:
     }
 
     void initVulkan() {
-        createInstance();
-        setupDebugMessenger();
+//!        createInstance();
+//!        setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
@@ -439,6 +441,7 @@ public:
         createInfo.pfnUserCallback = debugCallback;
     }
 
+#if 0 //T
     void setupDebugMessenger() {
         if (!enableValidationLayers) return;
 
@@ -449,6 +452,7 @@ public:
             throw std::runtime_error("failed to set up debug messenger!");
         }
     }
+#endif
 
     void createSurface() 
     {

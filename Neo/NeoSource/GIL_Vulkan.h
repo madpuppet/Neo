@@ -24,7 +24,21 @@ public:
 	void EndFrame();
 
 protected:
+#ifdef NDEBUG
+	const bool m_enableValidationLayers = false;
+#else
+	const bool m_enableValidationLayers = true;
+#endif
+
 	SDL_Window* m_window;
+	VkInstance m_instance;
+	VkDebugUtilsMessengerEXT m_debugMessenger;
+
+	void createInstance();
+	bool checkValidationLayerSupport();
+	vector<const char*> getRequiredExtensions();
+	void populateDebugMessengerCreateInfo(VkDebugUtilsMessengerCreateInfoEXT& createInfo);
+	void setupDebugMessenger();
 };
 
 #endif // GRAPHICS_Vulkan
