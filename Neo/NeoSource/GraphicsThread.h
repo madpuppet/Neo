@@ -16,29 +16,32 @@ typedef std::function<void(void)> GraphicsTask;
 
 class GraphicsThread : public Module<GraphicsThread>, Thread
 {
-public:
-	enum Phase
-	{
-		PreFrame,
-		MidFrame,
-		Phase_MAX
-	};
+	Semaphore m_frameEnded;
+	WorkerThread m_nonRenderTaskThread;
+	Semaphore m_renderTasksSignal;
+	Mutex m_renderTasksLock;
+	fifo<GraphicsTask> m_renderTasks;
 
+public:
 	GraphicsThread();
 	~GraphicsThread();
 
-	void AddTask(Phase phase, GraphicsTask task)
+	void AddRenderTask(GraphicsTask task)
 	{
-		m_phaseTasksLock.Lock();
-		m_phaseTasks[phase].emplace_back(task);
-		m_phaseTasksLock.Release();
+		m_renderTasksLock.Lock();
+		m_renderTasks.emplace_back(std::move(task));
+		m_renderTasksLock.Release();
+		m_renderTasksSignal.Signal();
 	}
-	
-	virtual int Go() override;
 
-protected:
-	Mutex m_phaseTasksLock;
-	vector<GraphicsTask> m_phaseTasks[Phase_MAX];
-	vector<GraphicsTask> m_activeTasks;
+	void AddNonRenderTask(GraphicsTask task)
+	{
+		m_nonRenderTaskThread.AddTask(task);
+	}
+
+	void WaitFrameEnded() { m_frameEnded.Wait(); }
+	void SignalFrameEnded() { m_frameEnded.Signal(); }
+
+	virtual int Go() override;
 };
 

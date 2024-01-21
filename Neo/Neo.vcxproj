@@ -637,6 +637,7 @@
     <ClInclude Include="NeoSource\Memory.h" />
     <ClInclude Include="NeoSource\Module.h" />
     <ClInclude Include="NeoSource\Neo.h" />
+    <ClInclude Include="NeoSource\RenderThread.h" />
     <ClInclude Include="NeoSource\Resource.h" />
     <ClInclude Include="NeoSource\AssetManager.h" />
     <ClInclude Include="NeoSource\ResourceFactory.h" />
@@ -675,6 +676,7 @@
     <ClCompile Include="NeoSource\MemBlock.cpp" />
     <ClCompile Include="NeoSource\Memory.cpp" />
     <ClCompile Include="NeoSource\Module.cpp" />
+    <ClCompile Include="NeoSource\RenderThread.cpp" />
     <ClCompile Include="NeoSource\Serializer.cpp" />
     <ClCompile Include="NeoSource\StringUtils.cpp" />
     <ClCompile Include="NeoSource\Texture.cpp" />

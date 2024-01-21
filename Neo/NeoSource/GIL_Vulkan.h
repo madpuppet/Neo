@@ -88,6 +88,7 @@ protected:
 	VkImageView m_depthImageView;
 
 	VkSampler m_textureSampler;
+	VkImageView m_textureImageView;
 
 	VkBuffer m_vertexBuffer;
 	VkDeviceMemory m_vertexBufferMemory;
@@ -98,6 +99,14 @@ protected:
 	std::vector<VkDeviceMemory> m_uniformBuffersMemory;
 	std::vector<void*> m_uniformBuffersMapped;
 
+	VkDescriptorPool m_descriptorPool;
+	std::vector<VkDescriptorSet> m_descriptorSets;
+	std::vector<VkCommandBuffer> m_commandBuffers;
+
+	std::vector<VkSemaphore> m_imageAvailableSemaphores;
+	std::vector<VkSemaphore> m_renderFinishedSemaphores;
+	std::vector<VkFence> m_inFlightFences;
+	u32 currentFrame = 0;
 
 	struct QueueFamilyIndices
 	{
@@ -157,6 +166,10 @@ protected:
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
+	void createDescriptorPool();
+	void createDescriptorSets();
+	void createCommandBuffers();
+	void createSyncObjects();
 
 #else //!NEW_CODE
 public:

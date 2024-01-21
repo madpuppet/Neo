@@ -1,6 +1,7 @@
 #include "neo.h"
 #include "Texture.h"
 #include "StringUtils.h"
+#include "GraphicsThread.h"
 #include <stb_image.h>
 
 DECLARE_MODULE(TextureFactory, NeoModulePri_TextureFactory);
@@ -19,8 +20,7 @@ void Texture::OnAssetDeliver(AssetData* data)
 	Assert(data->m_type == AssetType_Texture, "Bad Asset Type");
 	m_assetData = dynamic_cast<TextureAssetData*>(data);
 
-	//TODO: this needs to be done on the graphics thread
-//	m_platformData = TexturePlatformData_Create(m_assetData);
+	GraphicsThread::Instance().AddNonRenderTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); });
 }
 
 void Texture::Reload()

@@ -9,6 +9,7 @@ enum NeoModulePri
 	NeoModulePri_TextureManager,
 	NeoModulePri_GIL,
 	NeoModulePri_GraphicsThread,
+	NeoModulePri_GraphicsNRThread,
 
 	NeoModulePri_MAX
 };

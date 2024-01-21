@@ -29,6 +29,7 @@ enum ThreadGUID
     ThreadGUID_Main,
     ThreadGUID_AssetManager,
     ThreadGUID_GraphicsInterface,
+    ThreadGUID_RenderThread,
 
     ThreadGUID_MAX
 };
@@ -154,16 +155,11 @@ protected:
 };
 
 // a worker thread that executes one off tasks
-template <int MaxTasks>
 class WorkerThread: public Thread
 {
     Mutex m_tasks;
     Semaphore m_taskSignals;
-
-    // circular list of tasks to execute - typically captured lamda functions
-    std::function<void()> m_taskList[MaxTasks];
-    int m_read = 0;
-    int m_write = 0;
+    fifo<std::function<void()>> m_taskList;
 
 public:
     WorkerThread(int guid, const std::string &name) : Thread(guid, name) {}
@@ -174,12 +170,9 @@ public:
     void AddTask(std::function<void()> task)
     {
         m_tasks.Lock();
-        int nextWrite = (m_write + 1) % MaxTasks;
-        Assert(nextWrite != m_read, STR("%d Tasks exceeded in thread %s!\n", MaxTasks, m_name.c_str()));
-        m_taskList[m_write] = task;
-        m_taskSignals.Signal();
-        m_write = nextWrite;
+        m_taskList.emplace_back(task);
         m_tasks.Release();
+        m_taskSignals.Signal();
     }
 
     virtual int Go()
@@ -187,8 +180,11 @@ public:
         while (!m_terminate)
         {
             m_taskSignals.Wait();
-            m_taskList[m_read]();
-            m_read = (m_read + 1) % MaxTasks;
+            m_tasks.Lock();
+            auto task = m_taskList.front();
+            m_taskList.pop_front();
+            m_tasks.Release();
+            task();
         }
         return 0;
     }

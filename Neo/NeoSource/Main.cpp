@@ -269,11 +269,11 @@ public:
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
-#endif
         createDescriptorPool();
         createDescriptorSets();
         createCommandBuffers();
         createSyncObjects();
+#endif
     }
 
     void HandleEvent(SDL_Event* e)
@@ -1915,6 +1915,12 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData *assetData)
 
 void TexturePlatformData_Destroy(class TexturePlatformData* platformData)
 {
+    auto& neo = NeoCore::Instance();
+
+    vkDestroyImageView(neo.device, platformData->textureImageView, nullptr);
+
+    vkDestroyImage(neo.device, platformData->textureImage, nullptr);
+    vkFreeMemory(neo.device, platformData->textureImageMemory, nullptr);
 }
 
 CallbackHandle AllocUniqueCallbackHandle()

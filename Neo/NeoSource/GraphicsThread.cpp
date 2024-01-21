@@ -1,9 +1,27 @@
 #include "Neo.h"
 #include "GraphicsThread.h"
 
+/*
+
+============ GRAPHICS THREAD ==============
+Init vulkan  (gil.Startup)
+{
+	StartFrame
+	==> Reset Queue
+
+	Misc Tasks
+
+	EndFrame
+	==> Wait on GPU finished
+	==> Present screen
+	==> Execute Command Queue
+}
+*/
+
+
 DECLARE_MODULE(GraphicsThread, NeoModulePri_GraphicsThread)
 
-GraphicsThread::GraphicsThread() : Thread(NeoModulePri_GraphicsThread, "GraphicsThread")
+GraphicsThread::GraphicsThread() : m_nonRenderTaskThread(NeoModulePri_GraphicsNRThread, "GraphicsNRThread"), Thread(NeoModulePri_GraphicsThread, "GraphicsThread")
 {
 	Start();
 }
@@ -19,29 +37,12 @@ int GraphicsThread::Go()
 	gil.Startup();
 	while (!m_terminate)
 	{
-		// pre frame tasks
-		m_phaseTasksLock.Lock();
-		m_activeTasks = m_phaseTasks[PreFrame];
-		m_phaseTasksLock.Release();
-		for (auto& task : m_activeTasks)
-		{
-			task();
-		}
-
-		// start frame
-		gil.BeginFrame();
-
-		// mid frame tasks
-		m_phaseTasksLock.Lock();
-		m_activeTasks = m_phaseTasks[MidFrame];
-		m_phaseTasksLock.Release();
-		for (auto& task : m_activeTasks)
-		{
-			task();
-		}
-
-		// end the frame
-		gil.EndFrame();
+		m_renderTasksSignal.Wait();
+		m_renderTasksLock.Lock();
+		auto task = m_renderTasks.front();
+		m_renderTasks.pop_front();
+		m_renderTasksLock.Release();
+		task();
 	}
 	gil.Shutdown();
 	return 0;

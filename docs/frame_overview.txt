@@ -1,9 +1,9 @@
 =========== DRAW THREAD ===================
 ... Wait SignalUpdateDone
+SignalDrawStarted ==> UPDATE THREAD
 GRAPHICS => StartFrame
 Do draws - add tasks to graphics thread
 GRAPHICS => EndFrame
-SignalDrawDone ==> UPDATE THREAD
 
 ============ GRAPHICS THREAD ==============
 Init vulkan
@@ -22,5 +22,5 @@ EndFrame
 =============== UPDATE THREAD ===============
 Do update
 SignalUpdateDone ==> DRAW THREAD
-... Wait SignalDrawDone
+... Wait SignalDrawStarted
 

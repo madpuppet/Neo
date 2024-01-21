@@ -62,7 +62,7 @@ typedef std::function<void(AssetData*)> DeliverAssetDataCB;
 class AssetManager : public Module<AssetManager>
 {
 	// asset delivery thread can handle a maximum number of tasks at once
-	WorkerThread<256> m_assetTasks;
+	WorkerThread m_assetTasks;
 
 	// map of asset type creators
 	map<int, AssetTypeInfo*> m_assetTypeInfoMap;

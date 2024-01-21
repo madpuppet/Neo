@@ -1496,6 +1496,9 @@
     <ClInclude Include="NeoSource\GIL_Common.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\RenderThread.h">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1583,6 +1586,9 @@
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\GIL_Vulkan.cpp">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\RenderThread.cpp">
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
   </ItemGroup>

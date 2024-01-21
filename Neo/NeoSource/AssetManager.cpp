@@ -24,7 +24,7 @@ static int GetTime(const string name, const vector<string> &extensions, u64& tim
 
 void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name, const DeliverAssetDataCB& cb)
 {
-//	Assert(m_assetTypeInfoMap.contains(assetType), std::format("Cannot create asset: {} - unregistered asset type: {}", name, assetType));
+	Assert(m_assetTypeInfoMap.contains(assetType), std::format("Cannot create asset: {} - unregistered asset type: {}", name, assetType));
 
 	auto assetTypeInfo = m_assetTypeInfoMap[assetType];
 	m_assetTasks.AddTask
