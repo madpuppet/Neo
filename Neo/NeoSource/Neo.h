@@ -9,7 +9,11 @@
 #include <vector>
 #include <unordered_map>
 #include <map>
+#include <set>
+#include <array>
 #include <algorithm>
+
+#define NEW_CODE 1
 
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
@@ -97,6 +101,7 @@ typedef glm::mat4x4     mat4x4;
 template<typename T> using vector = std::vector<T>;
 template<typename T, size_t S> using array = std::array<T, S>;
 template<typename K, typename D> using map = std::map<K, D>;
+template<typename D> using set = std::set<D>;
 template<typename K, typename D> using hashtable = std::unordered_map<K, D>;
 using string = std::string;
 using stringlist = vector<string>;

@@ -15,15 +15,11 @@
 #include <stdexcept>
 #include <algorithm>
 #include <chrono>
-#include <vector>
 #include <cstring>
 #include <cstdlib>
 #include <cstdint>
 #include <limits>
-#include <array>
 #include <optional>
-#include <set>
-#include <unordered_map>
 
 #include "Application.h"
 
@@ -38,7 +34,9 @@ const uint32_t HEIGHT = 600;
 const std::string MODEL_PATH = "sourceData/models/viking_room.obj";
 const std::string TEXTURE_PATH = "sourceData/textures/viking_room.png";
 
+#if !NEW_CODE
 const int MAX_FRAMES_IN_FLIGHT = 2;
+#endif
 
 const std::vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
@@ -54,7 +52,7 @@ const bool enableValidationLayers = false;
 const bool enableValidationLayers = true;
 #endif
 
-#if 0 //T
+#if !NEW_CODE
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger) {
     auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
     if (func != nullptr) {
@@ -64,7 +62,6 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
         return VK_ERROR_EXTENSION_NOT_PRESENT;
     }
 }
-#endif
 
 void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT debugMessenger, const VkAllocationCallbacks* pAllocator) {
     auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
@@ -72,6 +69,7 @@ void DestroyDebugUtilsMessengerEXT(VkInstance instance, VkDebugUtilsMessengerEXT
         func(instance, debugMessenger, pAllocator);
     }
 }
+#endif
 
 struct QueueFamilyIndices {
     std::optional<uint32_t> graphicsFamily;
@@ -149,13 +147,25 @@ public:
     NeoCore() { s_instance = this; }
 
     void run() {
-//        initWindow();
+#if !NEW_CODE
+        initWindow();
+#endif
+
         StartupModules();
-//        initVulkan();
+
+#if !NEW_CODE
+        initVulkan();
+#endif
+
         mainLoop();
-//        gMemoryTracker.Dump();
- //       cleanup();
- //       ShutdownModules();
+
+        gMemoryTracker.Dump();
+
+#if !NEW_CODE
+        cleanup();
+#endif
+
+        ShutdownModules();
     }
 
     SDL_Window* window;
@@ -223,35 +233,23 @@ public:
     bool framebufferResized = false;
     bool m_quit = false;
 
-    void initWindow() 
+#if !NEW_CODE
+    void initWindow()
     {
         if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER) < 0)
         {
-//            Log("SDL could not initialize! SDL Error: %s\n", SDL_GetError());
             exit(0);
         }
 
         window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
-//        m_renderer = SDL_CreateRenderer(m_window, -1, SDL_RENDERER_ACCELERATED);
-
-        
-        //        glfwInit();
-//
-//        glfwWindowHint(GLFW_CLIENT_API, GLFW_NO_API);
-//
-//        window = glfwCreateWindow(WIDTH, HEIGHT, "Vulkan", nullptr, nullptr);
-//        glfwSetWindowUserPointer(window, this);
-//        glfwSetFramebufferSizeCallback(window, framebufferResizeCallback);
-//    }
-
-//    static void framebufferResizeCallback(GLFWwindow* window, int width, int height) {
-//        auto app = reinterpret_cast<HelloTriangleApplication*>(glfwGetWindowUserPointer(window));
-//        app->framebufferResized = true;
     }
+#endif
+
 
     void initVulkan() {
-//!        createInstance();
-//!        setupDebugMessenger();
+#if !NEW_CODE
+        createInstance();
+        setupDebugMessenger();
         createSurface();
         pickPhysicalDevice();
         createLogicalDevice();
@@ -271,6 +269,7 @@ public:
         createVertexBuffer();
         createIndexBuffer();
         createUniformBuffers();
+#endif
         createDescriptorPool();
         createDescriptorSets();
         createCommandBuffers();
@@ -298,9 +297,13 @@ public:
             {
                 HandleEvent(&e);
             }
-//            drawFrame();
+#if !NEW_CODE
+            drawFrame();
+#endif
         }
-//       vkDeviceWaitIdle(device);
+#if !NEW_CODE
+        vkDeviceWaitIdle(device);
+#endif
     }
 
     void cleanupSwapChain() {
@@ -361,9 +364,11 @@ public:
 
         vkDestroyDevice(device, nullptr);
 
+#if !NEW_CODE
         if (enableValidationLayers) {
             DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
         }
+#endif
 
         vkDestroySurfaceKHR(instance, surface, nullptr);
         vkDestroyInstance(instance, nullptr);
@@ -374,6 +379,7 @@ public:
     }
 
     void recreateSwapChain() {
+#if !NEW_CODE
 
 //        int width = 0, height = 0;
 //        glfwGetFramebufferSize(window, &width, &height);
@@ -391,8 +397,10 @@ public:
         createColorResources();
         createDepthResources();
         createFramebuffers();
+#endif
     }
 
+#if !NEW_CODE
     void createInstance() {
         if (enableValidationLayers && !checkValidationLayerSupport()) {
             throw std::runtime_error("validation layers requested, but not available!");
@@ -441,7 +449,6 @@ public:
         createInfo.pfnUserCallback = debugCallback;
     }
 
-#if 0 //T
     void setupDebugMessenger() {
         if (!enableValidationLayers) return;
 
@@ -452,14 +459,10 @@ public:
             throw std::runtime_error("failed to set up debug messenger!");
         }
     }
-#endif
 
     void createSurface() 
     {
         SDL_Vulkan_CreateSurface(window, instance, &surface);
-
-//        if (glfwCreateWindowSurface(instance, window, nullptr, &surface) != VK_SUCCESS) {
-//        }
     }
 
     void pickPhysicalDevice() {
@@ -583,6 +586,7 @@ public:
         swapChainImageFormat = surfaceFormat.format;
         swapChainExtent = extent;
     }
+#endif
 
     void createImageViews() {
         swapChainImageViews.resize(swapChainImages.size());
@@ -1614,6 +1618,7 @@ public:
         return shaderModule;
     }
 
+#if !NEW_CODE
     VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) {
         for (const auto& availableFormat : availableFormats) {
             if (availableFormat.format == VK_FORMAT_B8G8R8A8_SRGB && availableFormat.colorSpace == VK_COLOR_SPACE_SRGB_NONLINEAR_KHR) {
@@ -1653,6 +1658,7 @@ public:
             return actualExtent;
         }
     }
+#endif
 
     SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device) {
         SwapChainSupportDetails details;
@@ -1678,6 +1684,7 @@ public:
         return details;
     }
 
+#if !NEW_CODE
     bool isDeviceSuitable(VkPhysicalDevice device) {
         QueueFamilyIndices indices = findQueueFamilies(device);
 
@@ -1694,6 +1701,7 @@ public:
 
         return indices.isComplete() && extensionsSupported && swapChainAdequate && supportedFeatures.samplerAnisotropy;
     }
+#endif
 
     bool checkDeviceExtensionSupport(VkPhysicalDevice device) {
         uint32_t extensionCount;

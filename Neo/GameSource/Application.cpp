@@ -7,8 +7,10 @@ const char* GAME_NAME = "TestGame";
 
 Application::Application()
 {
+#if NEW_CODE
 	// mount filesystems
 	m_testTex.Create("viking_room");
+#endif
 }
 
 Application::~Application()
