@@ -17,7 +17,7 @@ void ThreadFunc(void *threadPtr)
     thread->Begin();
 }
 
-Thread::Thread(int guid, const std::string &name)
+Thread::Thread(int guid, const string &name)
 {
     m_guid = guid;
     m_name = name;
@@ -140,12 +140,12 @@ void Mutex::Release()
 struct ThreadInfo
 {
     int guid;
-    std::string name;
+    string name;
 };
 static std::map<ThreadID, ThreadInfo> s_threadRegistry;
 Mutex s_threadRegistryLock;
 
-void Thread::RegisterThread(int guid, const std::string& name)
+void Thread::RegisterThread(int guid, const string& name)
 {
     ScopedMutexLock lock(s_threadRegistryLock);
     s_threadRegistry.emplace(std::pair<ThreadID, ThreadInfo>(CurrentThreadID(), { guid, name }));
@@ -159,7 +159,7 @@ int Thread::GetCurrentThreadGUID()
     return (it != s_threadRegistry.end()) ? it->second.guid : -1;
 }
 
-std::string Thread::GetCurrentThreadName()
+string Thread::GetCurrentThreadName()
 {
     ScopedMutexLock lock(s_threadRegistryLock);
 

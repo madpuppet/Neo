@@ -162,7 +162,7 @@ class WorkerThread: public Thread
     fifo<std::function<void()>> m_taskList;
 
 public:
-    WorkerThread(int guid, const std::string &name) : Thread(guid, name) {}
+    WorkerThread(int guid, const string &name) : Thread(guid, name) {}
 
     // @param task - typically a lambda function that you want to run on this thread. it will be called once only and then forgotten
     //               the task will need alert the system of its completion via other methods

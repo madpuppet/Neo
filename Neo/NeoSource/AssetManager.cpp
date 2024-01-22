@@ -11,7 +11,7 @@ AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, string("Ass
 	m_assetTasks.Start();
 }
 
-static int GetTime(const string name, const vector<string> &extensions, u64& time)
+static int GetTime(const string name, const stringlist &extensions, u64& time)
 {
 	auto& fm = FileManager::Instance();
 	for (int i = 0; i < extensions.size(); i++)
@@ -39,7 +39,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			fm.GetTime(assetDataPath, assetDateStamp);
 
 			// get datestamp of each source file
-			vector<string> srcFiles;
+			stringlist srcFiles;
 			bool missingSrcFile = false;
 			int idx = 0;
 			u64 earliestSourceDateStamp = 0;

@@ -3,14 +3,14 @@
 class Resource
 {
 public:
-	Resource(const std::string &name) : m_name(name) {}
+	Resource(const string &name) : m_name(name) {}
 	virtual ~Resource() {}
 
 	int IncRef() { return ++m_refCount; }
 	int DecRef() { return --m_refCount; }
 	int GetRef() { return m_refCount; }
 
-	std::string GetName() const { return m_name; }
+	string GetName() const { return m_name; }
 
 	bool IsLoaded() { return m_dataLoaded; }
 
@@ -19,7 +19,7 @@ protected:
 
 	int m_refCount = 1;
 	bool m_dataLoaded = false;
-	std::string m_name;
-	std::string m_source;
+	string m_name;
+	string m_source;
 };
 

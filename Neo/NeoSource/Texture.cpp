@@ -6,7 +6,7 @@
 
 DECLARE_MODULE(TextureFactory, NeoModulePri_TextureFactory);
 
-Texture::Texture(const std::string& name) : Resource(name)
+Texture::Texture(const string& name) : Resource(name)
 {
 	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, [this](AssetData* data) { OnAssetDeliver(data); } );
 }
@@ -38,7 +38,7 @@ TextureFactory::TextureFactory()
 	AssetManager::Instance().RegisterAssetType(AssetType_Texture, ati);
 }
 
-Texture* TextureFactory::Create(const std::string& name)
+Texture* TextureFactory::Create(const string& name)
 {
 	u64 hash = StringHash64(name);
 	auto it = m_resources.find(hash);

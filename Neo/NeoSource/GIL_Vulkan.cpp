@@ -7,7 +7,7 @@ DECLARE_MODULE(GIL, NeoModulePri_GIL);
 
 #include <tiny_obj_loader.h>
 
-const std::string MODEL_PATH = "sourceData/models/viking_room.obj";
+const string MODEL_PATH = "sourceData/models/viking_room.obj";
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -23,7 +23,7 @@ const vector<const char*> deviceExtensions = {
 // todo: replace with file system read
 #include <iostream>
 #include <fstream>
-static std::vector<char> readFile(const std::string& filename) {
+static std::vector<char> readFile(const string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
     if (!file.is_open()) {
@@ -1079,7 +1079,7 @@ void GIL::loadModel()
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
     std::vector<tinyobj::material_t> materials;
-    std::string warn, err;
+    string warn, err;
 
     if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
         throw std::runtime_error(warn + err);

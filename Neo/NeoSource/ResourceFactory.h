@@ -16,7 +16,7 @@ public:
 			Log(std::format("  {} ({:x})", ii.second->GetName().CStr(), ii.first));
 	}
 
-	T* Create(const std::string &name, const std::string&source)
+	T* Create(const string &name, const string &source)
 	{
 		u64 hash = StringHash64(name);
 		auto it = m_resources.find(hash);

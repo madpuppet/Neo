@@ -93,7 +93,7 @@ void MemoryTracker::Dump()
     gMemTrackEnabled = false;
     if (fm.StreamWriteBegin(logFile, "local:mem.log"))
     {
-        std::string out = std::format("MEM DUMP: {} allocs, {} bytes, Debug Overhead {}\n", m_blocks.size(), m_totalAllocated, m_debugOverhead);
+        string out = std::format("MEM DUMP: {} allocs, {} bytes, Debug Overhead {}\n", m_blocks.size(), m_totalAllocated, m_debugOverhead);
         fm.StreamWrite(logFile, (u8*)out.c_str(), (u32)out.size());
 
         for (int i = 0; i < (int)MemoryGroup_MAX; i++)
@@ -256,7 +256,7 @@ void StackTrace::Capture()
 
             // NOTE: we can save 40% of capture time using a large char buffer instead of a std::format
             //       but dynamic string is more robust - we can deal with it if speed becomes an issue
-            std::string str;
+            string str;
             if (SymFromAddr(process, stackFrame.AddrPC.Offset, &displacement, symbol))
             {
                 str = std::format("{:x}:{}\n", stackFrame.AddrPC.Offset, symbol->Name);

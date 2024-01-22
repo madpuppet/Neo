@@ -2,7 +2,7 @@
 #include "FileExcludes.h"
 #include "StringUtils.h"
 
-FileExcludes::FileExcludes(const std::string &path)
+FileExcludes::FileExcludes(const string &path)
 {
 	ExcludeType excludeType = ExcludeType_Ext;
 	FILE *fh = fopen(path.c_str(), "r");
@@ -29,7 +29,7 @@ FileExcludes::FileExcludes(const std::string &path)
 			{
 				if (excludeType == ExcludeType_Dir)
 				{
-					std::string sanitizedDir = StringReplace(buf, '\\', '/');
+					string sanitizedDir = StringReplace(buf, '\\', '/');
 					m_excludes[excludeType].push_back(StringHash64(sanitizedDir));
 				}
 				else

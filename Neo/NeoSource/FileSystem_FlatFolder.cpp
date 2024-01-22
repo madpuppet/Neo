@@ -2,7 +2,7 @@
 #include "FileSystem_FlatFolder.h"
 #include "StringUtils.h"
 
-FileSystem_FlatFolder::FileSystem_FlatFolder(const std::string &name, const std::string &folder, int priority, bool writable, FileExcludes *excludes)
+FileSystem_FlatFolder::FileSystem_FlatFolder(const string &name, const string &folder, int priority, bool writable, FileExcludes *excludes)
 	: m_name(name), m_rootFolder(folder), m_priority(priority), m_writable(writable), m_excludes(excludes)
 #if defined(PLATFORM_Windows)
     , m_readDirBuffer(0), m_rootFolderHandle(0)
@@ -59,7 +59,7 @@ void FileSystem_FlatFolder::StartReadDirCall()
 }
 #endif
 
-bool FileSystem_FlatFolder::PopChangedFile(std::string &name)
+bool FileSystem_FlatFolder::PopChangedFile(string &name)
 {
 #if defined(PLATFORM_Windows)
 	if (m_monitorFileChanges)
@@ -126,7 +126,7 @@ FileSystem_FlatFolder::~FileSystem_FlatFolder()
 	}
 }
 
-bool FileSystem_FlatFolder::Read(const std::string &name, MemBlock &block)
+bool FileSystem_FlatFolder::Read(const string &name, MemBlock &block)
 {
 	u64 hash = StringHash64(name);
 	auto entry = m_files.find(hash);
@@ -161,7 +161,7 @@ bool FileSystem_FlatFolder::Read(const std::string &name, MemBlock &block)
 	return true;
 }
 
-bool FileSystem_FlatFolder::GetAbsolutePath(const std::string &name, std::string &path)
+bool FileSystem_FlatFolder::GetAbsolutePath(const string &name, string &path)
 {
 	u64 hash = StringHash64(name);
 	auto entry = m_files.find(hash);
@@ -171,12 +171,12 @@ bool FileSystem_FlatFolder::GetAbsolutePath(const std::string &name, std::string
 	return true;
 }
 
-bool FileSystem_FlatFolder::Write(const std::string &name, MemBlock &block)
+bool FileSystem_FlatFolder::Write(const string &name, MemBlock &block)
 {
 	if (!m_writable)
 		return false;
 
-	std::string path = StringAddPath(m_rootFolder,name);
+	string path = StringAddPath(m_rootFolder,name);
 	FILE *fh = fopen(path.c_str(), "wb");
 	if (fh == 0)
 		return false;
@@ -196,14 +196,14 @@ bool FileSystem_FlatFolder::Write(const std::string &name, MemBlock &block)
 	return true;
 }
 
-bool FileSystem_FlatFolder::Exists(const std::string &name)
+bool FileSystem_FlatFolder::Exists(const string &name)
 {
 	u64 hash = StringHash64(name);
 	auto entry = m_files.find(hash);
 	return (entry != m_files.end());
 }
 
-bool FileSystem_FlatFolder::GetSize(const std::string &name, u32 &size)
+bool FileSystem_FlatFolder::GetSize(const string &name, u32 &size)
 {
 	u64 hash = StringHash64(name);
 	auto entry = m_files.find(hash);
@@ -223,7 +223,7 @@ bool FileSystem_FlatFolder::GetSize(const std::string &name, u32 &size)
 	return true;
 }
 
-bool FileSystem_FlatFolder::GetTime(const std::string &name, u64 &timestamp)
+bool FileSystem_FlatFolder::GetTime(const string &name, u64 &timestamp)
 {
 	u64 hash = StringHash64(name);
 	auto entry = m_files.find(hash);
@@ -244,7 +244,7 @@ bool FileSystem_FlatFolder::GetTime(const std::string &name, u64 &timestamp)
 	return false;
 }
 
-bool FileSystem_FlatFolder::Delete(const std::string &name)
+bool FileSystem_FlatFolder::Delete(const string &name)
 {
 	u64 hash = StringHash64(name);
 	auto entry = m_files.find(hash);
@@ -252,7 +252,7 @@ bool FileSystem_FlatFolder::Delete(const std::string &name)
 		return false;
 
 #if defined(PLATFORM_Windows)
-	std::string winName = StringReplace(entry->second->fullPath, '/', '\\');
+	string winName = StringReplace(entry->second->fullPath, '/', '\\');
 	if (remove(winName.c_str()) != 0)
 	{
 		Error(std::format("Failed to delete file: {}", winName));
@@ -271,7 +271,7 @@ bool FileSystem_FlatFolder::Delete(const std::string &name)
 	return true;
 }
 
-bool FileSystem_FlatFolder::Rename(const std::string &oldName, const std::string &newName)
+bool FileSystem_FlatFolder::Rename(const string &oldName, const string &newName)
 {
 	u64 hash = StringHash64(oldName);
 	auto entry = m_files.find(hash);
@@ -284,14 +284,14 @@ bool FileSystem_FlatFolder::Rename(const std::string &oldName, const std::string
 		return false;
 	}
 
-	std::string newPath = StringAddPath(m_rootFolder, newName);
+	string newPath = StringAddPath(m_rootFolder, newName);
 
 #if defined(PLATFORM_Windows)
 
 	if (entry->second->fullPath != newPath)
 	{
-		std::string winExisting = StringReplace(entry->second->fullPath, '/', '\\');
-		std::string winNew = StringReplace(newPath, '/', '\\');
+		string winExisting = StringReplace(entry->second->fullPath, '/', '\\');
+		string winNew = StringReplace(newPath, '/', '\\');
 		if (MoveFile(winExisting.c_str(),winNew.c_str()))
 		{
 			RemoveEntry(StringGetFilename(winExisting));
@@ -306,8 +306,8 @@ bool FileSystem_FlatFolder::Rename(const std::string &oldName, const std::string
 
 	if (entry->second->fullPath != newPath)
 	{
-		std::string iosExisting = StringReplace(entry->second->fullPath, '\\', '/');
-		std::string iosNew = StringReplace(newPath, '\\', '/');
+		string iosExisting = StringReplace(entry->second->fullPath, '\\', '/');
+		string iosNew = StringReplace(newPath, '\\', '/');
 	
 		NSError *error;
 
@@ -341,7 +341,7 @@ bool FileSystem_FlatFolder::Rename(const std::string &oldName, const std::string
 	return true;
 }
 
-void FileSystem_FlatFolder::GetListByExt(const std::string &ext, std::vector<std::string> &list)
+void FileSystem_FlatFolder::GetListByExt(const string &ext, std::vector<string> &list)
 {
 	for (auto entry : m_files)
 	{
@@ -355,7 +355,7 @@ void FileSystem_FlatFolder::GetListByExt(const std::string &ext, std::vector<std
 	}
 }
 
-void FileSystem_FlatFolder::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &list)
+void FileSystem_FlatFolder::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<string> &list)
 {
 	for (auto entry : m_files)
 	{
@@ -364,20 +364,20 @@ void FileSystem_FlatFolder::GetListByDelegate(const FileSystem_FilenameFilterDel
 	}
 }
 
-void FileSystem_FlatFolder::GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &list)
+void FileSystem_FlatFolder::GetListByExcludes(FileExcludes *excludes, std::vector<string> &list)
 {
 	for (auto entry : m_files)
 	{
-		std::string dir, filename, ext;
+		string dir, filename, ext;
 		StringSplitIntoFileParts(entry.second->fullPath, 0, &dir, &filename, &ext);
 		if (!excludes->IsExcluded(dir.c_str(), filename.c_str(), ext.c_str()))
 			list.push_back(entry.second->name);
 	}
 }
 
-void FileSystem_FlatFolder::GetListByFolder(const std::string &folder, std::vector<std::string> &list, GetFolderListMode folderMode)
+void FileSystem_FlatFolder::GetListByFolder(const string &folder, std::vector<string> &list, GetFolderListMode folderMode)
 {
-	std::string path = StringAddPath(m_rootFolder, folder);
+	string path = StringAddPath(m_rootFolder, folder);
 	for (auto entry : m_files)
 	{
 		if (StringGetDirectory(entry.second->fullPath) == path)
@@ -390,10 +390,10 @@ void FileSystem_FlatFolder::GetListByFolder(const std::string &folder, std::vect
 	}
 }
 
-void FileSystem_FlatFolder::ScanFolder(const std::string &folder)
+void FileSystem_FlatFolder::ScanFolder(const string &folder)
 {
 #if defined(PLATFORM_Windows)
-	std::string pattern = folder + "/*.*";
+	string pattern = folder + "/*.*";
 	_finddata_t buffer;
 	intptr_t handle;
 	if ((handle = _findfirst(pattern.c_str(), &buffer)) != -1)
@@ -412,8 +412,8 @@ void FileSystem_FlatFolder::ScanFolder(const std::string &folder)
 			}
 			else
 			{
-				std::string path = StringAddPath(folder, buffer.name);
-				std::string fs, dir, name, ext;
+				string path = StringAddPath(folder, buffer.name);
+				string fs, dir, name, ext;
 				StringSplitIntoFileParts(path, &fs, &dir, &name, &ext);
 				if (!m_excludes || !m_excludes->IsExcluded(dir.c_str(), name.c_str(), ext.c_str()))
 				{
@@ -435,12 +435,12 @@ void FileSystem_FlatFolder::ScanFolder(const std::string &folder)
 	NSString * resourcePath = [NSString stringWithUTF8String:folder.CStr()];
 	NSError * error;
 	NSArray * directoryContents = [[NSFileManager defaultManager] contentsOfDirectoryAtPath:resourcePath error:&error];
-	std::string path = [resourcePath UTF8String];
+	string path = [resourcePath UTF8String];
 	for (NSString *item in directoryContents)
 	{
-		std::string entry = [item UTF8String];
-		std::string path = folder.AddPath(entry);
-		std::string fs, dir, name, ext;
+		string entry = [item UTF8String];
+		string path = folder.AddPath(entry);
+		string fs, dir, name, ext;
 		path.SplitIntoFileParts(&fs, &dir, &name, &ext);
 		if (!m_excludes || !m_excludes->IsExcluded(dir.c_str(), name.c_str(), ext.c_str()))
 		{
@@ -468,9 +468,9 @@ void FileSystem_FlatFolder::Rescan()
 	ScanFolder(m_rootFolder);
 }
 
-bool FileSystem_FlatFolder::StreamWriteBegin(FileHandle handle, const std::string &name)
+bool FileSystem_FlatFolder::StreamWriteBegin(FileHandle handle, const string &name)
 {
-	std::string path = StringAddPath(m_rootFolder, name);
+	string path = StringAddPath(m_rootFolder, name);
 
 	u64 hash = StringHash64(name);
 	auto entry = m_files.find(hash);
@@ -538,7 +538,7 @@ bool FileSystem_FlatFolder::StreamWriteEnd(FileHandle handle)
 	return false;
 }
 
-bool FileSystem_FlatFolder::StreamReadBegin(FileHandle handle, const std::string &name)
+bool FileSystem_FlatFolder::StreamReadBegin(FileHandle handle, const string &name)
 {
 	auto entry = m_files.find(StringHash64(name));
 	if (entry == m_files.end())
@@ -588,7 +588,7 @@ bool FileSystem_FlatFolder::StreamReadEnd(FileHandle handle)
 	return false;
 }
 
-bool FileSystem_FlatFolder::AddEntry(const std::string &name, const std::string &path)
+bool FileSystem_FlatFolder::AddEntry(const string &name, const string &path)
 {
 	//DMLOG("Add Entry: %s,  %s",name.CStr(),path.CStr());
 	
@@ -603,7 +603,7 @@ bool FileSystem_FlatFolder::AddEntry(const std::string &name, const std::string 
 	return true;
 }
 
-bool FileSystem_FlatFolder::RemoveEntry(const std::string &name)
+bool FileSystem_FlatFolder::RemoveEntry(const string &name)
 {
 	bool found = false;
 	auto it = m_files.begin();

@@ -32,7 +32,7 @@ FileManager::FileManager() : m_nextUniqueFileHandle(0)
 	char buffer[256];
 	if (::SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, buffer) == 0)
 	{
-		std::string path = buffer;
+		string path = buffer;
 		path = StringAddPath(path, GAME_NAME);
 		::SHCreateDirectoryExA(NULL, path.c_str(), 0);
 		FileSystem_FlatFolder* fflocal = new FileSystem_FlatFolder("local", path, 2, true, s_excludes);
@@ -44,7 +44,7 @@ FileManager::FileManager() : m_nextUniqueFileHandle(0)
 #endif
 
 	// mount archives
-	std::string archiveName;
+	string archiveName;
 	Mount(new FileSystem_FlatArchive("datarkv", "data.rkv", 10));
 	
 	// raw access to file system (read/write files anyhere with full path)
@@ -99,10 +99,10 @@ bool FileManager::GetAbsolutePath(const string &name, string &path)
 }
 
 
-bool FileManager::Read(const std::string &name, MemBlock &block)
+bool FileManager::Read(const string &name, MemBlock &block)
 {
 	SCOPED_MUTEX;
-	std::string fsName, path;
+	string fsName, path;
 	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
@@ -113,10 +113,10 @@ bool FileManager::Read(const std::string &name, MemBlock &block)
 	return false;
 }
 
-bool FileManager::Write(const std::string &name, MemBlock &block)
+bool FileManager::Write(const string &name, MemBlock &block)
 {
 	SCOPED_MUTEX;
-	std::string fsName, path;
+	string fsName, path;
 	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
@@ -127,10 +127,10 @@ bool FileManager::Write(const std::string &name, MemBlock &block)
 	return false;
 }
 
-bool FileManager::Exists(const std::string &name)
+bool FileManager::Exists(const string &name)
 {
 	SCOPED_MUTEX;
-	std::string fsName, path;
+	string fsName, path;
 	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
@@ -144,7 +144,7 @@ bool FileManager::Exists(const std::string &name)
 bool FileManager::GetSize(const string &name, u32 &size)
 {
 	SCOPED_MUTEX;
-	std::string fsName, path;
+	string fsName, path;
 	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
@@ -155,10 +155,10 @@ bool FileManager::GetSize(const string &name, u32 &size)
 	return false;
 }
 
-bool FileManager::GetTime(const std::string &name, u64 &time)
+bool FileManager::GetTime(const string &name, u64 &time)
 {
 	SCOPED_MUTEX;
-	std::string fsName, path;
+	string fsName, path;
 	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
@@ -169,10 +169,10 @@ bool FileManager::GetTime(const std::string &name, u64 &time)
 	return false;
 }
 
-bool FileManager::Delete(const std::string &name)
+bool FileManager::Delete(const string &name)
 {
 	SCOPED_MUTEX;
-	std::string fsName, path;
+	string fsName, path;
 	StringSplitIntoFSAndPath(name, fsName, path);
 
 	for (auto fs : m_fileSystems)
@@ -183,13 +183,13 @@ bool FileManager::Delete(const std::string &name)
 	return false;
 }
 
-bool FileManager::Rename(const std::string &oldName, const std::string &newName)
+bool FileManager::Rename(const string &oldName, const string &newName)
 {
 	SCOPED_MUTEX;
-	std::string oldfsName, oldpath;
+	string oldfsName, oldpath;
 	StringSplitIntoFSAndPath(oldName, oldfsName, oldpath);
 
-	std::string newfsName, newpath;
+	string newfsName, newpath;
 	StringSplitIntoFSAndPath(newName, newfsName, newpath);
 
 	if (!newfsName.empty() && oldfsName != newfsName)
@@ -206,7 +206,7 @@ bool FileManager::Rename(const std::string &oldName, const std::string &newName)
 	return false;
 }
 
-void FileManager::GetListByExt(const std::string &ext, std::vector<std::string> &list)
+void FileManager::GetListByExt(const string &ext, vector<string> &list)
 {
 	SCOPED_MUTEX;
 	for (auto fs : m_fileSystems)
@@ -215,7 +215,7 @@ void FileManager::GetListByExt(const std::string &ext, std::vector<std::string> 
 	}
 }
 
-void FileManager::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &list)
+void FileManager::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, vector<string> &list)
 {
 	SCOPED_MUTEX;
 	for (auto fs : m_fileSystems)
@@ -224,7 +224,7 @@ void FileManager::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fil
 	}
 }
 
-void FileManager::GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &list)
+void FileManager::GetListByExcludes(FileExcludes *excludes, vector<string> &list)
 {
 	SCOPED_MUTEX;
 	for (auto fs : m_fileSystems)
@@ -233,7 +233,7 @@ void FileManager::GetListByExcludes(FileExcludes *excludes, std::vector<std::str
 	}
 }
 
-void FileManager::GetListByFolder(const std::string &folder, std::vector<std::string> &list, GetFolderListMode folderMode)
+void FileManager::GetListByFolder(const string &folder, vector<string> &list, GetFolderListMode folderMode)
 {
 	SCOPED_MUTEX;
 	for (auto fs : m_fileSystems)
@@ -252,7 +252,7 @@ void FileManager::Rescan()
 }
 
 #if 0 // keep osx,ios,android code around until they are ported to system init module for creating the local file system
-std::string FileManager::MakeLocalPath(const std::string &name, bool createFolder)
+string FileManager::MakeLocalPath(const string &name, bool createFolder)
 {
 
 //#elif defined(PLATFORM_OSX)
@@ -264,10 +264,10 @@ std::string FileManager::MakeLocalPath(const std::string &name, bool createFolde
 		NSError * error;
 		[[NSFileManager defaultManager] createDirectoryAtPath:nsexpanded withIntermediateDirectories : TRUE attributes : nil error : &error];
 	}
-	std::string path = [nsout cStringUsingEncoding : NSASCIIStringEncoding];
+	string path = [nsout cStringUsingEncoding : NSASCIIStringEncoding];
 	return path;
 //#elif defined(PLATFORM_IOS)
-	std::string fixedName = name.AsLowercase();
+	string fixedName = name.AsLowercase();
 
 	// try documents folder...
 	NSArray *paths = NSSearchPathForDirectoriesInDomains(NSDocumentDirectory, NSUserDomainMask, YES);
@@ -276,16 +276,16 @@ std::string FileManager::MakeLocalPath(const std::string &name, bool createFolde
 //#elif defined(PLATFORM_Android)
 	// Build an android specific file system path for writing profiles and settings.
 	DMASSERTD(g_internalDataPath, "internalDataPath has not been specified");
-	return std::string::CreateFormatted("%s/%s", g_internalDataPath, name.CStr());
+	return string::CreateFormatted("%s/%s", g_internalDataPath, name.CStr());
 }
 #endif
 
-bool FileManager::StreamWriteBegin(FileHandle &handle, const std::string &name)
+bool FileManager::StreamWriteBegin(FileHandle &handle, const string &name)
 {
 	SCOPED_MUTEX;
 	handle = ++m_nextUniqueFileHandle;
 
-	std::string _fs, _path;
+	string _fs, _path;
 	StringSplitIntoFSAndPath(name, _fs, _path);
 
 	// first try only overwriting files that exist...
@@ -337,14 +337,14 @@ bool FileManager::StreamWriteEnd(FileHandle handle)
 	return false;
 }
 
-bool FileManager::StreamReadBegin(FileHandle &handle, const std::string &name)
+bool FileManager::StreamReadBegin(FileHandle &handle, const string &name)
 {
 	Log(std::format("Stream Read {}", name));
 
 	SCOPED_MUTEX;
 	handle = ++m_nextUniqueFileHandle;
 
-	std::string _fs, _path;
+	string _fs, _path;
 	StringSplitIntoFSAndPath(name, _fs, _path);
 
 	for (auto fs : m_fileSystems)
@@ -403,18 +403,18 @@ void FileManager::Update()
 	struct Change
 	{
 		FileSystem *fs;
-		std::string filename;
+		string filename;
 	};
-	std::vector<Change> *changes = 0;
+	vector<Change> *changes = 0;
 
 	// check for file changes
 	for (auto fs : m_fileSystems)
 	{
-		std::string filename;
+		string filename;
 		if (fs->PopChangedFile(filename))
 		{
 			if (!changes)
-				changes = new std::vector<Change>();
+				changes = new vector<Change>();
 
 			Change change;
 			change.fs = fs;

@@ -100,21 +100,16 @@ typedef glm::ivec4      ivec4;
 typedef glm::mat3x4     mat3x4;
 typedef glm::mat4x4     mat4x4;
 
-// neo containers - we just use STL but rename them to allow them to be changed if necessary
-template<typename T> using dynamicarray = std::vector<T>;
-template<typename T, size_t S> using fixedarray = std::array<T,S>;
-template<typename T> using fifo = std::deque<T>;
-template<typename K, typename D> using lookuptree = std::map<K, D>;
-template<typename D> using set = std::unordered_set<D>;
-template<typename D> using sortedset = std::set<D>;
-template<typename K, typename D> using hashtable = std::unordered_map<K, D>;
-using string = std::string;
-using stringlist = std::vector<string>;
-
-// remove these
+// neo containers... some are renamed from STL for more legibility
 template<typename T> using vector = std::vector<T>;
 template<typename T, size_t S> using array = std::array<T, S>;
 template<typename K, typename D> using map = std::map<K, D>;
+template<typename K, typename D> using hashtable = std::unordered_map<K, D>;
+template<typename D> using set = std::set<D>;
+template<typename D> using hashset = std::unordered_set<D>;
+template<typename T> using fifo = std::deque<T>;
+using string = std::string;
+using stringlist = std::vector<string>;
 
 // this used by any callback system that allows adding & removing callbacks
 typedef u64             CallbackHandle;

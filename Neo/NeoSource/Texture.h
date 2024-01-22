@@ -95,7 +95,7 @@ class Texture : public Resource
 	class TexturePlatformData* m_platformData;
 
 public:
-	Texture(const std::string& name);
+	Texture(const string& name);
 	virtual ~Texture();
 };
 
@@ -107,7 +107,7 @@ class TextureFactory : public Module<TextureFactory>
 public:
 	TextureFactory();
 
-	Texture* Create(const std::string& name);
+	Texture* Create(const string& name);
 	void Destroy(Texture* texture);
 };
 

@@ -57,6 +57,6 @@ public:  \
 	}  \
 } __registerModule##x;
 
-void RegisterModule(std::function<void()> newFunc, std::function<void()> deleteFunc, std::string name, int priority);
+void RegisterModule(std::function<void()> newFunc, std::function<void()> deleteFunc, string name, int priority);
 void StartupModules();
 void ShutdownModules();

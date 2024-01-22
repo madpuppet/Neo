@@ -31,8 +31,8 @@
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
 
-const std::string MODEL_PATH = "sourceData/models/viking_room.obj";
-const std::string TEXTURE_PATH = "sourceData/textures/viking_room.png";
+const string MODEL_PATH = "sourceData/models/viking_room.obj";
+const string TEXTURE_PATH = "sourceData/textures/viking_room.png";
 
 #if !NEW_CODE
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -1195,7 +1195,7 @@ public:
         tinyobj::attrib_t attrib;
         std::vector<tinyobj::shape_t> shapes;
         std::vector<tinyobj::material_t> materials;
-        std::string warn, err;
+        string warn, err;
 
         if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, MODEL_PATH.c_str())) {
             throw std::runtime_error(warn + err);
@@ -1710,7 +1710,7 @@ public:
         std::vector<VkExtensionProperties> availableExtensions(extensionCount);
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
 
-        std::set<std::string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
+        std::set<string> requiredExtensions(deviceExtensions.begin(), deviceExtensions.end());
 
         for (const auto& extension : availableExtensions) {
             requiredExtensions.erase(extension.extensionName);
@@ -1793,7 +1793,7 @@ public:
         return true;
     }
 
-    static std::vector<char> readFile(const std::string& filename) {
+    static std::vector<char> readFile(const string& filename) {
         std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
         if (!file.is_open()) {
@@ -1828,7 +1828,7 @@ class ThreadTest : public Thread
     };
 
 public:
-    ThreadTest(int guid, const std::string& name) : Thread(guid, name) {}
+    ThreadTest(int guid, const string& name) : Thread(guid, name) {}
 };
 
 
@@ -1850,7 +1850,7 @@ int main(int argc, char* args[])
     return EXIT_SUCCESS;
 }
 
-void Log(const std::string& msg)
+void Log(const string& msg)
 {
     NOMEMTRACK();
     string outStr = msg + "\n";
@@ -1863,7 +1863,7 @@ void Log(const std::string& msg)
 
 #if defined(_DEBUG)
 
-void Error(const std::string &msg)
+void Error(const string &msg)
 {
     NOMEMTRACK();
     string errorStr = string("ERROR: ") + msg + "\n";

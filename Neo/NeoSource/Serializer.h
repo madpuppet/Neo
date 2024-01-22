@@ -66,7 +66,7 @@ public:
 	void WriteI16(i16 value) { WriteU16((u16)value); }
 	void WriteI8(i8 value) { WriteU8((u8)value); }
 	void WriteBool(bool value) { WriteU8( value != 0 ); }
-	void WriteString(const std::string &value);
+	void WriteString(const string &value);
     void WriteVec3(const glm::vec3 &value);
 	void WriteIVec3(const glm::ivec3 &value);
 	void WriteQuat(const glm::quat &value);
@@ -83,7 +83,7 @@ public:
 	Serializer& operator << (i16 value) {WriteU16((u16)value); return *this;}
 	Serializer& operator << (i8 value)  {WriteU8((u8)value); return *this;}
 	Serializer& operator << (bool value) {WriteBool(value); return *this;}
-	Serializer& operator << (const std::string &value) {WriteString(value); return *this;}
+	Serializer& operator << (const string &value) {WriteString(value); return *this;}
 	Serializer& operator << (const ivec2 &value) {WriteI32(value.x);WriteI32(value.y);return *this;}
 	Serializer& operator << (const ivec3 &value) {WriteI32(value.x);WriteI32(value.y);WriteI32(value.z);return *this;};
 	Serializer& operator << (const vec3 &value) {WriteF32(value.x);WriteF32(value.y);WriteF32(value.z);return *this;}

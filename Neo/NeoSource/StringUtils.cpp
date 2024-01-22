@@ -1,6 +1,6 @@
 #include "Neo.h"
 
-u16 StringPopUTF8(const std::string& source, int& idx)
+u16 StringPopUTF8(const string& source, int& idx)
 {
     const char* str = source.c_str();
     u16 result = 0;
@@ -24,7 +24,7 @@ u16 StringPopUTF8(const std::string& source, int& idx)
     return result;
 }
 
-std::string StringReplace(const std::string& str, char oldChar, char newChar)
+string StringReplace(const string& str, char oldChar, char newChar)
 {
     char* buffer = new char[str.size()+1];
     int inIdx = 0;
@@ -45,12 +45,12 @@ std::string StringReplace(const std::string& str, char oldChar, char newChar)
         }
     }
     buffer[outIdx++] = 0;
-    std::string result(buffer);
+    string result(buffer);
     delete buffer;
     return result;
 }
 
-u64 StringHash64(const std::string& str)
+u64 StringHash64(const string& str)
 {
     u64 offsetBasis = 2166136261;
     u64 prime = 16777619;
@@ -68,7 +68,7 @@ u64 StringHash64(const std::string& str)
     return hash;
 }
 
-void StringSplitIntoFileParts(const std::string &str, std::string *pFilesys, std::string *pDirectory, std::string* pFilename, std::string* pExt)
+void StringSplitIntoFileParts(const string &str, string *pFilesys, string *pDirectory, string* pFilename, string* pExt)
 {
     const char* pSTART = 0;
     const char* pFS = 0;
@@ -101,14 +101,14 @@ void StringSplitIntoFileParts(const std::string &str, std::string *pFilesys, std
     if (pFilesys && pFS)
     {
         size_t len = pFS - pSTART;
-        *pFilesys = std::string(pSTART, pFS);
+        *pFilesys = string(pSTART, pFS);
     }
 
     if (pDirectory && pDIR && pDIR > pSTART)
     {
         const char* dirStart = pFS ? pFS + 1 : pSTART;
         size_t len = pDIR - dirStart;
-        *pDirectory = std::string(dirStart, len);
+        *pDirectory = string(dirStart, len);
     }
     if (pFilename)
     {
@@ -117,19 +117,19 @@ void StringSplitIntoFileParts(const std::string &str, std::string *pFilesys, std
         size_t len = pFNAME_End - pFNAME_Start;
         if (pFNAME_Start <= pFNAME_End)
         {
-            *pFilename = std::string(pFNAME_Start, len);
+            *pFilename = string(pFNAME_Start, len);
         }
     }
     if (pExt && pEXT)
     {
         size_t len = pEND - pEXT;
-        *pExt = std::string(pEXT, len);
+        *pExt = string(pEXT, len);
     }
 }
 
-std::string StringAddPath(const std::string& base, const std::string& path)
+string StringAddPath(const string& base, const string& path)
 {
-    std::string result = base;
+    string result = base;
 
     // Check if the first string is empty or doesn't end with a backslash
     if (base.back() != '\\' || base.back() == '.') 
@@ -143,10 +143,10 @@ std::string StringAddPath(const std::string& base, const std::string& path)
     return result;
 }
 
-bool StringSplit(const std::string& input, std::string &left, std::string &right, char delimiter)
+bool StringSplit(const string& input, string &left, string &right, char delimiter)
 {
     size_t pos = input.find(delimiter);
-    if (pos != std::string::npos) 
+    if (pos != string::npos) 
     {
         left = input.substr(0, pos);
         right = input.substr(pos + 1);
@@ -162,7 +162,7 @@ bool StringSplit(const std::string& input, std::string &left, std::string &right
 
 
 
-void StringSplitIntoFSAndPath(const std::string &str, std::string &fs, std::string &path)
+void StringSplitIntoFSAndPath(const string &str, string &fs, string &path)
 {
     if (!StringSplit(str, fs, path, ':'))
     {
@@ -175,11 +175,11 @@ void StringSplitIntoFSAndPath(const std::string &str, std::string &fs, std::stri
 
 
 
-class astring : public std::string
+class astring : public string
 {
 public:
     astring() = default;
-    astring(const std::string& str) : std::string(str) {}
+    astring(const string& str) : string(str) {}
 
     void SomeFunc() { }
 };

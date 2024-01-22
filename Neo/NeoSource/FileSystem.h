@@ -22,30 +22,30 @@ public:
 	virtual ~FileSystem() {};
 	virtual bool CanWrite() const = 0;
 	virtual int Priority() const = 0;
-	virtual const std::string &Name() const = 0;
-	virtual bool GetAbsolutePath(const std::string &name, std::string &path) = 0;
-	virtual bool Read(const std::string &name, MemBlock &block) = 0;
-	virtual bool Write(const std::string &name, MemBlock &block) = 0;
-	virtual bool Exists(const std::string &name) = 0;
-	virtual bool GetSize(const std::string &name, u32 &size) = 0;
-	virtual bool GetTime(const std::string &name, u64 &time) = 0;
-	virtual bool Delete(const std::string &name) = 0;
-	virtual bool Rename(const std::string &oldName, const std::string &newName) = 0;
-	virtual void GetListByExt(const std::string &ext, std::vector<std::string> &list) = 0;
-	virtual void GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &files) = 0;
-	virtual void GetListByFolder(const std::string &folder, std::vector<std::string> &files, GetFolderListMode folderMode) = 0;
-	virtual void GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &files) = 0;
+	virtual const string &Name() const = 0;
+	virtual bool GetAbsolutePath(const string &name, string &path) = 0;
+	virtual bool Read(const string &name, MemBlock &block) = 0;
+	virtual bool Write(const string &name, MemBlock &block) = 0;
+	virtual bool Exists(const string &name) = 0;
+	virtual bool GetSize(const string &name, u32 &size) = 0;
+	virtual bool GetTime(const string &name, u64 &time) = 0;
+	virtual bool Delete(const string &name) = 0;
+	virtual bool Rename(const string &oldName, const string &newName) = 0;
+	virtual void GetListByExt(const string &ext, std::vector<string> &list) = 0;
+	virtual void GetListByExcludes(FileExcludes *excludes, std::vector<string> &files) = 0;
+	virtual void GetListByFolder(const string &folder, std::vector<string> &files, GetFolderListMode folderMode) = 0;
+	virtual void GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<string> &files) = 0;
 
 	virtual void Rescan() = 0;
 
-	virtual bool StreamWriteBegin(FileHandle handle, const std::string &name) = 0;
+	virtual bool StreamWriteBegin(FileHandle handle, const string &name) = 0;
 	virtual bool StreamWrite(FileHandle handle, u8 *mem, u32 size) = 0;
 	virtual bool StreamFlush(FileHandle handle) = 0;
 	virtual bool StreamWriteEnd(FileHandle handle) = 0;
 
-	virtual bool StreamReadBegin(FileHandle handle, const std::string &name) = 0;
+	virtual bool StreamReadBegin(FileHandle handle, const string &name) = 0;
 	virtual bool StreamRead(FileHandle handle, u8 *mem, u32 size, u32 &sizeRead) = 0;
 	virtual bool StreamReadEnd(FileHandle handle) = 0;
 
-	virtual bool PopChangedFile(std::string &name) = 0;
+	virtual bool PopChangedFile(string &name) = 0;
 };

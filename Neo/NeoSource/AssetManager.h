@@ -31,7 +31,7 @@ struct AssetData
 	AssetType m_type;
 	u16 m_version;
 	string m_name;
-	vector<string> m_sourceFiles;
+	stringlist m_sourceFiles;
 
 	virtual MemBlock AssetToMemory() = 0;
 	virtual void MemoryToAsset(const MemBlock& block) = 0;
@@ -74,6 +74,6 @@ public:
 	void RegisterAssetType(int assetType, AssetTypeInfo* assetCreator) { m_assetTypeInfoMap.insert(std::pair<int, AssetTypeInfo*>(assetType, assetCreator)); }
 
 	// gather all data from file systems
-	void DeliverAssetDataAsync(AssetType assetType, const std::string &name, const DeliverAssetDataCB& cb);
+	void DeliverAssetDataAsync(AssetType assetType, const string &name, const DeliverAssetDataCB& cb);
 };
 

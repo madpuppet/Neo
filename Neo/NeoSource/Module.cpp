@@ -9,13 +9,13 @@ struct ModuleInfo
 {
 	std::function<void()> newFunc;
 	std::function<void()> deleteFunc;
-	std::string name;
+	string name;
 	int priority;
 };
 ModuleInfo *s_modules[256];
 int s_moduleCount = 0;
 
-void RegisterModule(std::function<void()> newFunc, std::function<void()> deleteFunc, std::string name, int priority)
+void RegisterModule(std::function<void()> newFunc, std::function<void()> deleteFunc, string name, int priority)
 {
 	s_modules[s_moduleCount++] = new ModuleInfo{ newFunc, deleteFunc, name, priority };
 }

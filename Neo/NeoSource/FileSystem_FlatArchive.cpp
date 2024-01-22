@@ -5,7 +5,7 @@
 #include "MathUtils.h"
 #include "StringUtils.h"
 
-FileSystem_FlatArchive::FileSystem_FlatArchive(const std::string &name, const std::string &path, int priority)
+FileSystem_FlatArchive::FileSystem_FlatArchive(const string &name, const string &path, int priority)
 	: m_name(name), m_path(path), m_priority(priority), m_dataStart(0)
 {
 	Log(std::format("MOUNT ARCHIVE: {}", name));
@@ -52,7 +52,7 @@ FileSystem_FlatArchive::~FileSystem_FlatArchive()
 		fclose(m_fh);
 }
 
-bool FileSystem_FlatArchive::Read(const std::string &name, MemBlock &block)
+bool FileSystem_FlatArchive::Read(const string &name, MemBlock &block)
 {
 	// check if entry is in the TOC
 	u64 hash = StringHash64(name);
@@ -102,24 +102,24 @@ bool FileSystem_FlatArchive::Read(const std::string &name, MemBlock &block)
 	return true;
 }
 
-bool FileSystem_FlatArchive::Exists(const std::string &name)
+bool FileSystem_FlatArchive::Exists(const string &name)
 {
 	// check if entry is in the TOC
 	auto it = m_entries.find(StringHash64(name));
 	return (it != m_entries.end());
 }
 
-void FileSystem_FlatArchive::GetListByFolder(const std::string &folder, std::vector<std::string> &files, GetFolderListMode folderMode)
+void FileSystem_FlatArchive::GetListByFolder(const string &folder, std::vector<string> &files, GetFolderListMode folderMode)
 {
 	Log("GetListByFolder NOT IMPLEMENTED!");
 }
 
-void FileSystem_FlatArchive::GetListByExcludes(FileExcludes *excludes, std::vector<std::string> &files)
+void FileSystem_FlatArchive::GetListByExcludes(FileExcludes *excludes, std::vector<string> &files)
 {
 	Log("GetListByExcludes NOT IMPLEMENTED!");
 }
 
-void FileSystem_FlatArchive::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<std::string> &list)
+void FileSystem_FlatArchive::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<string> &list)
 {
 	for (auto entry : m_entries)
 	{
@@ -128,7 +128,7 @@ void FileSystem_FlatArchive::GetListByDelegate(const FileSystem_FilenameFilterDe
 	}
 }
 
-bool FileSystem_FlatArchive::GetSize(const std::string &name, u32 &size)
+bool FileSystem_FlatArchive::GetSize(const string &name, u32 &size)
 {
 	// check if entry is in the TOC
 	auto it = m_entries.find(StringHash64(name));
@@ -138,7 +138,7 @@ bool FileSystem_FlatArchive::GetSize(const std::string &name, u32 &size)
 	return true;
 }
 
-bool FileSystem_FlatArchive::GetTime(const std::string &name, u64 &time)
+bool FileSystem_FlatArchive::GetTime(const string &name, u64 &time)
 {
 	// check if entry is in the TOC
 	if (Exists(name))
@@ -149,13 +149,13 @@ bool FileSystem_FlatArchive::GetTime(const std::string &name, u64 &time)
 	return false;
 }
 
-void FileSystem_FlatArchive::GetListByExt(const std::string &ext, std::vector<std::string> &list)
+void FileSystem_FlatArchive::GetListByExt(const string &ext, std::vector<string> &list)
 {
 	for (auto entry : m_entries)
 	{
 		const char *_ext = strrchr(entry.second->name, '.');
         auto name = (const char *)entry.second->name;
-        auto is_equal = [name](const std::string& other) { return other == name; };
+        auto is_equal = [name](const string& other) { return other == name; };
 		if (_ext && ext == _ext && !std::any_of(list.begin(), list.end(), is_equal))
 		{
 			list.push_back(entry.second->name);
@@ -163,7 +163,7 @@ void FileSystem_FlatArchive::GetListByExt(const std::string &ext, std::vector<st
 	}
 }
 
-bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const std::string &name)
+bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const string &name)
 {
 	if (!Exists(name))
 		return false;
@@ -221,21 +221,21 @@ bool FileSystem_FlatArchive::StreamReadEnd(FileHandle handle)
 
 struct BTOCEntry
 {
-	std::string filename;
+	string filename;
 	MemBlock compressed;
 	u64 tocEntryOffset;
 	u32 tocEntrySize;
 };
 
-void FileSystem_FlatArchive::WriteArchive(const std::string &outputFile)
+void FileSystem_FlatArchive::WriteArchive(const string &outputFile)
 {
 	FileManager &fm = FileManager::Instance();
 
 	// first we build a list of all known files that match our excludes criteria
-	std::string archiveName = outputFile + ".rkv";
-	std::string excludesFile = outputFile + ".exclude";
+	string archiveName = outputFile + ".rkv";
+	string excludesFile = outputFile + ".exclude";
 	auto excludes = new FileExcludes(excludesFile);
-	std::vector<std::string> files;
+	std::vector<string> files;
 	fm.GetListByExcludes(excludes, files);
 
 	// first pass - calculate the toc size

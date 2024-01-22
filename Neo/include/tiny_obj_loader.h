@@ -174,12 +174,12 @@ struct texture_option_t {
   real_t bump_multiplier;  // -bm (for bump maps only, default 1.0)
 
   // extension
-  std::string colorspace;  // Explicitly specify color space of stored texel
+  string colorspace;  // Explicitly specify color space of stored texel
                            // value. Usually `sRGB` or `linear` (default empty).
 };
 
 struct material_t {
-  std::string name;
+  string name;
 
   real_t ambient[3];
   real_t diffuse[3];
@@ -194,14 +194,14 @@ struct material_t {
 
   int dummy;  // Suppress padding warning.
 
-  std::string ambient_texname;             // map_Ka. For ambient or ambient occlusion.
-  std::string diffuse_texname;             // map_Kd
-  std::string specular_texname;            // map_Ks
-  std::string specular_highlight_texname;  // map_Ns
-  std::string bump_texname;                // map_bump, map_Bump, bump
-  std::string displacement_texname;        // disp
-  std::string alpha_texname;               // map_d
-  std::string reflection_texname;          // refl
+  string ambient_texname;             // map_Ka. For ambient or ambient occlusion.
+  string diffuse_texname;             // map_Kd
+  string specular_texname;            // map_Ks
+  string specular_highlight_texname;  // map_Ns
+  string bump_texname;                // map_bump, map_Bump, bump
+  string displacement_texname;        // disp
+  string alpha_texname;               // map_d
+  string reflection_texname;          // refl
 
   texture_option_t ambient_texopt;
   texture_option_t diffuse_texopt;
@@ -222,11 +222,11 @@ struct material_t {
   real_t anisotropy;           // aniso. [0, 1] default 0
   real_t anisotropy_rotation;  // anisor. [0, 1] default 0
   real_t pad0;
-  std::string roughness_texname;  // map_Pr
-  std::string metallic_texname;   // map_Pm
-  std::string sheen_texname;      // map_Ps
-  std::string emissive_texname;   // map_Ke
-  std::string normal_texname;     // norm. For normal mapping.
+  string roughness_texname;  // map_Pr
+  string metallic_texname;   // map_Pm
+  string sheen_texname;      // map_Ps
+  string emissive_texname;   // map_Ke
+  string normal_texname;     // norm. For normal mapping.
 
   texture_option_t roughness_texopt;
   texture_option_t metallic_texopt;
@@ -236,7 +236,7 @@ struct material_t {
 
   int pad2;
 
-  std::map<std::string, std::string> unknown_parameter;
+  std::map<string, string> unknown_parameter;
 
 #ifdef TINY_OBJ_LOADER_PYTHON_BINDING
   // For pybind11
@@ -309,25 +309,25 @@ struct material_t {
     transmittance[2] = real_t(a[2]);
   }
 
-  std::string GetCustomParameter(const std::string &key) {
-    std::map<std::string, std::string>::const_iterator it =
+  string GetCustomParameter(const string &key) {
+    std::map<string, string>::const_iterator it =
         unknown_parameter.find(key);
 
     if (it != unknown_parameter.end()) {
       return it->second;
     }
-    return std::string();
+    return string();
   }
 
 #endif
 };
 
 struct tag_t {
-  std::string name;
+  string name;
 
   std::vector<int> intValues;
   std::vector<real_t> floatValues;
-  std::vector<std::string> stringValues;
+  std::vector<string> stringValues;
 };
 
 struct joint_and_weight_t {
@@ -377,7 +377,7 @@ struct points_t {
 };
 
 struct shape_t {
-  std::string name;
+  string name;
   mesh_t mesh;
   lines_t lines;
   points_t points;
@@ -460,10 +460,10 @@ class MaterialReader {
   MaterialReader() {}
   virtual ~MaterialReader();
 
-  virtual bool operator()(const std::string &matId,
+  virtual bool operator()(const string &matId,
                           std::vector<material_t> *materials,
-                          std::map<std::string, int> *matMap, std::string *warn,
-                          std::string *err) = 0;
+                          std::map<string, int> *matMap, string *warn,
+                          string *err) = 0;
 };
 
 ///
@@ -472,16 +472,16 @@ class MaterialReader {
 class MaterialFileReader : public MaterialReader {
  public:
   // Path could contain separator(';' in Windows, ':' in Posix)
-  explicit MaterialFileReader(const std::string &mtl_basedir)
+  explicit MaterialFileReader(const string &mtl_basedir)
       : m_mtlBaseDir(mtl_basedir) {}
   virtual ~MaterialFileReader() TINYOBJ_OVERRIDE {}
-  virtual bool operator()(const std::string &matId,
+  virtual bool operator()(const string &matId,
                           std::vector<material_t> *materials,
-                          std::map<std::string, int> *matMap, std::string *warn,
-                          std::string *err) TINYOBJ_OVERRIDE;
+                          std::map<string, int> *matMap, string *warn,
+                          string *err) TINYOBJ_OVERRIDE;
 
  private:
-  std::string m_mtlBaseDir;
+  string m_mtlBaseDir;
 };
 
 ///
@@ -492,10 +492,10 @@ class MaterialStreamReader : public MaterialReader {
   explicit MaterialStreamReader(std::istream &inStream)
       : m_inStream(inStream) {}
   virtual ~MaterialStreamReader() TINYOBJ_OVERRIDE {}
-  virtual bool operator()(const std::string &matId,
+  virtual bool operator()(const string &matId,
                           std::vector<material_t> *materials,
-                          std::map<std::string, int> *matMap, std::string *warn,
-                          std::string *err) TINYOBJ_OVERRIDE;
+                          std::map<string, int> *matMap, string *warn,
+                          string *err) TINYOBJ_OVERRIDE;
 
  private:
   std::istream &m_inStream;
@@ -508,7 +508,7 @@ struct ObjReaderConfig {
   // Currently not used.
   // "simple" or empty: Create triangle fan
   // "earcut": Use the algorithm based on Ear clipping
-  std::string triangulation_method;
+  string triangulation_method;
 
   /// Parse vertex color.
   /// If vertex color is not present, its filled with default value.
@@ -521,7 +521,7 @@ struct ObjReaderConfig {
   /// Default = "" = search from the same directory of .obj file.
   /// Valid only when loading .obj from a file.
   ///
-  std::string mtl_search_path;
+  string mtl_search_path;
 
   ObjReaderConfig()
       : triangulate(true), triangulation_method("simple"), vertex_color(true) {}
@@ -540,7 +540,7 @@ class ObjReader {
   /// @param[in] filename wavefront .obj filename
   /// @param[in] config Reader configuration
   ///
-  bool ParseFromFile(const std::string &filename,
+  bool ParseFromFile(const string &filename,
                      const ObjReaderConfig &config = ObjReaderConfig());
 
   ///
@@ -552,7 +552,7 @@ class ObjReader {
   /// @param[in] mtl_text wavefront .mtl filename
   /// @param[in] config Reader configuration
   ///
-  bool ParseFromString(const std::string &obj_text, const std::string &mtl_text,
+  bool ParseFromString(const string &obj_text, const string &mtl_text,
                        const ObjReaderConfig &config = ObjReaderConfig());
 
   ///
@@ -569,12 +569,12 @@ class ObjReader {
   ///
   /// Warning message(may be filled after `Load` or `Parse`)
   ///
-  const std::string &Warning() const { return warning_; }
+  const string &Warning() const { return warning_; }
 
   ///
   /// Error message(filled when `Load` or `Parse` failed)
   ///
-  const std::string &Error() const { return error_; }
+  const string &Error() const { return error_; }
 
  private:
   bool valid_;
@@ -583,8 +583,8 @@ class ObjReader {
   std::vector<shape_t> shapes_;
   std::vector<material_t> materials_;
 
-  std::string warning_;
-  std::string error_;
+  string warning_;
+  string error_;
 };
 
 /// ==>>========= Legacy v1 API =============================================
@@ -602,8 +602,8 @@ class ObjReader {
 /// Option 'default_vcols_fallback' specifies whether vertex colors should
 /// always be defined, even if no colors are given (fallback to white).
 bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
-             std::vector<material_t> *materials, std::string *warn,
-             std::string *err, const char *filename,
+             std::vector<material_t> *materials, string *warn,
+             string *err, const char *filename,
              const char *mtl_basedir = NULL, bool triangulate = true,
              bool default_vcols_fallback = true);
 
@@ -616,22 +616,22 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
 bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
                          void *user_data = NULL,
                          MaterialReader *readMatFn = NULL,
-                         std::string *warn = NULL, std::string *err = NULL);
+                         string *warn = NULL, string *err = NULL);
 
 /// Loads object from a std::istream, uses `readMatFn` to retrieve
 /// std::istream for materials.
 /// Returns true when loading .obj become success.
 /// Returns warning and error message into `err`
 bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
-             std::vector<material_t> *materials, std::string *warn,
-             std::string *err, std::istream *inStream,
+             std::vector<material_t> *materials, string *warn,
+             string *err, std::istream *inStream,
              MaterialReader *readMatFn = NULL, bool triangulate = true,
              bool default_vcols_fallback = true);
 
 /// Loads materials into std::map
-void LoadMtl(std::map<std::string, int> *material_map,
+void LoadMtl(std::map<string, int> *material_map,
              std::vector<material_t> *materials, std::istream *inStream,
-             std::string *warning, std::string *err);
+             string *warning, string *err);
 
 ///
 /// Parse texture name and texture option for custom texture parameter through
@@ -641,7 +641,7 @@ void LoadMtl(std::map<std::string, int> *material_map,
 /// @param[out] texopt Parsed texopt
 /// @param[in] linebuf Input string
 ///
-bool ParseTextureNameAndOption(std::string *texname, texture_option_t *texopt,
+bool ParseTextureNameAndOption(string *texname, texture_option_t *texopt,
                                const char *linebuf);
 
 /// =<<========== Legacy v1 API =============================================
@@ -759,7 +759,7 @@ struct PrimGroup {
 
 // See
 // http://stackoverflow.com/questions/6089231/getting-std-ifstream-to-handle-lf-cr-and-crlf
-static std::istream &safeGetline(std::istream &is, std::string &t) {
+static std::istream &safeGetline(std::istream &is, string &t) {
   t.clear();
 
   // The characters in the stream are read one-by-one using a std::streambuf.
@@ -799,7 +799,7 @@ static std::istream &safeGetline(std::istream &is, std::string &t) {
 #define IS_NEW_LINE(x) (((x) == '\r') || ((x) == '\n') || ((x) == '\0'))
 
 template <typename T>
-static inline std::string toString(const T &t) {
+static inline string toString(const T &t) {
   std::stringstream ss;
   ss << t;
   return ss.str();
@@ -807,7 +807,7 @@ static inline std::string toString(const T &t) {
 
 struct warning_context
 {
-	std::string *warn;
+	string *warn;
 	size_t line_number;
 };
 
@@ -844,11 +844,11 @@ static inline bool fixIndex(int idx, int n, int *ret, bool allow_zero, const war
   return false;  // never reach here.
 }
 
-static inline std::string parseString(const char **token) {
-  std::string s;
+static inline string parseString(const char **token) {
+  string s;
   (*token) += strspn((*token), " \t");
   size_t e = strcspn((*token), " \t\r");
-  s = std::string((*token), &(*token)[e]);
+  s = string((*token), &(*token)[e]);
   (*token) += e;
   return s;
 }
@@ -1243,11 +1243,11 @@ static vertex_index_t parseRawTriple(const char **token) {
   return vi;
 }
 
-bool ParseTextureNameAndOption(std::string *texname, texture_option_t *texopt,
+bool ParseTextureNameAndOption(string *texname, texture_option_t *texopt,
                                const char *linebuf) {
   // @todo { write more robust lexer and parser. }
   bool found_texname = false;
-  std::string texture_name;
+  string texture_name;
 
   const char *token = linebuf;  // Assume line ends with NULL
 
@@ -1306,14 +1306,14 @@ bool ParseTextureNameAndOption(std::string *texname, texture_option_t *texopt,
 // Assume texture filename
 #if 0
       size_t len = strcspn(token, " \t\r");  // untile next space
-      texture_name = std::string(token, token + len);
+      texture_name = string(token, token + len);
       token += len;
 
       token += strspn(token, " \t");  // skip space
 #else
       // Read filename until line end to parse filename containing whitespace
       // TODO(syoyo): Support parsing texture option flag after the filename.
-      texture_name = std::string(token);
+      texture_name = string(token);
       token += texture_name.length();
 #endif
 
@@ -1459,9 +1459,9 @@ inline TinyObjPoint WorldToLocal(const TinyObjPoint& a,
 // TODO(syoyo): refactor function.
 static bool exportGroupsToShape(shape_t *shape, const PrimGroup &prim_group,
                                 const std::vector<tag_t> &tags,
-                                const int material_id, const std::string &name,
+                                const int material_id, const string &name,
                                 bool triangulate, const std::vector<real_t> &v,
-                                std::string *warn) {
+                                string *warn) {
   if (prim_group.IsEmpty()) {
     return false;
   }
@@ -1999,9 +1999,9 @@ static bool exportGroupsToShape(shape_t *shape, const PrimGroup &prim_group,
 
 // Split a string with specified delimiter character and escape character.
 // https://rosettacode.org/wiki/Tokenize_a_string_with_escaping#C.2B.2B
-static void SplitString(const std::string &s, char delim, char escape,
-                        std::vector<std::string> &elems) {
-  std::string token;
+static void SplitString(const string &s, char delim, char escape,
+                        std::vector<string> &elems) {
+  string token;
 
   bool escaping = false;
   for (size_t i = 0; i < s.size(); ++i) {
@@ -2024,24 +2024,24 @@ static void SplitString(const std::string &s, char delim, char escape,
   elems.push_back(token);
 }
 
-static std::string JoinPath(const std::string &dir,
-                            const std::string &filename) {
+static string JoinPath(const string &dir,
+                            const string &filename) {
   if (dir.empty()) {
     return filename;
   } else {
     // check '/'
     char lastChar = *dir.rbegin();
     if (lastChar != '/') {
-      return dir + std::string("/") + filename;
+      return dir + string("/") + filename;
     } else {
       return dir + filename;
     }
   }
 }
 
-void LoadMtl(std::map<std::string, int> *material_map,
+void LoadMtl(std::map<string, int> *material_map,
              std::vector<material_t> *materials, std::istream *inStream,
-             std::string *warning, std::string *err) {
+             string *warning, string *err) {
   (void)err;
 
   // Create a default material anyway.
@@ -2059,7 +2059,7 @@ void LoadMtl(std::map<std::string, int> *material_map,
   std::stringstream warn_ss;
 
   size_t line_no = 0;
-  std::string linebuf;
+  string linebuf;
   while (inStream->peek() != -1) {
     safeGetline(*inStream, linebuf);
     line_no++;
@@ -2097,7 +2097,7 @@ void LoadMtl(std::map<std::string, int> *material_map,
     if ((0 == strncmp(token, "newmtl", 6)) && IS_SPACE((token[6]))) {
       // flush previous material.
       if (!material.name.empty()) {
-        material_map->insert(std::pair<std::string, int>(
+        material_map->insert(std::pair<string, int>(
             material.name, static_cast<int>(materials->size())));
         materials->push_back(material);
       }
@@ -2111,7 +2111,7 @@ void LoadMtl(std::map<std::string, int> *material_map,
       // set new mtl name
       token += 7;
       {
-        std::string namebuf = parseString(&token);
+        string namebuf = parseString(&token);
         // TODO: empty name check?
         if (namebuf.empty()) {
           if (warning) {
@@ -2423,14 +2423,14 @@ void LoadMtl(std::map<std::string, int> *material_map,
     }
     if (_space) {
       std::ptrdiff_t len = _space - token;
-      std::string key(token, static_cast<size_t>(len));
-      std::string value = _space + 1;
+      string key(token, static_cast<size_t>(len));
+      string value = _space + 1;
       material.unknown_parameter.insert(
-          std::pair<std::string, std::string>(key, value));
+          std::pair<string, string>(key, value));
     }
   }
   // flush last material.
-  material_map->insert(std::pair<std::string, int>(
+  material_map->insert(std::pair<string, int>(
       material.name, static_cast<int>(materials->size())));
   materials->push_back(material);
 
@@ -2439,10 +2439,10 @@ void LoadMtl(std::map<std::string, int> *material_map,
   }
 }
 
-bool MaterialFileReader::operator()(const std::string &matId,
+bool MaterialFileReader::operator()(const string &matId,
                                     std::vector<material_t> *materials,
-                                    std::map<std::string, int> *matMap,
-                                    std::string *warn, std::string *err) {
+                                    std::map<string, int> *matMap,
+                                    string *warn, string *err) {
   if (!m_mtlBaseDir.empty()) {
 #ifdef _WIN32
     char sep = ';';
@@ -2451,16 +2451,16 @@ bool MaterialFileReader::operator()(const std::string &matId,
 #endif
 
     // https://stackoverflow.com/questions/5167625/splitting-a-c-stdstring-using-tokens-e-g
-    std::vector<std::string> paths;
+    std::vector<string> paths;
     std::istringstream f(m_mtlBaseDir);
 
-    std::string s;
+    string s;
     while (getline(f, s, sep)) {
       paths.push_back(s);
     }
 
     for (size_t i = 0; i < paths.size(); i++) {
-      std::string filepath = JoinPath(paths[i], matId);
+      string filepath = JoinPath(paths[i], matId);
 
       std::ifstream matIStream(filepath.c_str());
       if (matIStream) {
@@ -2479,7 +2479,7 @@ bool MaterialFileReader::operator()(const std::string &matId,
     return false;
 
   } else {
-    std::string filepath = matId;
+    string filepath = matId;
     std::ifstream matIStream(filepath.c_str());
     if (matIStream) {
       LoadMtl(matMap, materials, &matIStream, warn, err);
@@ -2498,10 +2498,10 @@ bool MaterialFileReader::operator()(const std::string &matId,
   }
 }
 
-bool MaterialStreamReader::operator()(const std::string &matId,
+bool MaterialStreamReader::operator()(const string &matId,
                                       std::vector<material_t> *materials,
-                                      std::map<std::string, int> *matMap,
-                                      std::string *warn, std::string *err) {
+                                      std::map<string, int> *matMap,
+                                      string *warn, string *err) {
   (void)err;
   (void)matId;
   if (!m_inStream) {
@@ -2519,8 +2519,8 @@ bool MaterialStreamReader::operator()(const std::string &matId,
 }
 
 bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
-             std::vector<material_t> *materials, std::string *warn,
-             std::string *err, const char *filename, const char *mtl_basedir,
+             std::vector<material_t> *materials, string *warn,
+             string *err, const char *filename, const char *mtl_basedir,
              bool triangulate, bool default_vcols_fallback) {
   attrib->vertices.clear();
   attrib->normals.clear();
@@ -2539,7 +2539,7 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
     return false;
   }
 
-  std::string baseDir = mtl_basedir ? mtl_basedir : "";
+  string baseDir = mtl_basedir ? mtl_basedir : "";
   if (!baseDir.empty()) {
 #ifndef _WIN32
     const char dirsep = '/';
@@ -2555,8 +2555,8 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
 }
 
 bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
-             std::vector<material_t> *materials, std::string *warn,
-             std::string *err, std::istream *inStream,
+             std::vector<material_t> *materials, string *warn,
+             string *err, std::istream *inStream,
              MaterialReader *readMatFn /*= NULL*/, bool triangulate,
              bool default_vcols_fallback) {
   std::stringstream errss;
@@ -2568,11 +2568,11 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
   std::vector<skin_weight_t> vw;
   std::vector<tag_t> tags;
   PrimGroup prim_group;
-  std::string name;
+  string name;
 
   // material
-  std::set<std::string> material_filenames;
-  std::map<std::string, int> material_map;
+  std::set<string> material_filenames;
+  std::map<string, int> material_map;
   int material = -1;
 
   // smoothing group id
@@ -2588,7 +2588,7 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
   bool found_all_colors = true;
 
   size_t line_num = 0;
-  std::string linebuf;
+  string linebuf;
   while (inStream->peek() != -1) {
     safeGetline(*inStream, linebuf);
 
@@ -2811,10 +2811,10 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
     // use mtl
     if ((0 == strncmp(token, "usemtl", 6))) {
       token += 6;
-      std::string namebuf = parseString(&token);
+      string namebuf = parseString(&token);
 
       int newMaterialId = -1;
-      std::map<std::string, int>::const_iterator it =
+      std::map<string, int>::const_iterator it =
           material_map.find(namebuf);
       if (it != material_map.end()) {
         newMaterialId = it->second;
@@ -2843,8 +2843,8 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
       if (readMatFn) {
         token += 7;
 
-        std::vector<std::string> filenames;
-        SplitString(std::string(token), ' ', '\\', filenames);
+        std::vector<string> filenames;
+        SplitString(string(token), ' ', '\\', filenames);
 
         if (filenames.empty()) {
           if (warn) {
@@ -2863,8 +2863,8 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
               continue;
             }
 
-            std::string warn_mtl;
-            std::string err_mtl;
+            string warn_mtl;
+            string err_mtl;
             bool ok = (*readMatFn)(filenames[s].c_str(), materials,
                                    &material_map, &warn_mtl, &err_mtl);
             if (warn && (!warn_mtl.empty())) {
@@ -2911,10 +2911,10 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
       // material = -1;
       prim_group.clear();
 
-      std::vector<std::string> names;
+      std::vector<string> names;
 
       while (!IS_NEW_LINE(token[0])) {
-        std::string str = parseString(&token);
+        string str = parseString(&token);
         names.push_back(str);
         token += strspn(token, " \t\r");  // skip tag
       }
@@ -3117,22 +3117,22 @@ bool LoadObj(attrib_t *attrib, std::vector<shape_t> *shapes,
 bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
                          void *user_data /*= NULL*/,
                          MaterialReader *readMatFn /*= NULL*/,
-                         std::string *warn, /* = NULL*/
-                         std::string *err /*= NULL*/) {
+                         string *warn, /* = NULL*/
+                         string *err /*= NULL*/) {
   std::stringstream errss;
 
   // material
-  std::set<std::string> material_filenames;
-  std::map<std::string, int> material_map;
+  std::set<string> material_filenames;
+  std::map<string, int> material_map;
   int material_id = -1;  // -1 = invalid
 
   std::vector<index_t> indices;
   std::vector<material_t> materials;
-  std::vector<std::string> names;
+  std::vector<string> names;
   names.reserve(2);
   std::vector<const char *> names_out;
 
-  std::string linebuf;
+  string linebuf;
   while (inStream.peek() != -1) {
     safeGetline(inStream, linebuf);
 
@@ -3230,10 +3230,10 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
       token += 7;
       std::stringstream ss;
       ss << token;
-      std::string namebuf = ss.str();
+      string namebuf = ss.str();
 
       int newMaterialId = -1;
-      std::map<std::string, int>::const_iterator it =
+      std::map<string, int>::const_iterator it =
           material_map.find(namebuf);
       if (it != material_map.end()) {
         newMaterialId = it->second;
@@ -3260,8 +3260,8 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
       if (readMatFn) {
         token += 7;
 
-        std::vector<std::string> filenames;
-        SplitString(std::string(token), ' ', '\\', filenames);
+        std::vector<string> filenames;
+        SplitString(string(token), ' ', '\\', filenames);
 
         if (filenames.empty()) {
           if (warn) {
@@ -3277,8 +3277,8 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
               continue;
             }
 
-            std::string warn_mtl;
-            std::string err_mtl;
+            string warn_mtl;
+            string err_mtl;
             bool ok = (*readMatFn)(filenames[s].c_str(), &materials,
                                    &material_map, &warn_mtl, &err_mtl);
 
@@ -3320,7 +3320,7 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
       names.clear();
 
       while (!IS_NEW_LINE(token[0])) {
-        std::string str = parseString(&token);
+        string str = parseString(&token);
         names.push_back(str);
         token += strspn(token, " \t\r");  // skip tag
       }
@@ -3352,7 +3352,7 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
 
       std::stringstream ss;
       ss << token;
-      std::string object_name = ss.str();
+      string object_name = ss.str();
 
       if (callback.object_cb) {
         callback.object_cb(user_data, object_name.c_str());
@@ -3409,9 +3409,9 @@ bool LoadObjWithCallback(std::istream &inStream, const callback_t &callback,
   return true;
 }
 
-bool ObjReader::ParseFromFile(const std::string &filename,
+bool ObjReader::ParseFromFile(const string &filename,
                               const ObjReaderConfig &config) {
-  std::string mtl_search_path;
+  string mtl_search_path;
 
   if (config.mtl_search_path.empty()) {
     //
@@ -3419,7 +3419,7 @@ bool ObjReader::ParseFromFile(const std::string &filename,
     // the base directory of .obj file
     //
     size_t pos = filename.find_last_of("/\\");
-    if (pos != std::string::npos) {
+    if (pos != string::npos) {
       mtl_search_path = filename.substr(0, pos);
     }
   } else {
@@ -3433,8 +3433,8 @@ bool ObjReader::ParseFromFile(const std::string &filename,
   return valid_;
 }
 
-bool ObjReader::ParseFromString(const std::string &obj_text,
-                                const std::string &mtl_text,
+bool ObjReader::ParseFromString(const string &obj_text,
+                                const string &mtl_text,
                                 const ObjReaderConfig &config) {
   std::stringbuf obj_buf(obj_text);
   std::stringbuf mtl_buf(mtl_text);
