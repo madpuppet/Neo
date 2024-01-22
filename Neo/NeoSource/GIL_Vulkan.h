@@ -46,6 +46,9 @@ public:
 	void CreateRenderState(); // sets up shaders, color blendings, msaa, 
 	void CreateVertexAttributeBinding();
 
+
+	void DrawTestFrame();
+
 protected:
 
 #ifdef NDEBUG
@@ -70,6 +73,8 @@ protected:
 	VkExtent2D m_swapChainExtent;
 	vector<VkImageView> m_swapChainImageViews;
 	vector<VkFramebuffer> m_swapChainFramebuffers;
+
+	u32 m_frameSwapImage;
 
 	// all these probably get replaced by per-resource data once I replace more systems with resources like renderTargets, shaders and samplers
 	VkRenderPass m_renderPass;
@@ -106,7 +111,8 @@ protected:
 	std::vector<VkSemaphore> m_imageAvailableSemaphores;
 	std::vector<VkSemaphore> m_renderFinishedSemaphores;
 	std::vector<VkFence> m_inFlightFences;
-	u32 currentFrame = 0;
+	u32 m_currentFrame = 0;
+	bool m_framebufferResized = false;
 
 	struct QueueFamilyIndices
 	{
@@ -147,6 +153,7 @@ protected:
 	VkFormat findDepthFormat();
 	VkFormat findSupportedFormat(const vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkShaderModule createShaderModule(const std::vector<char>& code);
+	void cleanupSwapChain();
 
 	// these will change when we support samples, shaders, uniform buffers, texture, materials
 	void createDescriptorSetLayout();
@@ -170,6 +177,9 @@ protected:
 	void createDescriptorSets();
 	void createCommandBuffers();
 	void createSyncObjects();
+	void recreateSwapChain();
+	void updateUniformBuffer(uint32_t currentImage);
+	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 #else //!NEW_CODE
 public:
