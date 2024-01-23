@@ -2,6 +2,8 @@
 #include "Texture.h"
 #include "Shader.h"
 
+#if NEW_CODE
+
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
     Log(STR("Create Texture Platform Data: {}", assetData->name));
@@ -20,14 +22,17 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
     memcpy(data, assetData->images[0].Mem(), static_cast<size_t>(imageSize));
     vkUnmapMemory(gil.Device(), stagingBufferMemory);
 
-    gil.createImage(assetData->width, assetData->height, 1, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
-    gil.transitionImageLayout(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
+    Assert(assetData->format != PixFmt_Undefined, "Undefined pixel format!");
+    VkFormat fmt = gil.FindVulkanFormat(assetData->format);
+    gil.createImage(assetData->width, assetData->height, 1, fmt, VK_IMAGE_TILING_OPTIMAL,
+        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
+    gil.transitionImageLayout(platformData->textureImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
     gil.copyBufferToImage(stagingBuffer, platformData->textureImage, static_cast<uint32_t>(assetData->width), static_cast<uint32_t>(assetData->height));
 
     vkDestroyBuffer(gil.Device(), stagingBuffer, nullptr);
     vkFreeMemory(gil.Device(), stagingBufferMemory, nullptr);
 
-    platformData->textureImageView = gil.createImageView(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    platformData->textureImageView = gil.createImageView(platformData->textureImage, fmt, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
     return platformData;
 };
@@ -67,3 +72,9 @@ void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
     vkDestroyShaderModule(device, platformData->shaderModule, nullptr);
 }
 
+#else
+TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData) { return nullptr; }
+void TexturePlatformData_Destroy(struct TexturePlatformData* platformData) {}
+ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData) { return nullptr; }
+void ShaderPlatformData_Destroy(ShaderPlatformData* platformData) {}
+#endif

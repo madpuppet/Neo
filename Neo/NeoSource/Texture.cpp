@@ -85,7 +85,23 @@ AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams
 			texAsset->format = PixFmt_R8G8_UNORM;
 			break;
 		case 3:
-			texAsset->format = PixFmt_R8G8B8_UNORM;
+			// gpu's don't support 3 channel... need to put in a fake ALPHA
+			{
+				u8* mem = new u8[texWidth * texHeight * 4];
+				u8* in = stbi_uc;
+				u8* out = mem;
+				for (int i = 0; i < texWidth * texHeight; i++)
+				{
+					*out++ = *in++;
+					*out++ = *in++;
+					*out++ = *in++;
+					*out++ = 0xff;
+				}
+				delete[] stbi_uc;
+				stbi_uc = mem;
+				texChannels = 4;
+				texAsset->format = PixFmt_R8G8B8A8_UNORM;
+			}
 			break;
 		case 4:
 			texAsset->format = PixFmt_R8G8B8A8_UNORM;

@@ -24,41 +24,43 @@ enum TexturePixelFormat
 {
 	PixFmt_Undefined,
 
-	PixFmt_R8G8B8A8_UINT,
-	PixFmt_R8G8B8A8_SINT,
-	PixFmt_R8G8B8A8_UNORM,
-	PixFmt_R8G8B8A8_SNORM,
-	PixFmt_R8G8B8A8_SRGB,
+	PixFmt_R4G4_UNORM,
+	PixFmt_R4G4B4A4_UNORM,
+	PixFmt_R5G6B5_UNORM,
+	PixFmt_R5G6B5A1_UNORM,
 
-	PixFmt_R8G8B8_UINT,
-	PixFmt_R8G8B8_SINT,
-	PixFmt_R8G8B8_UNORM,
-	PixFmt_R8G8B8_SNORM,
-	PixFmt_R8G8B8_SRGB,
-
-	PixFmt_R8G8_UINT,
-	PixFmt_R8G8_SINT,
-	PixFmt_R8G8_UNORM,
-	PixFmt_R8G8_SNORM,
-	PixFmt_R8G8_SRGB,
-
-	PixFmt_R8_UINT,
-	PixFmt_R8_SINT,
 	PixFmt_R8_UNORM,
 	PixFmt_R8_SNORM,
+	PixFmt_R8_UINT,
+	PixFmt_R8_SINT,
 	PixFmt_R8_SRGB,
 
-	PixFmt_R5G6B5_UNORM,
-	PixFmt_R4G4B4A4_UNORM,
+	PixFmt_R8G8_UNORM,
+	PixFmt_R8G8_SNORM,
+	PixFmt_R8G8_UINT,
+	PixFmt_R8G8_SINT,
 
-	PixFmt_RGBA_COMP8_UNORM,
-	PixFmt_RGBA_COMP8_SRGB,
+	PixFmt_R8G8B8A8_UNORM,
+	PixFmt_R8G8B8A8_SNORM,
+	PixFmt_R8G8B8A8_UINT,
+	PixFmt_R8G8B8A8_SINT,
+	PixFmt_R8G8B8A8_SRGB,
 
-	PixFmt_RGBA_COMP16_UNORM,
-	PixFmt_RGBA_COMP16_SRGB,
+	PixFmt_R16_UNORM,
+	PixFmt_R16_SNORM,
+	PixFmt_R16_UINT,
+	PixFmt_R16_SINT,
+	PixFmt_R16_SFLOAT,
 
-	PixFmt_D32,
-	PixFmt_D24_S8
+	PixFmt_B10G11R11_UFLOAT,
+	
+	PixFmt_BC1_RGB_UNORM,
+	PixFmt_BC1_RGB_SRGB,
+	PixFmt_BC3_RGBA_UNORM,
+	PixFmt_BC3_RGBA_SRGB,
+
+	PixFmt_D32_SFLOAT,
+	PixFmt_D24_UNORM_S8_UINT
 };
 
 // Asset data is the file data for this asset

@@ -129,11 +129,11 @@ void GIL::Startup()
 
     m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
     createInstance();
-    createFormatMappings();
     setupDebugMessenger();
     createSurface();
     pickPhysicalDevice();
     createLogicalDevice();
+    createFormatMappings();
     createSwapChain();
     createImageViews();
     createRenderPass();
@@ -147,41 +147,58 @@ void GIL::Startup()
 void GIL::createFormatMappings()
 {
     m_neoFormatToVulkanFormat[PixFmt_Undefined] = VK_FORMAT_UNDEFINED;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_UINT] = VK_FORMAT_R8G8B8A8_UINT;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SINT] = VK_FORMAT_R8G8B8A8_SINT;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_UNORM] = VK_FORMAT_R8G8B8A8_UNORM;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SNORM] = VK_FORMAT_R8G8B8A8_SNORM;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SRGB] = VK_FORMAT_R8G8B8A8_SRGB;
 
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_UINT] = VK_FORMAT_R8G8B8_UINT;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_SINT] = VK_FORMAT_R8G8B8_SINT;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_UNORM] = VK_FORMAT_R8G8B8_UNORM;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_SNORM] = VK_FORMAT_R8G8B8_SNORM;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_SRGB] = VK_FORMAT_R8G8B8_SRGB;
+    m_neoFormatToVulkanFormat[PixFmt_R4G4_UNORM] = VK_FORMAT_R4G4_UNORM_PACK8;
+    m_neoFormatToVulkanFormat[PixFmt_R4G4B4A4_UNORM] = VK_FORMAT_R4G4B4A4_UNORM_PACK16;
+    m_neoFormatToVulkanFormat[PixFmt_R5G6B5_UNORM] = VK_FORMAT_R5G6B5_UNORM_PACK16;
+    m_neoFormatToVulkanFormat[PixFmt_R5G6B5A1_UNORM] = VK_FORMAT_R5G5B5A1_UNORM_PACK16;
 
-    m_neoFormatToVulkanFormat[PixFmt_R8G8_UINT] = VK_FORMAT_R8G8_UINT;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8_SINT] = VK_FORMAT_R8G8_SINT;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8_UNORM] = VK_FORMAT_R8G8_UNORM;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8_SNORM] = VK_FORMAT_R8G8_SNORM;
-    m_neoFormatToVulkanFormat[PixFmt_R8G8_SRGB] = VK_FORMAT_R8G8_SRGB;
-
-    m_neoFormatToVulkanFormat[PixFmt_R8_UINT] = VK_FORMAT_R8_UINT;
-    m_neoFormatToVulkanFormat[PixFmt_R8_SINT] = VK_FORMAT_R8_SINT;
     m_neoFormatToVulkanFormat[PixFmt_R8_UNORM] = VK_FORMAT_R8_UNORM;
     m_neoFormatToVulkanFormat[PixFmt_R8_SNORM] = VK_FORMAT_R8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8_UINT] = VK_FORMAT_R8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8_SINT] = VK_FORMAT_R8_SINT;
     m_neoFormatToVulkanFormat[PixFmt_R8_SRGB] = VK_FORMAT_R8_SRGB;
 
-    m_neoFormatToVulkanFormat[PixFmt_R5G6B5_UNORM] = VK_FORMAT_R5G6B5_UNORM_PACK16;
-    m_neoFormatToVulkanFormat[PixFmt_R4G4B4A4_UNORM] = VK_FORMAT_R4G4B4A4_UNORM_PACK16;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_UNORM] = VK_FORMAT_R8G8_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_SNORM] = VK_FORMAT_R8G8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_UINT] = VK_FORMAT_R8G8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_SINT] = VK_FORMAT_R8G8_SINT;
 
-    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP8_UNORM] = VK_FORMAT_BC1_RGB_UNORM_BLOCK;
-    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP8_SRGB] = VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_UNORM] = VK_FORMAT_R8G8B8A8_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SNORM] = VK_FORMAT_R8G8B8A8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_UINT] = VK_FORMAT_R8G8B8A8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SINT] = VK_FORMAT_R8G8B8A8_SINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SRGB] = VK_FORMAT_R8G8B8A8_SRGB;
 
-    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP16_UNORM] = VK_FORMAT_BC3_UNORM_BLOCK;
-    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP16_SRGB] = VK_FORMAT_BC3_SRGB_BLOCK;
+    m_neoFormatToVulkanFormat[PixFmt_R16_UNORM] = VK_FORMAT_R16_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R16_SNORM] = VK_FORMAT_R16_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R16_UINT] = VK_FORMAT_R16_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R16_SINT] = VK_FORMAT_R16_SINT;
+    m_neoFormatToVulkanFormat[PixFmt_R16_SFLOAT] = VK_FORMAT_R16_SFLOAT;
 
-    m_neoFormatToVulkanFormat[PixFmt_D32] = VK_FORMAT_D32_SFLOAT;
-    m_neoFormatToVulkanFormat[PixFmt_D24_S8] = VK_FORMAT_D24_UNORM_S8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_B10G11R11_UFLOAT] = VK_FORMAT_B10G11R11_UFLOAT_PACK32;
+
+    m_neoFormatToVulkanFormat[PixFmt_BC1_RGB_UNORM] = VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+    m_neoFormatToVulkanFormat[PixFmt_BC1_RGB_SRGB] = VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+    m_neoFormatToVulkanFormat[PixFmt_BC3_RGBA_UNORM] = VK_FORMAT_BC3_UNORM_BLOCK;
+    m_neoFormatToVulkanFormat[PixFmt_BC3_RGBA_SRGB] = VK_FORMAT_BC3_SRGB_BLOCK;
+
+    m_neoFormatToVulkanFormat[PixFmt_D32_SFLOAT] = VK_FORMAT_D32_SFLOAT;
+    m_neoFormatToVulkanFormat[PixFmt_D24_UNORM_S8_UINT] = VK_FORMAT_D24_UNORM_S8_UINT;
+
+    // validate the hardware supports all these texture types
+    for (auto fmt : m_neoFormatToVulkanFormat)
+    {
+        if (fmt.first != PixFmt_Undefined)
+        {
+            // Check supported features for the format
+            VkFormatProperties formatProperties;
+            vkGetPhysicalDeviceFormatProperties(m_physicalDevice, fmt.second, &formatProperties);
+
+            if (!(formatProperties.linearTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT))
+                Log(STR("Texture Format {} => {} Not Supported", (int)fmt.first, (int)fmt.second));
+        }
+    }
 }
 
 void GIL::Shutdown()
@@ -1450,7 +1467,7 @@ void GIL::DrawTestFrame()
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(s_indices.size()), 1, 0, 0, 0);
 }
 
-void GIL::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+void GIL::transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
 {
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 
