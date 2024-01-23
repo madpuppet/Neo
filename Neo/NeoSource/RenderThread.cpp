@@ -1,6 +1,6 @@
 #include "Neo.h"
 #include "RenderThread.h"
-#include "GraphicsThread.h"
+#include "GILThread.h"
 
 /*
 
@@ -24,17 +24,17 @@ RenderThread::~RenderThread()
 
 int RenderThread::Go()
 {
-	auto& gt = GraphicsThread::Instance();
+	auto& gilThread = GILThread::Instance();
 	while (!m_terminate)
 	{
 		WaitUpdateDone();
 		SignalDrawStarted();
 
-		gt.AddRenderTask([]() { GIL::Instance().BeginFrame(); });
+		gilThread.AddRenderTask([]() { GIL::Instance().BeginFrame(); });
 
 		// ... do draw functions ...
 
-		gt.AddRenderTask([]() { GIL::Instance().EndFrame(); });
+		gilThread.AddRenderTask([]() { GIL::Instance().EndFrame(); });
 	}
 	return 0;
 }

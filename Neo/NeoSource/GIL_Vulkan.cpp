@@ -1,5 +1,6 @@
 #include "Neo.h"
 #include "GIL_Vulkan.h"
+#include "Texture.h"
 
 DECLARE_MODULE(GIL, NeoModulePri_GIL);
 
@@ -128,6 +129,7 @@ void GIL::Startup()
 
     m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
     createInstance();
+    createFormatMappings();
     setupDebugMessenger();
     createSurface();
     pickPhysicalDevice();
@@ -139,6 +141,47 @@ void GIL::Startup()
     createGraphicsPipeline();
     createCommandPool();
 
+    m_vulkanInitialised.Signal();
+}
+
+void GIL::createFormatMappings()
+{
+    m_neoFormatToVulkanFormat[PixFmt_Undefined] = VK_FORMAT_UNDEFINED;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_UINT] = VK_FORMAT_R8G8B8A8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SINT] = VK_FORMAT_R8G8B8A8_SINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_UNORM] = VK_FORMAT_R8G8B8A8_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SNORM] = VK_FORMAT_R8G8B8A8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SRGB] = VK_FORMAT_R8G8B8A8_SRGB;
+
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_UINT] = VK_FORMAT_R8G8B8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_SINT] = VK_FORMAT_R8G8B8_SINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_UNORM] = VK_FORMAT_R8G8B8_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_SNORM] = VK_FORMAT_R8G8B8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8B8_SRGB] = VK_FORMAT_R8G8B8_SRGB;
+
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_UINT] = VK_FORMAT_R8G8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_SINT] = VK_FORMAT_R8G8_SINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_UNORM] = VK_FORMAT_R8G8_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_SNORM] = VK_FORMAT_R8G8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8G8_SRGB] = VK_FORMAT_R8G8_SRGB;
+
+    m_neoFormatToVulkanFormat[PixFmt_R8_UINT] = VK_FORMAT_R8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8_SINT] = VK_FORMAT_R8_SINT;
+    m_neoFormatToVulkanFormat[PixFmt_R8_UNORM] = VK_FORMAT_R8_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8_SNORM] = VK_FORMAT_R8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_R8_SRGB] = VK_FORMAT_R8_SRGB;
+
+    m_neoFormatToVulkanFormat[PixFmt_R5G6B5_UNORM] = VK_FORMAT_R5G6B5_UNORM_PACK16;
+    m_neoFormatToVulkanFormat[PixFmt_R4G4B4A4_UNORM] = VK_FORMAT_R4G4B4A4_UNORM_PACK16;
+
+    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP8_UNORM] = VK_FORMAT_BC1_RGB_UNORM_BLOCK;
+    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP8_SRGB] = VK_FORMAT_BC1_RGB_SRGB_BLOCK;
+
+    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP16_UNORM] = VK_FORMAT_BC3_UNORM_BLOCK;
+    m_neoFormatToVulkanFormat[PixFmt_RGBA_COMP16_SRGB] = VK_FORMAT_BC3_SRGB_BLOCK;
+
+    m_neoFormatToVulkanFormat[PixFmt_D32] = VK_FORMAT_D32_SFLOAT;
+    m_neoFormatToVulkanFormat[PixFmt_D24_S8] = VK_FORMAT_D24_UNORM_S8_UINT;
 }
 
 void GIL::Shutdown()
@@ -1406,5 +1449,80 @@ void GIL::DrawTestFrame()
 
     vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(s_indices.size()), 1, 0, 0, 0);
 }
+
+void GIL::transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
+{
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldLayout;
+    barrier.newLayout = newLayout;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = image;
+    barrier.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = mipLevels;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+
+    VkPipelineStageFlags sourceStage;
+    VkPipelineStageFlags destinationStage;
+
+    if (oldLayout == VK_IMAGE_LAYOUT_UNDEFINED && newLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL) {
+        barrier.srcAccessMask = 0;
+        barrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+
+        sourceStage = VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT;
+        destinationStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+    }
+    else if (oldLayout == VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL && newLayout == VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL) {
+        barrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+        barrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+
+        sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
+        destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+    }
+    else {
+        throw std::invalid_argument("unsupported layout transition!");
+    }
+
+    vkCmdPipelineBarrier(
+        commandBuffer,
+        sourceStage, destinationStage,
+        0,
+        0, nullptr,
+        0, nullptr,
+        1, &barrier
+    );
+
+    endSingleTimeCommands(commandBuffer);
+}
+
+void GIL::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height)
+{
+    VkCommandBuffer commandBuffer = beginSingleTimeCommands();
+
+    VkBufferImageCopy region{};
+    region.bufferOffset = 0;
+    region.bufferRowLength = 0;
+    region.bufferImageHeight = 0;
+    region.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+    region.imageSubresource.mipLevel = 0;
+    region.imageSubresource.baseArrayLayer = 0;
+    region.imageSubresource.layerCount = 1;
+    region.imageOffset = { 0, 0, 0 };
+    region.imageExtent = {
+        width,
+        height,
+        1
+    };
+
+    vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &region);
+
+    endSingleTimeCommands(commandBuffer);
+}
+
 
 #endif

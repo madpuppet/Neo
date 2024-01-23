@@ -1,5 +1,5 @@
 #include "Neo.h"
-#include "GraphicsThread.h"
+#include "GILThread.h"
 
 /*
 
@@ -19,18 +19,20 @@ Init vulkan  (gil.Startup)
 */
 
 
-DECLARE_MODULE(GraphicsThread, NeoModulePri_GraphicsThread)
+DECLARE_MODULE(GILThread, NeoModulePri_GILThread)
 
-GraphicsThread::GraphicsThread() : m_nonRenderTaskThread(NeoModulePri_GraphicsNRThread, "GraphicsNRThread"), Thread(NeoModulePri_GraphicsThread, "GraphicsThread")
+GILThread::GILThread() : m_nonRenderTaskThread(ThreadGUID_GILNonRender, "GILNRThread"), Thread(ThreadGUID_GILRender, "GILThread")
 {
 	Start();
+	m_nonRenderTaskThread.Start();
+	GIL::Instance().WaitTilInitialised();
 }
 
-GraphicsThread::~GraphicsThread()
+GILThread::~GILThread()
 {
 }
 
-int GraphicsThread::Go()
+int GILThread::Go()
 {
 	auto& gil = GIL::Instance();
 

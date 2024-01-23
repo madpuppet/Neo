@@ -41,7 +41,12 @@ bool MemBlock::FreeMem()
 		m_size = 0;
 		return true;
 	}
-	return false;
+	else
+	{
+		m_mem = 0;
+		m_size = 0;
+		return false;
+	}
 }
 void MemBlock::AllocMem(size_t size)
 {

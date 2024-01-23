@@ -4,7 +4,8 @@
 	Texture -> actual resource ready to use for rendering
 	TextureRef -> reference a resource and use it to create/destroy it in a refcounted way
 	TextureFactory -> keeps a cache of all created textures resources
-	TextureData -> this serializes the texture data to/from disk
+	TextureAssetData -> this serializes the texture data to/from disk
+	TexturePlatformData -> platform specific (ie. vulkan/metal) data for a texture
 */
 
 #include "Resource.h"
@@ -21,69 +22,68 @@ enum TextureType
 
 enum TexturePixelFormat
 {
-	TexturePixelFormat_Automatic,
-	TexturePixelFormat_RGBA8888,
-	TexturePixelFormat_RGB888,
-	TexturePixelFormat_RGB565,
-	TexturePixelFormat_RGBA4444,
-	TexturePixelFormat_A8,
-	TexturePixelFormat_PVRTC2_RGB,
-	TexturePixelFormat_PVRTC2_RGBA,
-	TexturePixelFormat_PVRTC4_RGB,
-	TexturePixelFormat_PVRTC4_RGBA,
-	TexturePixelFormat_DEPTH32
+	PixFmt_Undefined,
+
+	PixFmt_R8G8B8A8_UINT,
+	PixFmt_R8G8B8A8_SINT,
+	PixFmt_R8G8B8A8_UNORM,
+	PixFmt_R8G8B8A8_SNORM,
+	PixFmt_R8G8B8A8_SRGB,
+
+	PixFmt_R8G8B8_UINT,
+	PixFmt_R8G8B8_SINT,
+	PixFmt_R8G8B8_UNORM,
+	PixFmt_R8G8B8_SNORM,
+	PixFmt_R8G8B8_SRGB,
+
+	PixFmt_R8G8_UINT,
+	PixFmt_R8G8_SINT,
+	PixFmt_R8G8_UNORM,
+	PixFmt_R8G8_SNORM,
+	PixFmt_R8G8_SRGB,
+
+	PixFmt_R8_UINT,
+	PixFmt_R8_SINT,
+	PixFmt_R8_UNORM,
+	PixFmt_R8_SNORM,
+	PixFmt_R8_SRGB,
+
+	PixFmt_R5G6B5_UNORM,
+	PixFmt_R4G4B4A4_UNORM,
+
+	PixFmt_RGBA_COMP8_UNORM,
+	PixFmt_RGBA_COMP8_SRGB,
+
+	PixFmt_RGBA_COMP16_UNORM,
+	PixFmt_RGBA_COMP16_SRGB,
+
+	PixFmt_D32,
+	PixFmt_D24_S8
 };
 
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk
-class TextureAssetData : public AssetData
+struct TextureAssetData : public AssetData
 {
 public:
 	~TextureAssetData() {}
 
-	static AssetData* Create(vector<MemBlock> srcFiles);
+	static AssetData* Create(vector<MemBlock> srcFiles, AssetCreateParams *params);
+	virtual MemBlock AssetToMemory() override;
+	virtual bool MemoryToAsset(const MemBlock& block) override;
 
-	u16 m_width;
-	u16 m_height;
-	u16 m_depth;
-	vector<MemBlock> m_images;		// one for each mip level
-
-	virtual MemBlock AssetToMemory() override
-	{
-		Serializer_BinaryWriteGrow stream;
-		stream.WriteU16(AssetType_Texture);
-		stream.WriteU16(0);
-		stream.WriteU16(m_width);
-		stream.WriteU16(m_height);
-		stream.WriteU16(m_depth);
-		stream.WriteU16((u16)m_images.size());
-		for (auto& block : m_images)
-			stream.WriteMemory(block);
-
-		return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
-	}
-	virtual void MemoryToAsset(const MemBlock& block) override
-	{
-		Serializer_BinaryRead stream(block);
-		m_type = (AssetType)stream.ReadU16();
-		Assert(m_type == AssetType_Texture, std::format("Bad texture asset type - got {}, expected {}!", (int)m_type, AssetType_Texture));
-
-		m_version = stream.ReadU16();
-		m_width = stream.ReadU16();
-		m_height = stream.ReadU16();
-		m_depth = stream.ReadU16();
-		int miplevels = stream.ReadU16();
-		for (int i = 0; i < miplevels; i++)
-		{
-			m_images.push_back(stream.ReadMemory());
-		}
-	}
+	u16 width;
+	u16 height;
+	u16 depth;
+	TexturePixelFormat format;
+	vector<MemBlock> images;		// one for each mip level
 };
 
 // texture is the game facing class that represents any type of texture  (zbuffer, rendertarget, image)
 class Texture : public Resource
 {
 	void OnAssetDeliver(struct AssetData *data);
+
 	virtual void Reload() override;
 
 	int m_width;
@@ -91,8 +91,8 @@ class Texture : public Resource
 	int m_depth;
 	TextureType m_textureType;
 	TexturePixelFormat m_texturePixelFormat;
-	class TextureAssetData* m_assetData;
-	class TexturePlatformData* m_platformData;
+	TextureAssetData* m_assetData;
+	struct TexturePlatformData* m_platformData;
 
 public:
 	Texture(const string& name);

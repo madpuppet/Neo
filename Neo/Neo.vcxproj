@@ -631,18 +631,20 @@
     <ClInclude Include="NeoSource\FileSystem_RawAccess.h" />
     <ClInclude Include="NeoSource\GIL_Common.h" />
     <ClInclude Include="NeoSource\GIL_Vulkan.h" />
-    <ClInclude Include="NeoSource\GraphicsThread.h" />
+    <ClInclude Include="NeoSource\GILThread.h" />
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
     <ClInclude Include="NeoSource\Module.h" />
     <ClInclude Include="NeoSource\Neo.h" />
+    <ClInclude Include="NeoSource\PlatformData_Vulkan.h" />
     <ClInclude Include="NeoSource\RenderThread.h" />
     <ClInclude Include="NeoSource\Resource.h" />
     <ClInclude Include="NeoSource\AssetManager.h" />
     <ClInclude Include="NeoSource\ResourceFactory.h" />
     <ClInclude Include="NeoSource\ResourceRef.h" />
     <ClInclude Include="NeoSource\Serializer.h" />
+    <ClInclude Include="NeoSource\Shader.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
     <ClInclude Include="NeoSource\Texture.h" />
     <ClInclude Include="NeoSource\Thread.h" />
@@ -668,7 +670,7 @@
     <ClCompile Include="NeoSource\FileSystem_FlatFolder.cpp" />
     <ClCompile Include="NeoSource\FileSystem_RawAccess.cpp" />
     <ClCompile Include="NeoSource\GIL_Vulkan.cpp" />
-    <ClCompile Include="NeoSource\GraphicsThread.cpp" />
+    <ClCompile Include="NeoSource\GILThread.cpp" />
     <ClCompile Include="NeoSource\Main.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
@@ -676,8 +678,10 @@
     <ClCompile Include="NeoSource\MemBlock.cpp" />
     <ClCompile Include="NeoSource\Memory.cpp" />
     <ClCompile Include="NeoSource\Module.cpp" />
+    <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp" />
     <ClCompile Include="NeoSource\RenderThread.cpp" />
     <ClCompile Include="NeoSource\Serializer.cpp" />
+    <ClCompile Include="NeoSource\Shader.cpp" />
     <ClCompile Include="NeoSource\StringUtils.cpp" />
     <ClCompile Include="NeoSource\Texture.cpp" />
     <ClCompile Include="NeoSource\Thread.cpp" />

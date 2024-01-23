@@ -8,6 +8,7 @@
 enum AssetType
 {
 	AssetType_Texture,
+	AssetType_Shader,
 	AssetType_Mesh,
 	AssetType_Animation,
 	AssetType_Database
@@ -19,22 +20,31 @@ struct std::formatter<AssetType> : std::formatter<int> {
 		return ctx.begin();
 	}
 	auto format(const AssetType& obj, std::format_context& ctx) const {
-		const char *enumNames[] = { "AssetType:Texture", "AssetType:Mesh", "AssetType:Animation", "AssetType:Database"};
+		const char *enumNames[] = { "AssetType:Texture", "AssetType:Shader", "AssetType:Mesh", "AssetType:Animation", "AssetType:Database"};
 		return std::format_to(ctx.out(), "{}", enumNames[(int)obj] );
 	}
 };
 
 struct AssetData
 {
-	virtual ~AssetData() {}
+	AssetData() = default;
+	virtual ~AssetData() = default;
 
-	AssetType m_type;
-	u16 m_version;
-	string m_name;
-	stringlist m_sourceFiles;
+	AssetType type;	// for debug purposes
+	string name;	// for debug purposes
+	u16 version;	// increment the version to force a rebuild of assets
 
 	virtual MemBlock AssetToMemory() = 0;
-	virtual void MemoryToAsset(const MemBlock& block) = 0;
+	virtual bool MemoryToAsset(const MemBlock& block) = 0;
+};
+
+// derive options asset creation params off this
+// these params will only be used when creating an asset from source files
+// if a resource already exists, or is created from data:asset, this will be ignored.
+struct AssetCreateParams
+{
+public:
+	~AssetCreateParams() {}
 };
 
 // asset type info creates all the functions and data needed to create this asset type
@@ -45,7 +55,7 @@ public:
 	std::function<AssetData* (MemBlock assetMem)> m_assetCreateFromData;
 
 	// function to turn the source files into a single asset file
-	std::function<AssetData* (const vector<MemBlock>& srcBlocks)> m_assetCreateFromSource;
+	std::function<AssetData* (const vector<MemBlock>& srcBlocks, AssetCreateParams* params)> m_assetCreateFromSource;
 
 	// extension for asset file
 	string m_assetExt;
@@ -54,7 +64,6 @@ public:
 	// some source files could be one of many extensions (ie.  png, tga, jpg)
 	vector<std::pair<stringlist,bool>> m_sourceExt;
 };
-
 
 // callback when resource data has been finally loaded
 typedef std::function<void(AssetData*)> DeliverAssetDataCB;
@@ -74,6 +83,6 @@ public:
 	void RegisterAssetType(int assetType, AssetTypeInfo* assetCreator) { m_assetTypeInfoMap.insert(std::pair<int, AssetTypeInfo*>(assetType, assetCreator)); }
 
 	// gather all data from file systems
-	void DeliverAssetDataAsync(AssetType assetType, const string &name, const DeliverAssetDataCB& cb);
+	void DeliverAssetDataAsync(AssetType type, const string &name, AssetCreateParams* params, const DeliverAssetDataCB& cb);
 };
 

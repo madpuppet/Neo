@@ -14,7 +14,7 @@
 
 typedef std::function<void(void)> GraphicsTask;
 
-class GraphicsThread : public Module<GraphicsThread>, Thread
+class GILThread : public Module<GILThread>, Thread
 {
 	Semaphore m_frameEnded;
 	WorkerThread m_nonRenderTaskThread;
@@ -23,8 +23,8 @@ class GraphicsThread : public Module<GraphicsThread>, Thread
 	fifo<GraphicsTask> m_renderTasks;
 
 public:
-	GraphicsThread();
-	~GraphicsThread();
+	GILThread();
+	~GILThread();
 
 	void AddRenderTask(GraphicsTask task)
 	{

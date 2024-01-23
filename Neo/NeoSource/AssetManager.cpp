@@ -22,14 +22,14 @@ static int GetTime(const string name, const stringlist &extensions, u64& time)
 	return -1;
 }
 
-void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name, const DeliverAssetDataCB& cb)
+void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name, AssetCreateParams* params, const DeliverAssetDataCB& cb)
 {
 	Assert(m_assetTypeInfoMap.contains(assetType), std::format("Cannot create asset: {} - unregistered asset type: {}", name, assetType));
 
 	auto assetTypeInfo = m_assetTypeInfoMap[assetType];
 	m_assetTasks.AddTask
 	(
-		[assetType, assetTypeInfo, name, cb]()
+		[assetType, assetTypeInfo, name, cb, params]()
 		{
 			auto& fm = FileManager::Instance();
 
@@ -69,50 +69,8 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 				return;
 			}
 
-			// if no asset, or any src file is newer than the asset, we need to build the asset
-			if (assetDateStamp == 0 || earliestSourceDateStamp < assetDateStamp)
-			{
-				// first we load each src file into an array of memblocks
-				vector<MemBlock> srcFileMem;
-				for (auto &src : srcFiles)
-				{
-					MemBlock memblock;
-					if (src.empty())
-					{
-						// just push an empty memblock - the asset creator should be prepared for these if it had optional src files
-						srcFileMem.emplace_back(memblock);
-					}
-					else
-					{
-						if (!fm.Read(src, memblock))
-						{
-							Error(std::format("Asset building error trying to load src: {}", src));
-							srcFiles.clear();
-							cb(nullptr);
-							return;
-						}
-						srcFileMem.emplace_back(memblock);
-					}
-				}
-
-				// now create the AssetData from the src files
-				AssetData *assetData = assetTypeInfo->m_assetCreateFromSource(srcFileMem);
-
-				// write out the asset to then data folder
-						// write the texture asset to data
-				MemBlock serializedBlock = assetData->AssetToMemory();
-				if (!fm.Write(assetDataPath, serializedBlock))
-				{
-					// non fatal error, since we have converted the asset ok, we just can't write it
-					Error(std::format("Error trying to write asset to path: {}\nCheck disk space and permissions.", assetDataPath));
-				}
-
-				// finally we can deliver the asset back to the resource
-				cb(assetData);
-			}
-
-			// asset is newer than its src files, so just load and serve the asset
-			else
+			// if asset is newer than source files, just load and createFromData
+			if (assetDateStamp > earliestSourceDateStamp)
 			{
 				MemBlock serializedBlock;
 				if (!fm.Read(assetDataPath, serializedBlock))
@@ -122,9 +80,62 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 					return;
 				}
 
+				// create from data
+				// this can return nullptr if version is old
+				Log(STR("Create {} From Data: {}", name, assetType));
 				AssetData* assetData = assetTypeInfo->m_assetCreateFromData(serializedBlock);
-				cb(assetData);
+				if (assetData)
+				{
+					Log(STR("Deliver Asset: {}", name));
+					cb(assetData);
+					return;
+				}
+				Log("Asset was not delivered.. try creating from source...");
 			}
+
+			// didn't return assetData, so try building an asset from source
+			// first we load each src file into an array of memblocks
+			vector<MemBlock> srcFileMem;
+			for (auto &src : srcFiles)
+			{
+				MemBlock memblock;
+				if (src.empty())
+				{
+					// just push an empty memblock - the asset creator should be prepared for these if it had optional src files
+					srcFileMem.emplace_back(memblock);
+				}
+				else
+				{
+					if (!fm.Read(src, memblock))
+					{
+						Error(std::format("Asset building error trying to load src: {}", src));
+						srcFiles.clear();
+						cb(nullptr);
+						return;
+					}
+					srcFileMem.emplace_back(memblock);
+				}
+			}
+
+			// now create the AssetData from the src files
+			Log(STR("Create {} From Source: {}", name, assetType));
+			AssetData *assetData = assetTypeInfo->m_assetCreateFromSource(srcFileMem, params);
+			assetData->name = name;
+			assetData->type = assetType;
+
+			// write out the asset to then data folder
+			// write the texture asset to data
+			MemBlock serializedBlock = assetData->AssetToMemory();
+			Log(STR("Write Asset Data: {} -> {}", name, assetDataPath));
+			if (!fm.Write(assetDataPath, serializedBlock))
+			{
+				// non fatal error, since we have converted the asset ok, we just can't write it
+				Error(std::format("Error trying to write asset to path: {}\nCheck disk space and permissions.", assetDataPath));
+			}
+
+			// finally we can deliver the asset back to the resource
+			Log(STR("Deliver Asset: {}", name));
+			cb(assetData);
 		}
 	);
 }

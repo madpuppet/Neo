@@ -6,10 +6,10 @@ enum NeoModulePri
 {
 	NeoModulePri_FileManager,
 	NeoModulePri_AssetManager,
-	NeoModulePri_TextureManager,
+	NeoModulePri_TextureFactory,
+	NeoModulePri_ShaderFactory,
 	NeoModulePri_GIL,
-	NeoModulePri_GraphicsThread,
-	NeoModulePri_GraphicsNRThread,
+	NeoModulePri_GILThread,
 
 	NeoModulePri_MAX
 };
@@ -53,7 +53,7 @@ class __RegisterModule##x  \
 public:  \
 	__RegisterModule##x()  \
 	{  \
-		RegisterModule([]() { new x(); }, []() { delete& x::Instance(); }, #x, 0);  \
+		RegisterModule([]() { new x(); }, []() { delete& x::Instance(); }, #x, pri);  \
 	}  \
 } __registerModule##x;
 

@@ -28,7 +28,8 @@ enum ThreadGUID
 {
     ThreadGUID_Main,
     ThreadGUID_AssetManager,
-    ThreadGUID_GraphicsInterface,
+    ThreadGUID_GILRender,
+    ThreadGUID_GILNonRender,
     ThreadGUID_RenderThread,
 
     ThreadGUID_MAX

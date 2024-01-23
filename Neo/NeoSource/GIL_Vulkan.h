@@ -14,6 +14,9 @@
 #include <SDL_vulkan.h>
 #include <vulkan/vulkan.h>
 #include <optional>
+#include "PlatformData_Vulkan.h"
+#include "Thread.h"
+#include "Texture.h"
 
 #if NEW_CODE
 const int MAX_FRAMES_IN_FLIGHT = 2;
@@ -46,8 +49,11 @@ public:
 	void CreateRenderState(); // sets up shaders, color blendings, msaa, 
 	void CreateVertexAttributeBinding();
 
-
 	void DrawTestFrame();
+
+	void WaitTilInitialised() { m_vulkanInitialised.Wait(); }
+
+	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
 
 protected:
 
@@ -58,6 +64,7 @@ protected:
 #endif
 
 	SDL_Window* m_window;
+	Semaphore m_vulkanInitialised;
 
 	VkInstance m_instance;
 	VkDebugUtilsMessengerEXT m_debugMessenger;
@@ -73,8 +80,9 @@ protected:
 	VkExtent2D m_swapChainExtent;
 	vector<VkImageView> m_swapChainImageViews;
 	vector<VkFramebuffer> m_swapChainFramebuffers;
-
 	u32 m_frameSwapImage;
+
+	hashtable<TexturePixelFormat, VkFormat> m_neoFormatToVulkanFormat;
 
 	// all these probably get replaced by per-resource data once I replace more systems with resources like renderTargets, shaders and samplers
 	VkRenderPass m_renderPass;
@@ -148,12 +156,12 @@ protected:
 	VkPresentModeKHR chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes);
 	VkExtent2D chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities);
 	void createImageViews();
-	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 	void createRenderPass();
 	VkFormat findDepthFormat();
 	VkFormat findSupportedFormat(const vector<VkFormat>& candidates, VkImageTiling tiling, VkFormatFeatureFlags features);
 	VkShaderModule createShaderModule(const std::vector<char>& code);
 	void cleanupSwapChain();
+	void createFormatMappings();
 
 	// these will change when we support samples, shaders, uniform buffers, texture, materials
 	void createDescriptorSetLayout();
@@ -162,15 +170,12 @@ protected:
 	void createColorResources();
 	void createDepthResources();
 	void createFramebuffers();
-	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 	void createTextureSampler();
 	void loadModel();
 	void createVertexBuffer();
 	void createIndexBuffer();
 	void createUniformBuffers();
-	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 	void createDescriptorPool();
@@ -190,6 +195,15 @@ public:
 	void EndFrame() {}
 #endif
 
+	// these methods are used by external functions like Texture Platform creation
+public:
+	VkDevice Device() { return m_device; }
+	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+	void transitionImageLayout(VkImage image, VkFormat format, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
+	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
+	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
+	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 };
 
 

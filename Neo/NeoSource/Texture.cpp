@@ -1,14 +1,16 @@
 #include "neo.h"
 #include "Texture.h"
 #include "StringUtils.h"
-#include "GraphicsThread.h"
+#include "GILThread.h"
 #include <stb_image.h>
+
+#define TEXTURE_VERSION 1
 
 DECLARE_MODULE(TextureFactory, NeoModulePri_TextureFactory);
 
 Texture::Texture(const string& name) : Resource(name)
 {
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, [this](AssetData* data) { OnAssetDeliver(data); } );
+	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); } );
 }
 
 Texture::~Texture()
@@ -17,10 +19,10 @@ Texture::~Texture()
 
 void Texture::OnAssetDeliver(AssetData* data)
 {
-	Assert(data->m_type == AssetType_Texture, "Bad Asset Type");
+	Assert(data->type == AssetType_Texture, "Bad Asset Type");
 	m_assetData = dynamic_cast<TextureAssetData*>(data);
 
-	GraphicsThread::Instance().AddNonRenderTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); });
+	GILThread::Instance().AddNonRenderTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
 }
 
 void Texture::Reload()
@@ -31,7 +33,7 @@ TextureFactory::TextureFactory()
 {
 	auto ati = new AssetTypeInfo();
 	ati->m_assetCreateFromData = [](MemBlock memBlock) -> AssetData* { auto assetData = new TextureAssetData; assetData->MemoryToAsset(memBlock); return assetData; };
-	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks) -> AssetData* { return TextureAssetData::Create(srcBlocks);  };
+	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks, AssetCreateParams *params) -> AssetData* { return TextureAssetData::Create(srcBlocks, params);  };
 	ati->m_assetExt = ".neotex";
 	ati->m_sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
 	ati->m_sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
@@ -63,7 +65,7 @@ void TextureFactory::Destroy(Texture* texture)
 	}
 }
 
-AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles)
+AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams *params)
 {
 	// src image has been altered, so convert it...
 	int texWidth, texHeight, texChannels;
@@ -71,10 +73,65 @@ AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles)
 
 	// pack it into an asset
 	auto texAsset = new TextureAssetData;
-	texAsset->m_width = texWidth;
-	texAsset->m_height = texHeight;
-	texAsset->m_depth = texChannels;
-	texAsset->m_images.push_back(MemBlock((u8*)stbi_uc, texWidth * texHeight * texChannels, false));
+	texAsset->width = texWidth;
+	texAsset->height = texHeight;
+	texAsset->depth = texChannels;
+	switch (texAsset->depth)
+	{
+		case 1:
+			texAsset->format = PixFmt_R8_UNORM;
+			break;
+		case 2:
+			texAsset->format = PixFmt_R8G8_UNORM;
+			break;
+		case 3:
+			texAsset->format = PixFmt_R8G8B8_UNORM;
+			break;
+		case 4:
+			texAsset->format = PixFmt_R8G8B8A8_UNORM;
+			break;
+	}
+
+	texAsset->images.push_back(MemBlock((u8*)stbi_uc, texWidth * texHeight * texChannels, false));
 	return texAsset;
 }
 
+MemBlock TextureAssetData::AssetToMemory()
+{
+	Serializer_BinaryWriteGrow stream;
+	stream.WriteU16(AssetType_Texture);
+	stream.WriteU16(TEXTURE_VERSION);
+	stream.WriteString(name);
+	stream.WriteU16(width);
+	stream.WriteU16(height);
+	stream.WriteU16(depth);
+	stream.WriteU16((u16)format);
+	stream.WriteU16((u16)images.size());
+	for (auto& block : images)
+		stream.WriteMemory(block);
+
+	return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
+}
+
+bool TextureAssetData::MemoryToAsset(const MemBlock& block)
+{
+	Serializer_BinaryRead stream(block);
+	type = (AssetType)stream.ReadU16();
+	Assert(type == AssetType_Texture, std::format("Bad texture asset type - got {}, expected {}!", (int)type, AssetType_Texture));
+
+	version = stream.ReadU16();
+	if (version != TEXTURE_VERSION)
+		return false;
+
+	name = stream.ReadString();
+	width = stream.ReadU16();
+	height = stream.ReadU16();
+	depth = stream.ReadU16();
+	format = (TexturePixelFormat)stream.ReadU16();
+	int miplevels = stream.ReadU16();
+	for (int i = 0; i < miplevels; i++)
+	{
+		images.push_back(stream.ReadMemory());
+	}
+	return true;
+}

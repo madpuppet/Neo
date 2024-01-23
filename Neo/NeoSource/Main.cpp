@@ -695,7 +695,8 @@ public:
         }
     }
 
-    void createGraphicsPipeline() {
+    void createGraphicsPipeline() 
+    {
         auto vertShaderCode = readFile("shaders/vert.spv");
         auto fragShaderCode = readFile("shaders/frag.spv");
 
@@ -1875,53 +1876,6 @@ void Error(const string &msg)
 }
 
 #endif
-
-class TexturePlatformData
-{
-public:
-    VkImage textureImage;
-    VkDeviceMemory textureImageMemory;
-    VkImageView textureImageView;
-};
-
-TexturePlatformData* TexturePlatformData_Create(TextureAssetData *assetData)
-{
-    TexturePlatformData* platformData = new TexturePlatformData;
-
-    auto& neo = NeoCore::Instance();
-
-    VkDeviceSize imageSize = assetData->m_images[0].Size();
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    neo.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(neo.device, stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, assetData->m_images[0].Mem(), static_cast<size_t>(imageSize));
-    vkUnmapMemory(neo.device, stagingBufferMemory);
-
-    neo.createImage(assetData->m_width, assetData->m_height, 1, VK_SAMPLE_COUNT_1_BIT, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
-
-    neo.transitionImageLayout(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
-    neo.copyBufferToImage(stagingBuffer, platformData->textureImage, static_cast<uint32_t>(assetData->m_width), static_cast<uint32_t>(assetData->m_height));
-
-    vkDestroyBuffer(neo.device, stagingBuffer, nullptr);
-    vkFreeMemory(neo.device, stagingBufferMemory, nullptr);
-
-    platformData->textureImageView = neo.createImageView(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-
-    return platformData;
-};
-
-void TexturePlatformData_Destroy(class TexturePlatformData* platformData)
-{
-    auto& neo = NeoCore::Instance();
-
-    vkDestroyImageView(neo.device, platformData->textureImageView, nullptr);
-
-    vkDestroyImage(neo.device, platformData->textureImage, nullptr);
-    vkFreeMemory(neo.device, platformData->textureImageMemory, nullptr);
-}
 
 CallbackHandle AllocUniqueCallbackHandle()
 {

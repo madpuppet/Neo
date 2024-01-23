@@ -10,6 +10,8 @@ Application::Application()
 #if NEW_CODE
 	// mount filesystems
 	m_testTex.Create("viking_room");
+	m_testVertexShader.Create("vert", ShaderType_Vertex);
+	m_testPixelShader.Create("frag", ShaderType_Pixel);
 #endif
 }
 

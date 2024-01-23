@@ -1487,7 +1487,7 @@
     <ClInclude Include="NeoSource\Module.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\GraphicsThread.h">
+    <ClInclude Include="NeoSource\GILThread.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\GIL_Vulkan.h">
@@ -1497,6 +1497,12 @@
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\RenderThread.h">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Shader.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\PlatformData_Vulkan.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1582,13 +1588,19 @@
     <ClCompile Include="NeoSource\Module.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
-    <ClCompile Include="NeoSource\GraphicsThread.cpp">
+    <ClCompile Include="NeoSource\GILThread.cpp">
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\GIL_Vulkan.cpp">
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\RenderThread.cpp">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Shader.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp">
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
   </ItemGroup>

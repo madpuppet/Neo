@@ -1,4 +1,43 @@
+Asset Creation Summary
+Example: Texture
 
+## Main Thread
+TextureRef myTexture;		// declare reference
+
+myTexture->Create("wall");  // create disk name of texture - names are flat so no directory.
+
+TextureRef ==> calls TextureFactory::Create()
+if exists in cache
+   return Texture;
+else
+   new Texture()
+
+Texture Constructor ==>  AssetManager::DeliverAssetDataAsync   (passing it the OnAssetDeliver callback)
+
+Adds a task to AssetManagerWorkThread
+
+## AssetManagerWorkThread
+==> if wall.neotex exists and is newer than wall.tga/png/jpg
+      load wall.neotex
+	  call TextureAssetData::CreateFromData() to create AssetData
+      if success (can fail if version is old)
+	     return asset data to callback
+	  load wall.tga/png/jpg
+	  call TextureAssetData::CreateFromSourceFiles() to create AssetData and return to callback
+	  
+Texture::OnAssetDeliver called back with TexctureAssetData
+Adds a task to GILThread
+
+## GILThread
+==> create texture platform data (vulkan objects)
+==> call Resource::OnLoadComplete which makes the resource loaded  (Resources can override this if they want to do more on complete)
+
+
+
+
+
+
+===========================================================
 .mat    =>  text file with material definition
 .neomat =>  binary material asset
 

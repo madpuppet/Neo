@@ -9,5 +9,5 @@
 #endif
 
 // platform data creation methods - these implemented differently per platform
-extern class TexturePlatformData* TexturePlatformData_Create(class TextureAssetData* assetData);
-extern void TexturePlatformData_Destroy(class TexturePlatformData* platformData);
+extern struct TexturePlatformData* TexturePlatformData_Create(struct TextureAssetData* assetData);
+extern void TexturePlatformData_Destroy(struct TexturePlatformData* platformData);

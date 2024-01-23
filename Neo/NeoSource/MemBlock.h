@@ -30,18 +30,61 @@ public:
 		}
 	}
 
-	// move constructor
-	MemBlock(MemBlock&& o) noexcept
+	// assignment operator
+	MemBlock& operator=(const MemBlock& o)
 	{
-		m_mem = o.m_mem;
-		m_size = o.m_size;
-		m_external = o.m_external;
-		
-		if (!o.m_external)
+		if (this != &o) 
 		{
+			FreeMem();
+
+			// Copy size and handle external flag
+			m_size = o.m_size;
+			if (o.m_external) 
+			{
+				m_mem = o.m_mem;
+				m_external = true;
+			}
+			else
+			{
+				// Allocate new memory and copy data
+				m_mem = new u8[o.m_size];
+				memcpy(m_mem, o.m_mem, m_size);
+				m_external = false;
+			}
+		}
+
+		return *this;
+	}
+
+	// Move constructor
+	MemBlock(MemBlock&& o) noexcept
+		: m_mem(o.m_mem), m_size(o.m_size), m_external(o.m_external)
+	{
+		// Reset the source object to a valid state
+		o.m_mem = nullptr;
+		o.m_size = 0;
+		o.m_external = false;
+	}
+
+	// Move assignment operator
+	MemBlock& operator=(MemBlock&& o) noexcept
+	{
+		if (this != &o)
+		{
+			FreeMem();
+
+			// Move data from the source object
+			m_mem = o.m_mem;
+			m_size = o.m_size;
+			m_external = o.m_external;
+
+			// Reset the source object to a valid state
 			o.m_mem = nullptr;
 			o.m_size = 0;
+			o.m_external = false;
 		}
+
+		return *this;
 	}
 
 	~MemBlock() { FreeMem(); }
