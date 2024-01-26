@@ -10,7 +10,7 @@ DECLARE_MODULE(TextureFactory, NeoModulePri_TextureFactory);
 
 Texture::Texture(const string& name) : Resource(name)
 {
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); } );
+	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
 }
 
 Texture::~Texture()
@@ -33,7 +33,7 @@ TextureFactory::TextureFactory()
 {
 	auto ati = new AssetTypeInfo();
 	ati->m_assetCreateFromData = [](MemBlock memBlock) -> AssetData* { auto assetData = new TextureAssetData; assetData->MemoryToAsset(memBlock); return assetData; };
-	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks, AssetCreateParams *params) -> AssetData* { return TextureAssetData::Create(srcBlocks, params);  };
+	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks, AssetCreateParams* params) -> AssetData* { return TextureAssetData::Create(srcBlocks, params);  };
 	ati->m_assetExt = ".neotex";
 	ati->m_sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
 	ati->m_sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
@@ -65,7 +65,7 @@ void TextureFactory::Destroy(Texture* texture)
 	}
 }
 
-AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams *params)
+AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* params)
 {
 	// src image has been altered, so convert it...
 	int texWidth, texHeight, texChannels;
@@ -86,23 +86,23 @@ AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams
 			break;
 		case 3:
 			// gpu's don't support 3 channel... need to put in a fake ALPHA
+		{
+			u8* mem = new u8[texWidth * texHeight * 4];
+			u8* in = stbi_uc;
+			u8* out = mem;
+			for (int i = 0; i < texWidth * texHeight; i++)
 			{
-				u8* mem = new u8[texWidth * texHeight * 4];
-				u8* in = stbi_uc;
-				u8* out = mem;
-				for (int i = 0; i < texWidth * texHeight; i++)
-				{
-					*out++ = *in++;
-					*out++ = *in++;
-					*out++ = *in++;
-					*out++ = 0xff;
-				}
-				delete[] stbi_uc;
-				stbi_uc = mem;
-				texChannels = 4;
-				texAsset->format = PixFmt_R8G8B8A8_UNORM;
+				*out++ = *in++;
+				*out++ = *in++;
+				*out++ = *in++;
+				*out++ = 0xff;
 			}
-			break;
+			delete[] stbi_uc;
+			stbi_uc = mem;
+			texChannels = 4;
+			texAsset->format = PixFmt_R8G8B8A8_UNORM;
+		}
+		break;
 		case 4:
 			texAsset->format = PixFmt_R8G8B8A8_UNORM;
 			break;
@@ -133,13 +133,20 @@ bool TextureAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
 	type = (AssetType)stream.ReadU16();
-	Assert(type == AssetType_Texture, std::format("Bad texture asset type - got {}, expected {}!", (int)type, AssetType_Texture));
-
 	version = stream.ReadU16();
-	if (version != TEXTURE_VERSION)
-		return false;
-
 	name = stream.ReadString();
+
+	if (type != AssetType_Texture)
+	{
+		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Texture));
+		return false;
+	}
+	if (version != TEXTURE_VERSION)
+	{
+		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, TEXTURE_VERSION));
+		return false;
+	}
+
 	width = stream.ReadU16();
 	height = stream.ReadU16();
 	depth = stream.ReadU16();

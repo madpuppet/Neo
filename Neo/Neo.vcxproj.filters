@@ -1505,6 +1505,15 @@
     <ClInclude Include="NeoSource\PlatformData_Vulkan.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\Material.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ResourceLoadedManager.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\SHAD.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1602,6 +1611,12 @@
     </ClCompile>
     <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp">
       <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Material.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\SHAD.cpp">
+      <Filter>NeoSource\Resources</Filter>
     </ClCompile>
   </ItemGroup>
 </Project>

@@ -1,4 +1,6 @@
 #include "Neo.h"
+#include "StringUtils.h"
+#include <random>
 
 u16 StringPopUTF8(const string& source, int& idx)
 {
@@ -172,20 +174,92 @@ void StringSplitIntoFSAndPath(const string &str, string &fs, string &path)
 }
 
 
-
-
-
-class astring : public string
+u8 StringGetHexByteAt(const string &str, int idx)
 {
-public:
-    astring() = default;
-    astring(const string& str) : string(str) {}
-
-    void SomeFunc() { }
-};
-
-void TestIt()
-{
-    astring pork, chop, result;
-    result = pork + chop;
+    const char* ch = str.c_str();
+    char highChar = ch[idx];
+    char lowChar = ch[idx + 1];
+    int highVal, lowVal;
+    if (highChar >= 'A')
+        highVal = highChar - 'A' + 10;
+    else
+        highVal = highChar - '0';
+    if (lowChar >= 'A')
+        lowVal = lowChar - 'A' + 10;
+    else
+        lowVal = lowChar - '0';
+    return (highVal << 4) | lowVal;
 }
+
+u8 StringGetHexNibbleAt(const string &str, int idx)
+{
+    const char* ch = str.c_str();
+    char highChar = ch[idx];
+    int highVal;
+    if (highChar >= 'A')
+        highVal = highChar - 'A' + 10;
+    else
+        highVal = highChar - '0';
+    return highVal;
+}
+
+u64 GenerateRandomU64()
+{
+    static std::random_device rd;
+    static std::mt19937_64 generator(rd());
+    static std::uniform_int_distribution<uint64_t> distribution(std::numeric_limits<uint64_t>::min(), std::numeric_limits<uint64_t>::max());
+
+    // Create a random number generator engine (Mersenne Twister 64-bit version)
+    // Define a uniform distribution for 64-bit unsigned integers
+    // Generate a random 64-bit unsigned integer
+    return distribution(generator);
+}
+
+u32 StringToHex(const string &str)
+{
+    u32 result = 0;
+    const char* in = str.c_str();
+    char ch;
+    while ((ch = *in++) != 0)
+    {
+        result = result << 4;
+        if (ch >= 'a' && ch <= 'f')
+            result += ((int)ch - 'a' + 10);
+        else if (ch >= 'A' && ch <= 'F')
+            result += ((int)ch - 'A' + 10);
+        else if (ch >= '0' && ch <= '9')
+            result += ((int)ch - '0');
+    }
+    return result;
+}
+
+u64 StringToHex64(const string &str)
+{
+    u64 result = 0;
+    const char* in = str.c_str();
+    char ch;
+    while ((ch = *in++) != 0)
+    {
+        result = result << 4;
+        if (ch >= 'a' && ch <= 'f')
+            result += (u64)((int)ch - 'a' + 10);
+        else if (ch >= 'A' && ch <= 'F')
+            result += (u64)((int)ch - 'A' + 10);
+        else if (ch >= '0' && ch <= '9')
+            result += (u64)((int)ch - '0');
+    }
+    return result;
+}
+
+
+int StringFindInList(const string& str, const stringlist& list)
+{
+    for (int i = 0; i < list.size(); i++)
+    {
+        if (StringEqual(str, list[i]))
+            return i;
+    }
+    return -1;
+}
+
+

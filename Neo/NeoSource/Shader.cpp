@@ -28,11 +28,20 @@ bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
 	type = (AssetType)stream.ReadU16();
-	Assert(type == AssetType_Shader, std::format("Bad shader asset type - got {}, expected {}!", (int)type, AssetType_Shader));
 	version = stream.ReadU16();
-	if (version != SHADER_VERSION)
-		return false;
 	name = stream.ReadString();
+
+	if (type != AssetType_Shader)
+	{
+		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Shader));
+		return false;
+	}
+	if (version != SHADER_VERSION)
+	{
+		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, SHADER_VERSION));
+		return false;
+	}
+
 	spvData = stream.ReadMemory();
 
 	return true;

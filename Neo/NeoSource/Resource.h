@@ -1,5 +1,7 @@
 #pragma once
 
+typedef std::function<void(class Resource*)> ResourceLoadedCB;
+
 class Resource
 {
 public:
@@ -18,7 +20,15 @@ protected:
 	virtual void Reload() = 0;
 
 	int m_refCount = 1;
-	bool m_dataLoaded = false;
 	string m_name;
+	bool m_dataLoaded;
+	vector<ResourceLoadedCB> m_onLoadedCB;
+
+	friend class ResourceLoadedManager;
+	void AddOnLoadedCB(const ResourceLoadedCB& cb) { m_onLoadedCB.emplace_back(cb); }
+	void TriggerOnLoadedCBs()
+	{
+		for (auto& cb : m_onLoadedCB) cb(this);
+	}
 };
 

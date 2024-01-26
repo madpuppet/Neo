@@ -8,6 +8,8 @@ enum NeoModulePri
 	NeoModulePri_AssetManager,
 	NeoModulePri_TextureFactory,
 	NeoModulePri_ShaderFactory,
+	NeoModulePri_MaterialFactory,
+	NeoModulePri_ModelFactory,
 	NeoModulePri_GIL,
 	NeoModulePri_GILThread,
 

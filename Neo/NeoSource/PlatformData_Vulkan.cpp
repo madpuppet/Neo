@@ -72,9 +72,26 @@ void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
     vkDestroyShaderModule(device, platformData->shaderModule, nullptr);
 }
 
+MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData)
+{
+    auto platformData = new MaterialPlatformData;
+    return platformData;
+}
+
+void MaterialPlatformData_Destroy(MaterialPlatformData* platformData)
+{
+    delete platformData;
+}
+
 #else
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData) { return nullptr; }
 void TexturePlatformData_Destroy(struct TexturePlatformData* platformData) {}
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData) { return nullptr; }
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData) {}
+MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData) { return nullptr; }
+void MaterialPlatformData_Destroy(MaterialPlatformData* platformData) {}
 #endif
+
+
+
+

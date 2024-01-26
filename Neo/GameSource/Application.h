@@ -1,7 +1,6 @@
 #pragma once
 
-#include "Texture.h"
-#include "Shader.h"
+#include "Material.h"
 
 class Application
 {
@@ -13,8 +12,6 @@ public:
 	void Draw();
 
 protected:
-	TextureRef m_testTex;
-	ShaderRef m_testVertexShader;
-	ShaderRef m_testPixelShader;
+	MaterialRef m_vikingRoom;
 };
 

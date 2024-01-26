@@ -17,3 +17,12 @@ public:
 };
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
+
+struct MaterialPlatformData
+{
+public:
+
+};
+MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
+void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);
+

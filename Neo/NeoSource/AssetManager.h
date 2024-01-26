@@ -11,18 +11,8 @@ enum AssetType
 	AssetType_Shader,
 	AssetType_Mesh,
 	AssetType_Animation,
-	AssetType_Database
-};
-
-template <>
-struct std::formatter<AssetType> : std::formatter<int> {
-	constexpr auto parse(std::format_parse_context& ctx) {
-		return ctx.begin();
-	}
-	auto format(const AssetType& obj, std::format_context& ctx) const {
-		const char *enumNames[] = { "AssetType:Texture", "AssetType:Shader", "AssetType:Mesh", "AssetType:Animation", "AssetType:Database"};
-		return std::format_to(ctx.out(), "{}", enumNames[(int)obj] );
-	}
+	AssetType_Database,
+	AssetType_Material
 };
 
 struct AssetData

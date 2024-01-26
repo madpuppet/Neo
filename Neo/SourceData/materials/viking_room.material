@@ -1,0 +1,16 @@
+mode: forward
+	vertexShader: vert
+	pixelShader: frag
+	blendmode: opaque
+	cull: back
+	zread: true
+	zwrite: true
+	uniforms
+		texture: albedo
+			image: viking_room
+			filter: nearest, nearest
+			wrap: repeat
+		blendColor: vec4
+			default: 1,1,1,1
+
+

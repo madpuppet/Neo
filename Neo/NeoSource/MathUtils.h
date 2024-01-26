@@ -414,3 +414,4 @@ inline float Lerp(float minValue, float maxValue, float time)
 {
 	return minValue + (maxValue - minValue) * time;
 }
+

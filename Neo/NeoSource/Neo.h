@@ -99,6 +99,7 @@ typedef glm::ivec3      ivec3;
 typedef glm::ivec4      ivec4;
 typedef glm::mat3x4     mat3x4;
 typedef glm::mat4x4     mat4x4;
+typedef glm::vec4       color;
 
 // neo containers... some are renamed from STL for more legibility
 template<typename T> using vector = std::vector<T>;

@@ -632,6 +632,7 @@
     <ClInclude Include="NeoSource\GIL_Common.h" />
     <ClInclude Include="NeoSource\GIL_Vulkan.h" />
     <ClInclude Include="NeoSource\GILThread.h" />
+    <ClInclude Include="NeoSource\Material.h" />
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
@@ -642,8 +643,10 @@
     <ClInclude Include="NeoSource\Resource.h" />
     <ClInclude Include="NeoSource\AssetManager.h" />
     <ClInclude Include="NeoSource\ResourceFactory.h" />
+    <ClInclude Include="NeoSource\ResourceLoadedManager.h" />
     <ClInclude Include="NeoSource\ResourceRef.h" />
     <ClInclude Include="NeoSource\Serializer.h" />
+    <ClInclude Include="NeoSource\SHAD.h" />
     <ClInclude Include="NeoSource\Shader.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
     <ClInclude Include="NeoSource\Texture.h" />
@@ -675,12 +678,14 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="NeoSource\Material.cpp" />
     <ClCompile Include="NeoSource\MemBlock.cpp" />
     <ClCompile Include="NeoSource\Memory.cpp" />
     <ClCompile Include="NeoSource\Module.cpp" />
     <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp" />
     <ClCompile Include="NeoSource\RenderThread.cpp" />
     <ClCompile Include="NeoSource\Serializer.cpp" />
+    <ClCompile Include="NeoSource\SHAD.cpp" />
     <ClCompile Include="NeoSource\Shader.cpp" />
     <ClCompile Include="NeoSource\StringUtils.cpp" />
     <ClCompile Include="NeoSource\Texture.cpp" />
