@@ -41,7 +41,7 @@ class Shader : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
 	virtual void Reload() override;
-
+	virtual AssetType GetAssetType() { return AssetType_Shader; }
 	ShaderType m_shaderType;
 	ShaderAssetData* m_assetData;
 	struct ShaderPlatformData* m_platformData;
@@ -49,6 +49,9 @@ class Shader : public Resource
 public:
 	Shader(const string& name, ShaderType shaderType);
 	virtual ~Shader();
+
+	ShaderAssetData* GetAssetData() { return m_assetData; }
+	ShaderPlatformData* GetPlatformData() { return m_platformData; }
 };
 
 // texture factory keeps a map of all the currently created textures

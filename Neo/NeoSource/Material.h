@@ -113,6 +113,7 @@ struct MaterialMode
 class Material : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
+	virtual AssetType GetAssetType() { return AssetType_Material; }
 
 	virtual void Reload() override;
 

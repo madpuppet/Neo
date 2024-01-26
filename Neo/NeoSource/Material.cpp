@@ -3,6 +3,7 @@
 #include "GILThread.h"
 #include "StringUtils.h"
 #include "SHAD.h"
+#include "ResourceLoadedManager.h"
 
 #define MATERIAL_VERSION 1
 
@@ -30,17 +31,29 @@ void Material::OnAssetDeliver(AssetData* data)
 
 	// create dependant resources
 	vector<Resource*> dependantResources;
-	for (auto &mode : m_assetData->modes)
+	for (auto &it : m_assetData->modes)
 	{
-		mode.second->pixelShader.Create(mode.second->pixelShaderName, ShaderType_Pixel);
-		mode.second->vertexShader.Create(mode.second->vertexShaderName, ShaderType_Vertex);
-		dependantResources.push_back(*mode.second->pixelShader);
-		dependantResources.push_back(*mode.second->pixelShader);
+		auto mode = it.second;
+		mode->pixelShader.Create(mode->pixelShaderName, ShaderType_Pixel);
+		mode->vertexShader.Create(mode->vertexShaderName, ShaderType_Vertex);
+		dependantResources.push_back(*mode->pixelShader);
+		dependantResources.push_back(*mode->pixelShader);
+		for (auto uniform : mode->uniforms)
+		{
+			if (uniform->type == UniformType_Texture)
+			{
+				auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
+				uniformTexture->texture.Create(uniformTexture->textureName);
+				dependantResources.push_back(*uniformTexture->texture);
+			}
+		}
 	}
 
-	// create material platform data once all dependant resources are loaded
+	Log(STR("Adding Dependancy List: {}", dependantResources.size()));
 
-	GILThread::Instance().AddNonRenderTask([this]() { m_platformData = MaterialPlatformData_Create(m_assetData); OnLoadComplete(); });
+	// we need to wait for our dependant resources, like Shaders and Textures,  to load first before creating our platform data (which are pipeline states)
+	// note that if they are already loaded, this will just trigger off the callback immediately
+	ResourceLoadedManager::Instance().AddDependancyList(dependantResources, [this]() { m_platformData = MaterialPlatformData_Create(m_assetData); OnLoadComplete(); });
 }
 
 void Material::Reload()
@@ -119,6 +132,7 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 
 	auto shad = new SHADReader("material", (const char*)srcFiles[0].Mem(), (int)srcFiles[0].Size());
 	auto rootChildren = shad->root->GetChildren();
+
 	for (auto modeNode : rootChildren)
 	{
 		Assert(modeNode->IsName("mode"), STR("Expected 'mode' sections only, got {}", modeNode->Name()));
@@ -250,6 +264,58 @@ MemBlock MaterialAssetData::AssetToMemory()
 	stream.WriteU16(MATERIAL_VERSION);
 	stream.WriteString(name);
 
+	stream.WriteU16((u16)modes.size());
+	for (auto &it : modes)
+	{
+		auto mode = it.second;
+		stream.WriteString(mode->name);
+		stream.WriteU8((u8)mode->blendMode);
+		stream.WriteU8((u8)mode->cullMode);
+		stream.WriteBool(mode->zread);
+		stream.WriteBool(mode->zwrite);
+		stream.WriteString(mode->vertexShaderName);
+		stream.WriteString(mode->pixelShaderName);
+		stream.WriteU16((u16)mode->uniforms.size());
+		for (auto uniform : mode->uniforms)
+		{	
+			stream.WriteU8(uniform->type);
+			stream.WriteString(uniform->uniformName);
+			switch (uniform->type)
+			{
+				case UniformType_Texture:
+				{
+					auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
+					stream.WriteString(uniformTexture->textureName);
+					stream.WriteU8(uniformTexture->minFilter);
+					stream.WriteU8(uniformTexture->magFilter);
+					stream.WriteU8(uniformTexture->uWrap);
+					stream.WriteU8(uniformTexture->vWrap);
+					stream.WriteU8(uniformTexture->compare);
+				}
+				break;
+				case UniformType_Vec4:
+				{
+					auto uniformVec4 = dynamic_cast<MaterialUniform_Vec4*>(uniform);
+					stream.WriteVec4(uniformVec4->value);
+				}
+				break;
+				case UniformType_F32:
+				{
+					auto uniformF32 = dynamic_cast<MaterialUniform_F32*>(uniform);
+					stream.WriteF32(uniformF32->value);
+				}
+				break;
+				case UniformType_I32:
+				{
+					auto uniformI32 = dynamic_cast<MaterialUniform_I32*>(uniform);
+					stream.WriteI32(uniformI32->value);
+				}
+				break;
+			}
+		}
+	}
+
+
 	return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
 }
 
@@ -269,6 +335,64 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 	{
 		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, MATERIAL_VERSION));
 		return false;
+	}
+
+	u16 modeCount = stream.ReadI16();
+	for (u16 m = 0; m < modeCount; m++)
+	{
+		auto mode = new MaterialMode;
+		mode->name = stream.ReadString();
+		mode->blendMode = (MaterialBlendMode)stream.ReadU8();
+		mode->cullMode = (MaterialCullMode)stream.ReadU8();
+		mode->zread = stream.ReadBool();
+		mode->zwrite = stream.ReadBool();
+		mode->vertexShaderName = stream.ReadString();
+		mode->pixelShaderName = stream.ReadString();
+
+		u16 uniformsCount = stream.ReadU16();
+		for (u16 u = 0; u < uniformsCount; u++)
+		{
+			auto type = (UniformType)stream.ReadU8();
+			auto uniformName = stream.ReadString();
+			switch (type)
+			{
+				case UniformType_Texture:
+				{
+					auto uniform = new MaterialUniform_Texture(uniformName);
+					uniform->textureName = stream.ReadString();
+					uniform->minFilter = (SamplerFilter)stream.ReadU8();
+					uniform->magFilter = (SamplerFilter)stream.ReadU8();
+					uniform->uWrap = (SamplerWrap)stream.ReadU8();
+					uniform->vWrap = (SamplerWrap)stream.ReadU8();
+					uniform->compare = (SamplerCompare)stream.ReadU8();
+					mode->uniforms.push_back(uniform);
+				}
+				break;
+				case UniformType_Vec4:
+				{
+					auto uniform = new MaterialUniform_Vec4(uniformName);
+					uniform->value = stream.ReadVec4();
+					mode->uniforms.push_back(uniform);
+				}
+				break;
+				case UniformType_I32:
+				{
+					auto uniform = new MaterialUniform_I32(uniformName);
+					uniform->value = stream.ReadI32();
+					mode->uniforms.push_back(uniform);
+				}
+				break;
+				case UniformType_F32:
+				{
+					auto uniform = new MaterialUniform_F32(uniformName);
+					uniform->value = stream.ReadF32();
+					mode->uniforms.push_back(uniform);
+				}
+				break;
+			}
+		}
+
+		modes[StringHash64(mode->name)] = mode;
 	}
 
 	return true;

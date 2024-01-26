@@ -171,6 +171,11 @@ void Serializer::WriteVec3(const vec3 &value)
 	WriteF32(value.x); WriteF32(value.y); WriteF32(value.z);
 }
 
+void Serializer::WriteVec4(const vec4& value)
+{
+	WriteF32(value.x); WriteF32(value.y); WriteF32(value.z); WriteF32(value.w);
+}
+
 void Serializer::WriteIVec3(const ivec3 &value)
 {
 	WriteI32(value.x); WriteI32(value.y); WriteI32(value.z);
@@ -378,7 +383,7 @@ u8 Serializer_BinaryRead::ReadU8()
 {
 	if (m_memUsage+1 > m_memSize)
 	{
-		Log("Serializer block out of mem!");
+		Error("Serializer block out of mem!");
 		SetError(SerializerError_TruncatedBlock);
 		return 0;
 	}
@@ -392,7 +397,7 @@ void Serializer_BinaryRead::StartBlock()
 	*this >> size;
 	if (m_memUsage + size > m_memSize)
 	{
-		Log("Serializer block out of mem!");
+		Error("Serializer block out of mem!");
 		SetError(SerializerError_TruncatedBlock);
 		return;
 	}

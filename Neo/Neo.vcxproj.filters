@@ -1618,5 +1618,11 @@
     <ClCompile Include="NeoSource\SHAD.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
+    <ClCompile Include="NeoSource\Resource.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\ResourceLoadedManager.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
   </ItemGroup>
 </Project>

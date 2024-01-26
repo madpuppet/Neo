@@ -67,9 +67,10 @@ public:
 	void WriteI8(i8 value) { WriteU8((u8)value); }
 	void WriteBool(bool value) { WriteU8( value != 0 ); }
 	void WriteString(const string &value);
-    void WriteVec3(const glm::vec3 &value);
-	void WriteIVec3(const glm::ivec3 &value);
-	void WriteQuat(const glm::quat &value);
+    void WriteVec3(const vec3 &value);
+	void WriteIVec3(const ivec3 &value);
+	void WriteVec4(const vec4& value);
+	void WriteQuat(const quat &value);
 	void WriteID(u32 value);
 
 	Serializer& operator << (f32 value) {WriteF32(value); return *this;}
@@ -85,9 +86,10 @@ public:
 	Serializer& operator << (bool value) {WriteBool(value); return *this;}
 	Serializer& operator << (const string &value) {WriteString(value); return *this;}
 	Serializer& operator << (const ivec2 &value) {WriteI32(value.x);WriteI32(value.y);return *this;}
-	Serializer& operator << (const ivec3 &value) {WriteI32(value.x);WriteI32(value.y);WriteI32(value.z);return *this;};
-	Serializer& operator << (const vec3 &value) {WriteF32(value.x);WriteF32(value.y);WriteF32(value.z);return *this;}
-	Serializer& operator << (const quat &value) {WriteF32(value.x);WriteF32(value.y);WriteF32(value.z);WriteF32(value.w);return *this;}
+	Serializer& operator << (const ivec3 &value) {WriteIVec3(value);return *this;};
+	Serializer& operator << (const vec3 &value) {WriteVec3(value);return *this;}
+	Serializer& operator << (const vec4 &value) {WriteVec4(value);return *this;}
+	Serializer& operator << (const quat &value) {WriteQuat(value);return *this;}
 
 	//=====================================================================================
 	// read interface wrappers

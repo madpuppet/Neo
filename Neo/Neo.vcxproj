@@ -684,6 +684,8 @@
     <ClCompile Include="NeoSource\Module.cpp" />
     <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp" />
     <ClCompile Include="NeoSource\RenderThread.cpp" />
+    <ClCompile Include="NeoSource\Resource.cpp" />
+    <ClCompile Include="NeoSource\ResourceLoadedManager.cpp" />
     <ClCompile Include="NeoSource\Serializer.cpp" />
     <ClCompile Include="NeoSource\SHAD.cpp" />
     <ClCompile Include="NeoSource\Shader.cpp" />

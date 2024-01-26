@@ -87,6 +87,7 @@ class Texture : public Resource
 	void OnAssetDeliver(struct AssetData *data);
 
 	virtual void Reload() override;
+	virtual AssetType GetAssetType() { return AssetType_Texture; }
 
 	int m_width;
 	int m_height;

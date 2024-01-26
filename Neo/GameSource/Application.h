@@ -13,5 +13,6 @@ public:
 
 protected:
 	MaterialRef m_vikingRoom;
+	MaterialRef m_2;
 };
 

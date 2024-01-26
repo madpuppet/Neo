@@ -12,21 +12,19 @@
 #include "GIL_Vulkan.h"
 #endif
 
-typedef std::function<void(void)> GraphicsTask;
-
 class GILThread : public Module<GILThread>, Thread
 {
 	Semaphore m_frameEnded;
 	WorkerThread m_nonRenderTaskThread;
 	Semaphore m_renderTasksSignal;
 	Mutex m_renderTasksLock;
-	fifo<GraphicsTask> m_renderTasks;
+	fifo<GenericCallback> m_renderTasks;
 
 public:
 	GILThread();
 	~GILThread();
 
-	void AddRenderTask(GraphicsTask task)
+	void AddRenderTask(GenericCallback task)
 	{
 		m_renderTasksLock.Lock();
 		m_renderTasks.emplace_back(std::move(task));
@@ -34,7 +32,7 @@ public:
 		m_renderTasksSignal.Signal();
 	}
 
-	void AddNonRenderTask(GraphicsTask task)
+	void AddNonRenderTask(GenericCallback task)
 	{
 		m_nonRenderTaskThread.AddTask(task);
 	}

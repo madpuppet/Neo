@@ -641,7 +641,8 @@ void SHADReader_Node::Dump()
 	string line;
 	if (indent > 0)
 		line = string(spaces, &spaces[indent * 2]);
-	line+=name;
+	if (name)
+		line+=name;
 	line+=": ";
 	for (u32 i=0; i<valueCount; i++)
 	{

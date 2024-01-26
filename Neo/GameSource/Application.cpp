@@ -10,6 +10,7 @@ Application::Application()
 #if NEW_CODE
 	// mount filesystems
 	m_vikingRoom.Create("viking_room");
+	m_2.Create("viking_room");
 #endif
 }
 

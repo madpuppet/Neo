@@ -13,4 +13,3 @@ mode: forward
 		blendColor: vec4
 			default: 1,1,1,1
 
-
