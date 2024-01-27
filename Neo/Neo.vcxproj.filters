@@ -1514,6 +1514,9 @@
     <ClInclude Include="NeoSource\SHAD.h">
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\Model.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1622,6 +1625,9 @@
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\ResourceLoadedManager.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Model.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
   </ItemGroup>

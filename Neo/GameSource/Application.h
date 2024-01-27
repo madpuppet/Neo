@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Material.h"
+#include "Model.h"
 
 class Application
 {
@@ -12,7 +12,6 @@ public:
 	void Draw();
 
 protected:
-	MaterialRef m_vikingRoom;
-	MaterialRef m_2;
+	ModelRef m_vikingRoom;
 };
 

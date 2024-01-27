@@ -9,7 +9,7 @@ enum AssetType
 {
 	AssetType_Texture,
 	AssetType_Shader,
-	AssetType_Mesh,
+	AssetType_Model,
 	AssetType_Animation,
 	AssetType_Database,
 	AssetType_Material
@@ -21,7 +21,7 @@ struct std::formatter<AssetType> : std::formatter<int> {
 		return ctx.begin();
 	}
 	auto format(const AssetType& obj, std::format_context& ctx) const {
-		const char* enumNames[] = { "Texture", "Shader", "Mesh", "Animation", "Database", "Material" };
+		const char* enumNames[] = { "Texture", "Shader", "Model", "Animation", "Database", "Material" };
 		return std::format_to(ctx.out(), "{}", enumNames[(int)obj]);
 	}
 };

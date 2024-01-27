@@ -95,21 +95,6 @@ struct MaterialUniform_I32 : public MaterialUniform
 	i32 value = 0;
 };
 
-struct MaterialMode
-{
-	string name;
-	string vertexShaderName;
-	string pixelShaderName;
-	MaterialBlendMode blendMode = MaterialBlendMode_Opaque;
-	MaterialCullMode cullMode = MaterialCullMode_None;
-	vector<MaterialUniform*> uniforms;
-	bool zread = false;
-	bool zwrite = false;
-
-	ShaderRef vertexShader;
-	ShaderRef pixelShader;
-};
-
 class Material : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
@@ -159,7 +144,16 @@ public:
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 
-	hashtable<u64, MaterialMode*> modes;
+	string vertexShaderName;
+	string pixelShaderName;
+	MaterialBlendMode blendMode = MaterialBlendMode_Opaque;
+	MaterialCullMode cullMode = MaterialCullMode_None;
+	vector<MaterialUniform*> uniforms;
+	bool zread = false;
+	bool zwrite = false;
+
+	ShaderRef vertexShader;
+	ShaderRef pixelShader;
 
 	MaterialRef m_parent;
 };

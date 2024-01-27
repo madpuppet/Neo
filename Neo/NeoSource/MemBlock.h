@@ -113,6 +113,9 @@ public:
 	const u8* MemEnd() const { return m_mem + m_size; }
 	size_t Size() const { return m_size; }
 
+	// if something else has taken the memory..
+	void ClearMemPtrs() { m_mem = 0; m_size = 0; m_external = false; }
+
 protected:
 	bool FreeMem();
 	void AllocMem(size_t size);

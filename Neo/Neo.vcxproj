@@ -636,6 +636,7 @@
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
+    <ClInclude Include="NeoSource\Model.h" />
     <ClInclude Include="NeoSource\Module.h" />
     <ClInclude Include="NeoSource\Neo.h" />
     <ClInclude Include="NeoSource\PlatformData_Vulkan.h" />
@@ -681,6 +682,7 @@
     <ClCompile Include="NeoSource\Material.cpp" />
     <ClCompile Include="NeoSource\MemBlock.cpp" />
     <ClCompile Include="NeoSource\Memory.cpp" />
+    <ClCompile Include="NeoSource\Model.cpp" />
     <ClCompile Include="NeoSource\Module.cpp" />
     <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp" />
     <ClCompile Include="NeoSource\RenderThread.cpp" />

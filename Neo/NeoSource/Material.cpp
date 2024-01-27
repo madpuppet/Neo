@@ -31,21 +31,17 @@ void Material::OnAssetDeliver(AssetData* data)
 
 	// create dependant resources
 	vector<Resource*> dependantResources;
-	for (auto &it : m_assetData->modes)
+	m_assetData->pixelShader.Create(m_assetData->pixelShaderName, ShaderType_Pixel);
+	m_assetData->vertexShader.Create(m_assetData->vertexShaderName, ShaderType_Vertex);
+	dependantResources.push_back(*m_assetData->pixelShader);
+	dependantResources.push_back(*m_assetData->pixelShader);
+	for (auto uniform : m_assetData->uniforms)
 	{
-		auto mode = it.second;
-		mode->pixelShader.Create(mode->pixelShaderName, ShaderType_Pixel);
-		mode->vertexShader.Create(mode->vertexShaderName, ShaderType_Vertex);
-		dependantResources.push_back(*mode->pixelShader);
-		dependantResources.push_back(*mode->pixelShader);
-		for (auto uniform : mode->uniforms)
+		if (uniform->type == UniformType_Texture)
 		{
-			if (uniform->type == UniformType_Texture)
-			{
-				auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
-				uniformTexture->texture.Create(uniformTexture->textureName);
-				dependantResources.push_back(*uniformTexture->texture);
-			}
+			auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
+			uniformTexture->texture.Create(uniformTexture->textureName);
+			dependantResources.push_back(*uniformTexture->texture);
 		}
 	}
 
@@ -132,125 +128,112 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 
 	auto shad = new SHADReader("material", (const char*)srcFiles[0].Mem(), (int)srcFiles[0].Size());
 	auto rootChildren = shad->root->GetChildren();
-
-	for (auto modeNode : rootChildren)
+	for (auto fieldNode : rootChildren)
 	{
-		Assert(modeNode->IsName("mode"), STR("Expected 'mode' sections only, got {}", modeNode->Name()));
-		auto mode = new MaterialMode;
-		mode->name = modeNode->GetString(1);
-		u64 modeHash = StringHash64(mode->name);
-		auto modeChildren = modeNode->GetChildren();
-		for (auto fieldNode : modeChildren)
+		if (fieldNode->IsName("vertexShader"))
 		{
-			if (fieldNode->IsName("vertexShader"))
+			asset->vertexShaderName = fieldNode->GetString();
+		}
+		else if (fieldNode->IsName("pixelShader"))
+		{
+			asset->pixelShaderName = fieldNode->GetString();
+		}
+		else if (fieldNode->IsName("blend"))
+		{
+			asset->blendMode = (MaterialBlendMode)fieldNode->GetEnum(s_blendModeNames);
+		}
+		else if (fieldNode->IsName("cull"))
+		{
+			asset->cullMode = (MaterialCullMode)fieldNode->GetEnum(s_cullModeNames);
+		}
+		else if (fieldNode->IsName("zread"))
+		{
+			asset->zread = fieldNode->GetBool();
+		}
+		else if (fieldNode->IsName("zwrite"))
+		{
+			asset->zwrite = fieldNode->GetBool();
+		}
+		else if (fieldNode->IsName("uniforms"))
+		{
+			auto uniformNodes = fieldNode->GetChildren();
+			for (auto uniformNode : uniformNodes)
 			{
-				mode->vertexShaderName = fieldNode->GetString();
-			}
-			else if (fieldNode->IsName("pixelShader"))
-			{
-				mode->pixelShaderName = fieldNode->GetString();
-			}
-			else if (fieldNode->IsName("blend"))
-			{
-				mode->blendMode = (MaterialBlendMode)fieldNode->GetEnum(s_blendModeNames);
-			}
-			else if (fieldNode->IsName("cull"))
-			{
-				mode->cullMode = (MaterialCullMode)fieldNode->GetEnum(s_cullModeNames);
-			}
-			else if (fieldNode->IsName("zread"))
-			{
-				mode->zread = fieldNode->GetBool();
-			}
-			else if (fieldNode->IsName("zwrite"))
-			{
-				mode->zwrite = fieldNode->GetBool();
-			}
-			else if (fieldNode->IsName("uniforms"))
-			{
-				auto uniformNodes = fieldNode->GetChildren();
-				for (auto uniformNode : uniformNodes)
+				if (uniformNode->IsName("texture"))
 				{
-					if (uniformNode->IsName("texture"))
+					auto uniform = new MaterialUniform_Texture(uniformNode->GetString());
+					asset->uniforms.push_back(uniform);
+					auto textureNodes = uniformNode->GetChildren();
+					for (auto textureNode : textureNodes)
 					{
-						auto uniform = new MaterialUniform_Texture(uniformNode->GetString());
-						mode->uniforms.push_back(uniform);
-						auto textureNodes = uniformNode->GetChildren();
-						for (auto textureNode : textureNodes)
+						if (textureNode->IsName("image"))
 						{
-							if (textureNode->IsName("image"))
+							uniform->textureName = textureNode->GetString();
+						}
+						else if (textureNode->IsName("filter"))
+						{
+							uniform->minFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 0);
+							uniform->magFilter = uniform->minFilter;
+							if (textureNode->GetValueCount() == 2)
 							{
-								uniform->textureName = textureNode->GetString();
-							}
-							else if (textureNode->IsName("filter"))
-							{
-								uniform->minFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 0);
-								uniform->magFilter = uniform->minFilter;
-								if (textureNode->GetValueCount() == 2)
-								{
-									uniform->magFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 1);
-								}
-							}
-							else if (textureNode->IsName("wrap"))
-							{
-								uniform->uWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 0);
-								uniform->vWrap = uniform->uWrap;
-								if (textureNode->GetValueCount() == 2)
-								{
-									uniform->vWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 1);
-								}
-							}
-							else if (textureNode->IsName("compare"))
-							{
-								uniform->compare = (SamplerCompare)textureNode->GetEnum(s_samplerCompareNames);
+								uniform->magFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 1);
 							}
 						}
-					}
-					else if (uniformNode->IsName("vec4"))
-					{
-						auto uniform = new MaterialUniform_Vec4(uniformNode->GetString());
-						mode->uniforms.push_back(uniform);
-						auto uniformChildren = uniformNode->GetChildren();
-						for (auto node : uniformChildren)
+						else if (textureNode->IsName("wrap"))
 						{
-							if (node->IsName("default"))
+							uniform->uWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 0);
+							uniform->vWrap = uniform->uWrap;
+							if (textureNode->GetValueCount() == 2)
 							{
-								uniform->value = node->GetVector4();
+								uniform->vWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 1);
 							}
 						}
-					}
-					else if (uniformNode->IsName("f32"))
-					{
-						auto uniform = new MaterialUniform_F32(uniformNode->GetString());
-						mode->uniforms.push_back(uniform);
-						auto uniformChildren = uniformNode->GetChildren();
-						for (auto node : uniformChildren)
+						else if (textureNode->IsName("compare"))
 						{
-							if (node->IsName("default"))
-							{
-								uniform->value = node->GetF32();
-							}
+							uniform->compare = (SamplerCompare)textureNode->GetEnum(s_samplerCompareNames);
 						}
 					}
-					else if (uniformNode->IsName("i32"))
+				}
+				else if (uniformNode->IsName("vec4"))
+				{
+					auto uniform = new MaterialUniform_Vec4(uniformNode->GetString());
+					asset->uniforms.push_back(uniform);
+					auto uniformChildren = uniformNode->GetChildren();
+					for (auto node : uniformChildren)
 					{
-						auto uniform = new MaterialUniform_I32(uniformNode->GetString());
-						mode->uniforms.push_back(uniform);
-						auto uniformChildren = uniformNode->GetChildren();
-						for (auto node : uniformChildren)
+						if (node->IsName("default"))
 						{
-							if (node->IsName("default"))
-							{
-								uniform->value = node->GetI32();
-							}
+							uniform->value = node->GetVector4();
+						}
+					}
+				}
+				else if (uniformNode->IsName("f32"))
+				{
+					auto uniform = new MaterialUniform_F32(uniformNode->GetString());
+					asset->uniforms.push_back(uniform);
+					auto uniformChildren = uniformNode->GetChildren();
+					for (auto node : uniformChildren)
+					{
+						if (node->IsName("default"))
+						{
+							uniform->value = node->GetF32();
+						}
+					}
+				}
+				else if (uniformNode->IsName("i32"))
+				{
+					auto uniform = new MaterialUniform_I32(uniformNode->GetString());
+					asset->uniforms.push_back(uniform);
+					auto uniformChildren = uniformNode->GetChildren();
+					for (auto node : uniformChildren)
+					{
+						if (node->IsName("default"))
+						{
+							uniform->value = node->GetI32();
 						}
 					}
 				}
 			}
-		}
-		for (int i = 0; i < modeNode->GetValueCount(); i++)
-		{
-			asset->modes[StringHash64(modeNode->GetString(i))] = mode;
 		}
 	}
 
@@ -264,57 +247,50 @@ MemBlock MaterialAssetData::AssetToMemory()
 	stream.WriteU16(MATERIAL_VERSION);
 	stream.WriteString(name);
 
-	stream.WriteU16((u16)modes.size());
-	for (auto &it : modes)
-	{
-		auto mode = it.second;
-		stream.WriteString(mode->name);
-		stream.WriteU8((u8)mode->blendMode);
-		stream.WriteU8((u8)mode->cullMode);
-		stream.WriteBool(mode->zread);
-		stream.WriteBool(mode->zwrite);
-		stream.WriteString(mode->vertexShaderName);
-		stream.WriteString(mode->pixelShaderName);
-		stream.WriteU16((u16)mode->uniforms.size());
-		for (auto uniform : mode->uniforms)
-		{	
-			stream.WriteU8(uniform->type);
-			stream.WriteString(uniform->uniformName);
-			switch (uniform->type)
+	stream.WriteU8((u8)blendMode);
+	stream.WriteU8((u8)cullMode);
+	stream.WriteBool(zread);
+	stream.WriteBool(zwrite);
+	stream.WriteString(vertexShaderName);
+	stream.WriteString(pixelShaderName);
+	stream.WriteU16((u16)uniforms.size());
+	for (auto uniform : uniforms)
+	{	
+		stream.WriteU8(uniform->type);
+		stream.WriteString(uniform->uniformName);
+		switch (uniform->type)
+		{
+			case UniformType_Texture:
 			{
-				case UniformType_Texture:
-				{
-					auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
-					stream.WriteString(uniformTexture->textureName);
-					stream.WriteU8(uniformTexture->minFilter);
-					stream.WriteU8(uniformTexture->magFilter);
-					stream.WriteU8(uniformTexture->uWrap);
-					stream.WriteU8(uniformTexture->vWrap);
-					stream.WriteU8(uniformTexture->compare);
-				}
-				break;
-				case UniformType_Vec4:
-				{
-					auto uniformVec4 = dynamic_cast<MaterialUniform_Vec4*>(uniform);
-					stream.WriteVec4(uniformVec4->value);
-				}
-				break;
-				case UniformType_F32:
-				{
-					auto uniformF32 = dynamic_cast<MaterialUniform_F32*>(uniform);
-					stream.WriteF32(uniformF32->value);
-				}
-				break;
-				case UniformType_I32:
-				{
-					auto uniformI32 = dynamic_cast<MaterialUniform_I32*>(uniform);
-					stream.WriteI32(uniformI32->value);
-				}
-				break;
+				auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
+				stream.WriteString(uniformTexture->textureName);
+				stream.WriteU8(uniformTexture->minFilter);
+				stream.WriteU8(uniformTexture->magFilter);
+				stream.WriteU8(uniformTexture->uWrap);
+				stream.WriteU8(uniformTexture->vWrap);
+				stream.WriteU8(uniformTexture->compare);
 			}
+			break;
+			case UniformType_Vec4:
+			{
+				auto uniformVec4 = dynamic_cast<MaterialUniform_Vec4*>(uniform);
+				stream.WriteVec4(uniformVec4->value);
+			}
+			break;
+			case UniformType_F32:
+			{
+				auto uniformF32 = dynamic_cast<MaterialUniform_F32*>(uniform);
+				stream.WriteF32(uniformF32->value);
+			}
+			break;
+			case UniformType_I32:
+			{
+				auto uniformI32 = dynamic_cast<MaterialUniform_I32*>(uniform);
+				stream.WriteI32(uniformI32->value);
+			}
+			break;
 		}
 	}
-
 
 	return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
 }
@@ -337,62 +313,54 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 		return false;
 	}
 
-	u16 modeCount = stream.ReadI16();
-	for (u16 m = 0; m < modeCount; m++)
+	blendMode = (MaterialBlendMode)stream.ReadU8();
+	cullMode = (MaterialCullMode)stream.ReadU8();
+	zread = stream.ReadBool();
+	zwrite = stream.ReadBool();
+	vertexShaderName = stream.ReadString();
+	pixelShaderName = stream.ReadString();
+
+	u16 uniformsCount = stream.ReadU16();
+	for (u16 u = 0; u < uniformsCount; u++)
 	{
-		auto mode = new MaterialMode;
-		mode->name = stream.ReadString();
-		mode->blendMode = (MaterialBlendMode)stream.ReadU8();
-		mode->cullMode = (MaterialCullMode)stream.ReadU8();
-		mode->zread = stream.ReadBool();
-		mode->zwrite = stream.ReadBool();
-		mode->vertexShaderName = stream.ReadString();
-		mode->pixelShaderName = stream.ReadString();
-
-		u16 uniformsCount = stream.ReadU16();
-		for (u16 u = 0; u < uniformsCount; u++)
+		auto type = (UniformType)stream.ReadU8();
+		auto uniformName = stream.ReadString();
+		switch (type)
 		{
-			auto type = (UniformType)stream.ReadU8();
-			auto uniformName = stream.ReadString();
-			switch (type)
+			case UniformType_Texture:
 			{
-				case UniformType_Texture:
-				{
-					auto uniform = new MaterialUniform_Texture(uniformName);
-					uniform->textureName = stream.ReadString();
-					uniform->minFilter = (SamplerFilter)stream.ReadU8();
-					uniform->magFilter = (SamplerFilter)stream.ReadU8();
-					uniform->uWrap = (SamplerWrap)stream.ReadU8();
-					uniform->vWrap = (SamplerWrap)stream.ReadU8();
-					uniform->compare = (SamplerCompare)stream.ReadU8();
-					mode->uniforms.push_back(uniform);
-				}
-				break;
-				case UniformType_Vec4:
-				{
-					auto uniform = new MaterialUniform_Vec4(uniformName);
-					uniform->value = stream.ReadVec4();
-					mode->uniforms.push_back(uniform);
-				}
-				break;
-				case UniformType_I32:
-				{
-					auto uniform = new MaterialUniform_I32(uniformName);
-					uniform->value = stream.ReadI32();
-					mode->uniforms.push_back(uniform);
-				}
-				break;
-				case UniformType_F32:
-				{
-					auto uniform = new MaterialUniform_F32(uniformName);
-					uniform->value = stream.ReadF32();
-					mode->uniforms.push_back(uniform);
-				}
-				break;
+				auto uniform = new MaterialUniform_Texture(uniformName);
+				uniform->textureName = stream.ReadString();
+				uniform->minFilter = (SamplerFilter)stream.ReadU8();
+				uniform->magFilter = (SamplerFilter)stream.ReadU8();
+				uniform->uWrap = (SamplerWrap)stream.ReadU8();
+				uniform->vWrap = (SamplerWrap)stream.ReadU8();
+				uniform->compare = (SamplerCompare)stream.ReadU8();
+				uniforms.push_back(uniform);
 			}
+			break;
+			case UniformType_Vec4:
+			{
+				auto uniform = new MaterialUniform_Vec4(uniformName);
+				uniform->value = stream.ReadVec4();
+				uniforms.push_back(uniform);
+			}
+			break;
+			case UniformType_I32:
+			{
+				auto uniform = new MaterialUniform_I32(uniformName);
+				uniform->value = stream.ReadI32();
+				uniforms.push_back(uniform);
+			}
+			break;
+			case UniformType_F32:
+			{
+				auto uniform = new MaterialUniform_F32(uniformName);
+				uniform->value = stream.ReadF32();
+				uniforms.push_back(uniform);
+			}
+			break;
 		}
-
-		modes[StringHash64(mode->name)] = mode;
 	}
 
 	return true;

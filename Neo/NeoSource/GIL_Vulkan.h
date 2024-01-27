@@ -87,8 +87,6 @@ protected:
 	// all these probably get replaced by per-resource data once I replace more systems with resources like renderTargets, shaders and samplers
 	VkRenderPass m_renderPass;
 	VkDescriptorSetLayout m_descriptorSetLayout;
-	VkPipelineLayout m_pipelineLayout;
-	VkPipeline m_graphicsPipeline;
 
 	VkCommandPool m_commandPool;
 
@@ -165,7 +163,6 @@ protected:
 
 	// these will change when we support samples, shaders, uniform buffers, texture, materials
 	void createDescriptorSetLayout();
-	void createGraphicsPipeline();
 	void createCommandPool();
 	void createColorResources();
 	void createDepthResources();
@@ -205,6 +202,8 @@ public:
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
+	VkDescriptorSetLayout& GetDescriptorSetLayout() { return m_descriptorSetLayout; };
+	VkRenderPass& GetRenderPass() { return m_renderPass; };
 #endif
 };
 

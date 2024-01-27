@@ -16,14 +16,17 @@ struct ShaderPlatformData
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
 
-struct MaterialModePlatformData
-{
-
-};
 struct MaterialPlatformData
 {
-	hashtable<u64, MaterialModePlatformData*> modes;
+	VkPipelineLayout pipelineLayout;
+	VkPipeline pipeline;
 };
 MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);
 
+struct ModelPlatformData
+{
+
+};
+ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData);
+void ModelPlatformData_Destroy(ModelPlatformData* platformData);
