@@ -33,6 +33,12 @@ int RenderThread::Go()
 	m_gilInitialized = true;
 	while (!m_terminate)
 	{
+		// call all registered draw tasks
+		for (auto& task : m_gilTasks)
+		{
+			task();		
+		}
+
 		WaitUpdateDone();
 		SignalDrawStarted();
 

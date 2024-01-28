@@ -22,6 +22,12 @@
 const int MAX_FRAMES_IN_FLIGHT = 2;
 #endif
 
+struct UniformBufferObject {
+    alignas(16) mat4x4 model;
+    alignas(16) mat4x4 view;
+    alignas(16) mat4x4 proj;
+};
+
 class GIL : public Module<GIL>
 {
 
@@ -49,7 +55,9 @@ public:
 	void CreateRenderState(); // sets up shaders, color blendings, msaa, 
 	void CreateVertexAttributeBinding();
 
-	void DrawTestFrame();
+	// add model to render queue
+	// must be called on render thread
+	void RenderModel(class Model* model);
 
 	void WaitTilInitialised() { m_vulkanInitialised.Wait(); }
 
@@ -86,8 +94,6 @@ protected:
 
 	// all these probably get replaced by per-resource data once I replace more systems with resources like renderTargets, shaders and samplers
 	VkRenderPass m_renderPass;
-	VkDescriptorSetLayout m_descriptorSetLayout;
-
 	VkCommandPool m_commandPool;
 
 	VkImage m_colorImage;
@@ -111,7 +117,6 @@ protected:
 	std::vector<void*> m_uniformBuffersMapped;
 
 	VkDescriptorPool m_descriptorPool;
-	std::vector<VkDescriptorSet> m_descriptorSets;
 	std::vector<VkCommandBuffer> m_commandBuffers;
 
 	std::vector<VkSemaphore> m_imageAvailableSemaphores;
@@ -162,7 +167,6 @@ protected:
 	void createFormatMappings();
 
 	// these will change when we support samples, shaders, uniform buffers, texture, materials
-	void createDescriptorSetLayout();
 	void createCommandPool();
 	void createColorResources();
 	void createDepthResources();
@@ -196,13 +200,17 @@ public:
 public:
 #if NEW_CODE
 	VkDevice Device() { return m_device; }
+	VkCommandPool CommandPool() { return m_commandPool; }
+	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
+	std::vector<VkBuffer>& UniformBuffers() { return m_uniformBuffers; }
+	VkSampler TextureSampler() { return m_textureSampler; }
+
 	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
-	VkDescriptorSetLayout& GetDescriptorSetLayout() { return m_descriptorSetLayout; };
 	VkRenderPass& GetRenderPass() { return m_renderPass; };
 #endif
 };

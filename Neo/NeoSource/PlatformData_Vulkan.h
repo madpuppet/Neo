@@ -20,13 +20,19 @@ struct MaterialPlatformData
 {
 	VkPipelineLayout pipelineLayout;
 	VkPipeline pipeline;
+	VkDescriptorSetLayout descriptorSetLayout;
+	vector<VkDescriptorSet> descriptorSets;
 };
 MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);
 
 struct ModelPlatformData
 {
-
+	VkBuffer vertexBuffer;
+	VkDeviceMemory vertexBufferMemory;
+	VkBuffer indexBuffer;
+	VkDeviceMemory indexBufferMemory;
+	int indiceCount;
 };
 ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData);
 void ModelPlatformData_Destroy(ModelPlatformData* platformData);

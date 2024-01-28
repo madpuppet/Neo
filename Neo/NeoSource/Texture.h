@@ -100,6 +100,9 @@ class Texture : public Resource
 public:
 	Texture(const string& name);
 	virtual ~Texture();
+
+	TextureAssetData* GetAssetData() { return m_assetData; }
+	TexturePlatformData* GetPlatformData() { return m_platformData; }
 };
 
 // texture factory keeps a map of all the currently created textures

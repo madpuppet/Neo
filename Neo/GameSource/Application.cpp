@@ -27,25 +27,12 @@ void Application::Update()
 
 void Application::Draw()
 {
+#if NEW_CODE
+	// wait till our resources are loaded...
+	if (!m_vikingRoom->IsLoaded())
+		return;
 
-
-///	if (tex->IsLoaded())
-//	{
-//		Camera c;
-//		c.SetProjectionOrtho(-1, 1, -1, 1);
-//		c.SetLTWMatrix(glm::mat3x4);
-
-//		Neo::PushView(v);
-//
-//		Material m;
-//		m->Use();
-
-//		Renderer r;
-//		r.AddQuad("10,10,10,10");
-//		r.Render();
-
-
-
-//	}
+	GIL::Instance().RenderModel(m_vikingRoom);
+#endif
 }
 

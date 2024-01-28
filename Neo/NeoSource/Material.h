@@ -109,6 +109,9 @@ public:
 	Material(const string& name);
 	Material(const string& name, Material *parent);
 	virtual ~Material();
+
+	MaterialAssetData* GetAssetData() { return m_assetData; }
+	MaterialPlatformData* GetPlatformData() { return m_platformData; }
 };
 
 // texture factory keeps a map of all the currently created textures

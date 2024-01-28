@@ -48,6 +48,9 @@ public:
     // check what the current thread name is. empty() for unknow thread (thread wasn't registered)
     static string GetCurrentThreadName();
 
+    // check current thread is on a specific thread
+    static bool IsOnThread(int guid) { return GetCurrentThreadGUID() == guid; }
+
     Thread(int guid, const string &name);
     virtual ~Thread();
 

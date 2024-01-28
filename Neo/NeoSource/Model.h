@@ -20,6 +20,9 @@ public:
 	Model(const string& name);
 	Model(const string& name, Material* parent);
 	virtual ~Model();
+
+	ModelAssetData* GetAssetData() { return m_assetData; }
+	ModelPlatformData* GetPlatformData() { return m_platformData; }
 };
 
 // texture factory keeps a map of all the currently created textures

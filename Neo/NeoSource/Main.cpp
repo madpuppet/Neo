@@ -21,12 +21,12 @@
 #include <limits>
 #include <optional>
 
-#include "Application.h"
-
 #include "Thread.h"
-
 #include "FileManager.h"
 #include "AssetManager.h"
+
+#include "Application.h"  //TODO: we shouldn't know about Application - it should just itself to a generic update callback
+#include "RenderThread.h"
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -133,12 +133,6 @@ namespace std {
         }
     };
 }
-
-struct UniformBufferObject {
-    alignas(16) glm::mat4 model;
-    alignas(16) glm::mat4 view;
-    alignas(16) glm::mat4 proj;
-};
 
 class NeoCore {
 public:
@@ -295,6 +289,13 @@ public:
             {
                 HandleEvent(&e);
             }
+
+#if NEW_CODE
+            Application::Instance().Update();
+            RenderThread::Instance().SignalUpdateDone();
+            RenderThread::Instance().WaitDrawStarted();
+#endif
+
 #if !NEW_CODE
             drawFrame();
 #endif

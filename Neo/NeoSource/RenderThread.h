@@ -13,6 +13,7 @@ class RenderThread : public Module<RenderThread>, Thread
 	// not all things can be run on GIL thread - ie. command queue stuff must be run on render thread
 	WorkerThread m_gilTaskThread;
 	fifo<GenericCallback> m_gilTasks;
+	Mutex m_gilTasksLock;
 
 	// list of tasks to run during the render draw - general these add items to the render command queue
 	struct RenderTask
@@ -39,14 +40,19 @@ public:
 	// cannot use command queue or other resources that must be done on the main thread
 	void AddGILTask(const GenericCallback& task)
 	{
-		m_gilTaskThread.AddTask(task);
+		ScopedMutexLock lock(m_gilTasksLock);
+		m_gilTasks.push_back(task);
+//		m_gilTaskThread.AddTask(task);
 	}
 
 	virtual int Go() override;
 
 	// synchronisation functions for syncing update & draw threads
+	// these called by the draw thread
 	void WaitUpdateDone() { m_updateDone.Wait(); }
+	void SignalDrawStarted() { m_drawStarted.Signal(); }
+
+	// these called by the update thread
 	void WaitDrawStarted() { m_drawStarted.Wait(); }
 	void SignalUpdateDone() { m_updateDone.Signal(); }
-	void SignalDrawStarted() { m_drawStarted.Signal(); }
 };
