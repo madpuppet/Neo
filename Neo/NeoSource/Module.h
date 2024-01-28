@@ -14,7 +14,7 @@ enum NeoModulePri
 	NeoModulePri_GIL,
 	NeoModulePri_GILThread,
 
-	NeoModulePri_MAX
+	NeoModulePri_Application = 1000
 };
 
 template<class T>

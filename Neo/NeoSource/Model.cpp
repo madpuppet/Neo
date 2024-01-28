@@ -36,7 +36,7 @@ void Model::OnAssetDeliver(AssetData* data)
 
 	// we need to wait for our dependant resources, like Shaders and Textures,  to load first before creating our platform data (which are pipeline states)
 	// note that if they are already loaded, this will just trigger off the callback immediately
-	ResourceLoadedManager::Instance().AddDependancyList(dependantResources, [this]() { m_platformData = ModelPlatformData_Create(m_assetData); OnLoadComplete(); });
+	ResourceLoadedManager::Instance().AddDependancyList(this, dependantResources, [this]() { m_platformData = ModelPlatformData_Create(m_assetData); OnLoadComplete(); });
 }
 
 void Model::Reload()
@@ -133,7 +133,7 @@ AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* 
 		}
 	}
 
-	asset->materialName = "viking_room";
+	asset->materialName = "my_mat";
 
 	return asset;
 }
@@ -174,9 +174,7 @@ bool ModelAssetData::MemoryToAsset(const MemBlock& block)
 		return false;
 	}
 
-	u32 vertSize = stream.ReadU32();
 	auto vertBlock = stream.ReadMemory();
-	u32 indiceSize = stream.ReadU32();
 	auto indiceBlock = stream.ReadMemory();
 	materialName = stream.ReadString();
 

@@ -26,30 +26,40 @@ Material::~Material()
 
 void Material::OnAssetDeliver(AssetData* data)
 {
-	Assert(data->type == AssetType_Material, "Bad Asset Type");
-	m_assetData = dynamic_cast<MaterialAssetData*>(data);
-
-	// create dependant resources
-	vector<Resource*> dependantResources;
-	m_assetData->pixelShader.Create(m_assetData->pixelShaderName, ShaderType_Pixel);
-	m_assetData->vertexShader.Create(m_assetData->vertexShaderName, ShaderType_Vertex);
-	dependantResources.push_back(*m_assetData->pixelShader);
-	dependantResources.push_back(*m_assetData->pixelShader);
-	for (auto uniform : m_assetData->uniforms)
+	if (data)
 	{
-		if (uniform->type == UniformType_Texture)
+		Assert(data->type == AssetType_Material, "Bad Asset Type");
+		m_assetData = dynamic_cast<MaterialAssetData*>(data);
+
+		// create dependant resources
+		vector<Resource*> dependantResources;
+		m_assetData->pixelShader.Create(m_assetData->pixelShaderName, ShaderType_Pixel);
+		m_assetData->vertexShader.Create(m_assetData->vertexShaderName, ShaderType_Vertex);
+		dependantResources.push_back(*m_assetData->pixelShader);
+		dependantResources.push_back(*m_assetData->vertexShader);
+		for (auto uniform : m_assetData->uniforms)
 		{
-			auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
-			uniformTexture->texture.Create(uniformTexture->textureName);
-			dependantResources.push_back(*uniformTexture->texture);
+			if (uniform->type == UniformType_Texture)
+			{
+				auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
+				uniformTexture->texture.Create(uniformTexture->textureName);
+				dependantResources.push_back(*uniformTexture->texture);
+			}
 		}
+
+		Log(STR("Adding Dependancy List: {}", dependantResources.size()));
+
+		// we need to wait for our dependant resources, like Shaders and Textures,  to load first before creating our platform data (which are pipeline states)
+		// note that if they are already loaded, this will just trigger off the callback immediately
+		ResourceLoadedManager::Instance().AddDependancyList(this, dependantResources, [this]() { m_platformData = MaterialPlatformData_Create(m_assetData); OnLoadComplete(); });
+	}
+	else
+	{
+		// failed to load but we still need to make it as loaded so dependant resources can continue
+		m_failedToLoad = true;
+		OnLoadComplete();
 	}
 
-	Log(STR("Adding Dependancy List: {}", dependantResources.size()));
-
-	// we need to wait for our dependant resources, like Shaders and Textures,  to load first before creating our platform data (which are pipeline states)
-	// note that if they are already loaded, this will just trigger off the callback immediately
-	ResourceLoadedManager::Instance().AddDependancyList(dependantResources, [this]() { m_platformData = MaterialPlatformData_Create(m_assetData); OnLoadComplete(); });
 }
 
 void Material::Reload()

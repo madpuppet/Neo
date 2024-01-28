@@ -9,7 +9,7 @@
 class Model : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
-	virtual AssetType GetAssetType() { return AssetType_Material; }
+	virtual AssetType GetAssetType() { return AssetType_Model; }
 
 	virtual void Reload() override;
 

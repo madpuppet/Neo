@@ -1877,10 +1877,12 @@ void Error(const string &msg)
 
 #endif
 
+#include <atomic>
+static std::atomic<u64> s_global_unique_callback(0);
 CallbackHandle AllocUniqueCallbackHandle()
 {
-    static u64 global_unique_callback = 0;
-    return (CallbackHandle)++global_unique_callback; 
+    u64 result = s_global_unique_callback.fetch_add(1, std::memory_order_relaxed);
+    return result;
 }
 
 

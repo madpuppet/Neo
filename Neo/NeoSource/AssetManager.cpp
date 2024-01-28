@@ -38,6 +38,8 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			string assetDataPath = string("data:") + name + assetTypeInfo->m_assetExt;
 			fm.GetTime(assetDataPath, assetDateStamp);
 
+			Log(STR("#1 Request Asset: {} [{}]", name, assetType));
+
 			// get datestamp of each source file
 			stringlist srcFiles;
 			bool missingSrcFile = false;
@@ -73,16 +75,17 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			if (assetDateStamp > earliestSourceDateStamp)
 			{
 				MemBlock serializedBlock;
+				Log(STR("  deliver {} [{}] from asset data", name, assetType));
+				
 				if (!fm.Read(assetDataPath, serializedBlock))
 				{
-					Error(std::format("Error reading asset data file: {}\nTry deleting that file and run again.", assetDataPath));
+					Error(std::format("Failed to read asset data file: {}\nTry deleting that file and run again.", assetDataPath));
 					cb(nullptr);
 					return;
 				}
 
 				// create from data
 				// this can return nullptr if version is old
-				Log(STR("Create {} From Data: {}", name, assetType));
 				AssetData* assetData = assetTypeInfo->m_assetCreateFromData(serializedBlock);
 				if (assetData)
 				{
@@ -90,7 +93,6 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 					cb(assetData);
 					return;
 				}
-				Log("Asset was not delivered.. try creating from source...");
 			}
 
 			// didn't return assetData, so try building an asset from source
@@ -118,7 +120,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			}
 
 			// now create the AssetData from the src files
-			Log(STR("Create {} From Source: {}", name, assetType));
+			Log(STR("  deliver {} [{}] from src files", name, assetType));
 			AssetData *assetData = assetTypeInfo->m_assetCreateFromSource(srcFileMem, params);
 			assetData->name = name;
 			assetData->type = assetType;
@@ -126,7 +128,6 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			// write out the asset to then data folder
 			// write the texture asset to data
 			MemBlock serializedBlock = assetData->AssetToMemory();
-			Log(STR("Write Asset Data: {} -> {}", name, assetDataPath));
 			if (!fm.Write(assetDataPath, serializedBlock))
 			{
 				// non fatal error, since we have converted the asset ok, we just can't write it

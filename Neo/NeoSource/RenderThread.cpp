@@ -32,7 +32,11 @@ int RenderThread::Go()
 
 		gilThread.AddRenderTask([]() { GIL::Instance().BeginFrame(); });
 
-		// ... do draw functions ...
+		// call all registered draw tasks
+		for (auto& item : m_drawTasks)
+		{
+			item.task();
+		}
 
 		gilThread.AddRenderTask([]() { GIL::Instance().EndFrame(); });
 	}

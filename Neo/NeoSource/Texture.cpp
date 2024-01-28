@@ -19,10 +19,17 @@ Texture::~Texture()
 
 void Texture::OnAssetDeliver(AssetData* data)
 {
-	Assert(data->type == AssetType_Texture, "Bad Asset Type");
-	m_assetData = dynamic_cast<TextureAssetData*>(data);
-
-	GILThread::Instance().AddNonRenderTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
+	if (data)
+	{
+		Assert(data->type == AssetType_Texture, "Bad Asset Type");
+		m_assetData = dynamic_cast<TextureAssetData*>(data);
+		GILThread::Instance().AddNonRenderTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
+	}
+	else
+	{
+		m_failedToLoad = true;
+		OnLoadComplete();
+	}
 }
 
 void Texture::Reload()

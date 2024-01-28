@@ -59,8 +59,16 @@ Shader::~Shader()
 
 void Shader::OnAssetDeliver(struct AssetData* data)
 {
-	m_assetData = dynamic_cast<ShaderAssetData*>(data);
-	GILThread::Instance().AddNonRenderTask([this]() { m_platformData = ShaderPlatformData_Create(m_assetData); OnLoadComplete(); });
+	if (data)
+	{
+		m_assetData = dynamic_cast<ShaderAssetData*>(data);
+		GILThread::Instance().AddNonRenderTask([this]() { m_platformData = ShaderPlatformData_Create(m_assetData); OnLoadComplete(); });
+	}
+	else
+	{
+		m_failedToLoad = true;
+		OnLoadComplete();
+	}
 }
 
 void Shader::Reload()

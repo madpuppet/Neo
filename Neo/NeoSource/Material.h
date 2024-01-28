@@ -102,8 +102,8 @@ class Material : public Resource
 
 	virtual void Reload() override;
 
-	struct MaterialAssetData* m_assetData;
-	struct MaterialPlatformData* m_platformData;
+	struct MaterialAssetData* m_assetData = nullptr;
+	struct MaterialPlatformData* m_platformData = nullptr;
 
 public:
 	Material(const string& name);

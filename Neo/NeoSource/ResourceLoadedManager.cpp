@@ -8,7 +8,7 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 	// find any callbacks to this resource
 	ScopedMutexLock lock(m_mutex);
 
-	Log(STR("Resource Loaded: {} Type: {}", resource->GetName(), resource->GetAssetType()));
+	Log(STR("#2 COMPLETED: {} [{}]",resource->GetName(), resource->GetAssetType()));
 
 	// we need to do this here, so it is mutex locked
 	resource->MarkIsLoaded();
@@ -26,6 +26,8 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 			}
 		}
 
+		Log(STR("  deps: {}[{}] {}/{}", depInfo->resource->GetName(), depInfo->resource->GetAssetType(), depInfo->completed, depInfo->dependancies.size()));
+
 		// if our total completed matches are resources count, then we are done
 		if (depInfo->completed == depInfo->dependancies.size())
 		{
@@ -41,7 +43,7 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 	}
 }
 
-void ResourceLoadedManager::AddDependancyList(vector<Resource*>& list, GenericCallback cb)
+void ResourceLoadedManager::AddDependancyList(Resource *resource, vector<Resource*>& list, GenericCallback cb)
 {
 	// create a new dependancy block
 	ScopedMutexLock lock(m_mutex);
@@ -58,6 +60,7 @@ void ResourceLoadedManager::AddDependancyList(vector<Resource*>& list, GenericCa
 	{
 		// ok, we have some resources to wait on...
 		auto depInfo = new DependancyInfo;
+		depInfo->resource = resource;
 		depInfo->dependancies = std::move(list);
 		depInfo->completed = completed;
 		depInfo->task = cb;

@@ -1,8 +1,9 @@
 #pragma once
 
+#include "Module.h"
 #include "Model.h"
 
-class Application
+class Application : public Module<Application>
 {
 public:
 	Application();

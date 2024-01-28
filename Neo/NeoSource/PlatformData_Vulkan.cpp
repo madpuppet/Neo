@@ -52,7 +52,7 @@ struct Vertex {
 
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
-    Log(STR("Create Texture Platform Data: {}", assetData->name));
+    Log(STR("PLATFORM DATA for TEXTURE: {}", assetData->name));
 
     TexturePlatformData* platformData = new TexturePlatformData;
 
@@ -94,7 +94,7 @@ void TexturePlatformData_Destroy(struct TexturePlatformData* platformData)
 
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData)
 {
-    Log(STR("Create Shader Platform Data: {}", assetData->name));
+    Log(STR("PLATFORM DATA for SHADER: {}", assetData->name));
 
     ShaderPlatformData* platformData = new ShaderPlatformData;
     auto device = GIL::Instance().Device();
@@ -120,7 +120,7 @@ void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
 
 MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 {
-    Log("Creating Material Platform Data!");
+    Log(STR("PLATFORM DATA for MATERIAL: {}", assetData->name));
 
     auto platformData = new MaterialPlatformData;
     auto& gil = GIL::Instance();
@@ -250,6 +250,8 @@ void MaterialPlatformData_Destroy(MaterialPlatformData* platformData)
 
 ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData)
 {
+    Log(STR("PLATFORM DATA for MODEL: {}", assetData->name));
+
     return nullptr;
 }
 

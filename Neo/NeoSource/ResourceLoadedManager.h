@@ -17,6 +17,7 @@ class ResourceLoadedManager : public Module<ResourceLoadedManager>
 {
 	struct DependancyInfo
 	{
+		Resource* resource;
 		GenericCallback task;
 		vector<Resource*> dependancies;
 		int completed = 0;
@@ -28,6 +29,6 @@ class ResourceLoadedManager : public Module<ResourceLoadedManager>
 
 public:
 	void SignalResourceLoaded(Resource* resource);
-	void AddDependancyList(vector<Resource*>& list, GenericCallback cb);
+	void AddDependancyList(Resource* resource, vector<Resource*>& list, GenericCallback cb);
 };
 

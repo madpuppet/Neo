@@ -1,5 +1,8 @@
 #include "Neo.h"
 #include "Application.h"
+#include "RenderThread.h"
+
+DECLARE_MODULE(Application, NeoModulePri_Application);
 
 const char* GAME_NAME = "TestGame";
 
@@ -10,6 +13,7 @@ Application::Application()
 #if NEW_CODE
 	// mount filesystems
 	m_vikingRoom.Create("viking_room");
+	RenderThread::Instance().AddDrawTask([this]() {Draw();}, 0);
 #endif
 }
 
@@ -23,6 +27,8 @@ void Application::Update()
 
 void Application::Draw()
 {
+
+
 ///	if (tex->IsLoaded())
 //	{
 //		Camera c;
