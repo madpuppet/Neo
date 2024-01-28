@@ -23,7 +23,7 @@ void Texture::OnAssetDeliver(AssetData* data)
 	{
 		Assert(data->type == AssetType_Texture, "Bad Asset Type");
 		m_assetData = dynamic_cast<TextureAssetData*>(data);
-		RenderThread::Instance().AddGILTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
+		RenderThread::Instance().AddPreDrawTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
 	}
 	else
 	{

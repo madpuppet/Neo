@@ -6,7 +6,7 @@ zread: true
 zwrite: true
 uniforms
 	texture: albedo
-		image: my_tex
+		image: viking_room
 		filter: nearest, nearest
 		wrap: repeat
 	blendColor: vec4

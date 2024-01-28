@@ -132,7 +132,7 @@ AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* 
 		}
 	}
 
-	asset->materialName = "my_mat";
+	asset->materialName = "viking_room";
 
 	return asset;
 }

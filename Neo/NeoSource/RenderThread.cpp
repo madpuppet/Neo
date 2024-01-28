@@ -34,10 +34,13 @@ int RenderThread::Go()
 	while (!m_terminate)
 	{
 		// call all registered draw tasks
-		for (auto& task : m_gilTasks)
+		m_preDrawTaskLock.Lock();
+		for (auto& task : m_preDrawTasks)
 		{
 			task();		
 		}
+		m_preDrawTasks.clear();
+		m_preDrawTaskLock.Release();
 
 		WaitUpdateDone();
 		SignalDrawStarted();

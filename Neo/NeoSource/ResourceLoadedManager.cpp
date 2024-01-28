@@ -33,7 +33,7 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 		if (depInfo->completed == depInfo->dependancies.size())
 		{
 			// fire off the graphics task for creating the resource platform dependant data
-			RenderThread::Instance().AddGILTask(depInfo->task);
+			RenderThread::Instance().AddPreDrawTask(depInfo->task);
 			delete depInfo;
 			it = m_dependancyLists.erase(it);
 		}
@@ -70,6 +70,6 @@ void ResourceLoadedManager::AddDependancyList(Resource *resource, vector<Resourc
 	else
 	{
 		// all dependants have already loaded, so we can just fire off the task now
-		RenderThread::Instance().AddGILTask(cb);
+		RenderThread::Instance().AddPreDrawTask(cb);
 	}
 }

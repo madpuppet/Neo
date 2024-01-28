@@ -62,7 +62,7 @@ void Shader::OnAssetDeliver(struct AssetData* data)
 	if (data)
 	{
 		m_assetData = dynamic_cast<ShaderAssetData*>(data);
-		RenderThread::Instance().AddGILTask([this]() { m_platformData = ShaderPlatformData_Create(m_assetData); OnLoadComplete(); });
+		RenderThread::Instance().AddPreDrawTask([this]() { m_platformData = ShaderPlatformData_Create(m_assetData); OnLoadComplete(); });
 	}
 	else
 	{

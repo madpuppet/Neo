@@ -52,6 +52,8 @@ struct Vertex {
 
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
     Log(STR("PLATFORM DATA for TEXTURE: {}", assetData->name));
 
     TexturePlatformData* platformData = new TexturePlatformData;
@@ -94,6 +96,8 @@ void TexturePlatformData_Destroy(struct TexturePlatformData* platformData)
 
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData)
 {
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
     Log(STR("PLATFORM DATA for SHADER: {}", assetData->name));
 
     ShaderPlatformData* platformData = new ShaderPlatformData;
@@ -120,6 +124,8 @@ void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
 
 MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 {
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
     Log(STR("PLATFORM DATA for MATERIAL: {}", assetData->name));
 
     auto platformData = new MaterialPlatformData;
@@ -287,8 +293,6 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
         throw std::runtime_error("failed to allocate descriptor sets!");
     }
 
-
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         VkDescriptorBufferInfo bufferInfo{};
@@ -333,6 +337,8 @@ void MaterialPlatformData_Destroy(MaterialPlatformData* platformData)
 
 ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData)
 {
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
     Log(STR("PLATFORM DATA for MODEL: {}", assetData->name));
 
     auto& gil = GIL::Instance();
