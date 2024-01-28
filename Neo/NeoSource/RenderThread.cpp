@@ -1,6 +1,7 @@
 #include "Neo.h"
 #include "RenderThread.h"
-#include "GILThread.h"
+
+DECLARE_MODULE(RenderThread, NeoModulePri_RenderThread);
 
 /*
 
@@ -14,8 +15,10 @@ GRAPHICS = > EndFrame
 
 */
 
-RenderThread::RenderThread() : Thread(ThreadGUID_RenderThread, "RenderThread")
+RenderThread::RenderThread() : m_gilTaskThread(ThreadGUID_GILTasks, "GILThread"), Thread(ThreadGUID_Render, "RenderThread")
 {
+	Start();
+	while (!m_gilInitialized);
 }
 
 RenderThread::~RenderThread()
@@ -24,13 +27,16 @@ RenderThread::~RenderThread()
 
 int RenderThread::Go()
 {
-	auto& gilThread = GILThread::Instance();
+	auto& gil = GIL::Instance();
+	gil.Startup();
+	m_gilTaskThread.Start();
+	m_gilInitialized = true;
 	while (!m_terminate)
 	{
 		WaitUpdateDone();
 		SignalDrawStarted();
 
-		gilThread.AddRenderTask([]() { GIL::Instance().BeginFrame(); });
+		gil.BeginFrame();
 
 		// call all registered draw tasks
 		for (auto& item : m_drawTasks)
@@ -38,7 +44,19 @@ int RenderThread::Go()
 			item.task();
 		}
 
-		gilThread.AddRenderTask([]() { GIL::Instance().EndFrame(); });
+		gil.EndFrame();
 	}
+
+	gil.Shutdown();
 	return 0;
 }
+
+CallbackHandle RenderThread::AddDrawTask(const GenericCallback& task, int priority)
+{
+	ScopedMutexLock lock(m_drawTaskLock);
+	auto handle = AllocUniqueCallbackHandle();
+	m_drawTasks.emplace_back(handle, priority, task);
+	std::sort(m_drawTasks.begin(), m_drawTasks.end(), [](const RenderTask& a, const RenderTask& b) { return a.priority < b.priority; });
+	return handle;
+}
+

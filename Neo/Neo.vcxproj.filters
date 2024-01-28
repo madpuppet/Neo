@@ -1487,9 +1487,6 @@
     <ClInclude Include="NeoSource\Module.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\GILThread.h">
-      <Filter>NeoSource\Rendering</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\GIL_Vulkan.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
@@ -1599,9 +1596,6 @@
     </ClCompile>
     <ClCompile Include="NeoSource\Module.cpp">
       <Filter>NeoSource</Filter>
-    </ClCompile>
-    <ClCompile Include="NeoSource\GILThread.cpp">
-      <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\GIL_Vulkan.cpp">
       <Filter>NeoSource\Rendering</Filter>

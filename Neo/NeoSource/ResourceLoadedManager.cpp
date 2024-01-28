@@ -1,5 +1,6 @@
 #include "Neo.h"
 #include "ResourceLoadedManager.h"
+#include "RenderThread.h"
 
 DECLARE_MODULE(ResourceLoadedManager, NeoModulePri_ResourceLoadedManager);
 
@@ -32,7 +33,7 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 		if (depInfo->completed == depInfo->dependancies.size())
 		{
 			// fire off the graphics task for creating the resource platform dependant data
-			GILThread::Instance().AddNonRenderTask(depInfo->task);
+			RenderThread::Instance().AddGILTask(depInfo->task);
 			delete depInfo;
 			it = m_dependancyLists.erase(it);
 		}
@@ -69,6 +70,6 @@ void ResourceLoadedManager::AddDependancyList(Resource *resource, vector<Resourc
 	else
 	{
 		// all dependants have already loaded, so we can just fire off the task now
-		GILThread::Instance().AddNonRenderTask(cb);
+		RenderThread::Instance().AddGILTask(cb);
 	}
 }

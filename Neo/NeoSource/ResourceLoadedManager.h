@@ -3,7 +3,7 @@
 #include "Neo.h"
 #include "Module.h"
 #include "Resource.h"
-#include "GILThread.h"
+#include "RenderThread.h"
 #include <functional>
 
 // simple module that allows for thread safe callbacks when resources are finished loading

@@ -1,7 +1,7 @@
 #include "Neo.h"
 #include "Shader.h"
 #include "StringUtils.h"
-#include "GILThread.h"
+#include "RenderThread.h"
 
 #define SHADER_VERSION 1
 
@@ -62,7 +62,7 @@ void Shader::OnAssetDeliver(struct AssetData* data)
 	if (data)
 	{
 		m_assetData = dynamic_cast<ShaderAssetData*>(data);
-		GILThread::Instance().AddNonRenderTask([this]() { m_platformData = ShaderPlatformData_Create(m_assetData); OnLoadComplete(); });
+		RenderThread::Instance().AddGILTask([this]() { m_platformData = ShaderPlatformData_Create(m_assetData); OnLoadComplete(); });
 	}
 	else
 	{

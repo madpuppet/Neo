@@ -12,7 +12,7 @@ enum NeoModulePri
 	NeoModulePri_MaterialFactory,
 	NeoModulePri_ModelFactory,
 	NeoModulePri_GIL,
-	NeoModulePri_GILThread,
+	NeoModulePri_RenderThread,
 
 	NeoModulePri_Application = 1000
 };

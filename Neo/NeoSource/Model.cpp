@@ -1,7 +1,6 @@
 #include "Neo.h"
 #include "Model.h"
 #include "Material.h"
-#include "GILThread.h"
 #include "StringUtils.h"
 #include "SHAD.h"
 #include "ResourceLoadedManager.h"

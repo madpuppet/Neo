@@ -1,7 +1,7 @@
 #include "neo.h"
 #include "Texture.h"
 #include "StringUtils.h"
-#include "GILThread.h"
+#include "RenderThread.h"
 #include <stb_image.h>
 
 #define TEXTURE_VERSION 1
@@ -23,7 +23,7 @@ void Texture::OnAssetDeliver(AssetData* data)
 	{
 		Assert(data->type == AssetType_Texture, "Bad Asset Type");
 		m_assetData = dynamic_cast<TextureAssetData*>(data);
-		GILThread::Instance().AddNonRenderTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
+		RenderThread::Instance().AddGILTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
 	}
 	else
 	{

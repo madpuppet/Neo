@@ -288,8 +288,6 @@ public:
 
     void mainLoop()
     {
-        Application* app = new Application();
-
         SDL_Event e;
         while (!m_quit)
         {
