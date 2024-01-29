@@ -28,11 +28,11 @@ void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);
 
 struct ModelPlatformData
 {
-	VkBuffer vertexBuffer;
-	VkDeviceMemory vertexBufferMemory;
-	VkBuffer indexBuffer;
-	VkDeviceMemory indexBufferMemory;
-	int indiceCount;
+	VkBuffer vertexBuffer = nullptr;
+	VkDeviceMemory vertexBufferMemory = nullptr;
+	VkBuffer indexBuffer = nullptr;
+	VkDeviceMemory indexBufferMemory = nullptr;
+	int indiceCount = 0;
 };
 ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData);
 void ModelPlatformData_Destroy(ModelPlatformData* platformData);

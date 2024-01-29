@@ -180,7 +180,7 @@ bool ModelAssetData::MemoryToAsset(const MemBlock& block)
 	verts.assign((Vertex*)vertBlock.Mem(), (Vertex*)(vertBlock.Mem() + vertBlock.Size()));
 	vertBlock.ClearMemPtrs();
 
-	indices.assign((u32*)indiceBlock.Mem(), (u32*)(indiceBlock.Mem() + vertBlock.Size()));
+	indices.assign((u32*)indiceBlock.Mem(), (u32*)(indiceBlock.Mem() + indiceBlock.Size()));
 	indiceBlock.ClearMemPtrs();
 
 	return true;

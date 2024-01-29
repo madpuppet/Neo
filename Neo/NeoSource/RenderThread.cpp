@@ -21,6 +21,20 @@ RenderThread::RenderThread() : m_gilTaskThread(ThreadGUID_GILTasks, "GILThread")
 	while (!m_gilInitialized);
 }
 
+void RenderThread::AddPreDrawTask(const GenericCallback& task)
+{
+	if (Thread::IsOnThread(ThreadGUID_Render))
+	{
+		m_preDrawTasks.push_back(task);
+	}
+	else
+	{
+		ScopedMutexLock lock(m_preDrawTaskLock);
+		m_preDrawTasks.push_back(task);
+	}
+}
+
+
 RenderThread::~RenderThread()
 {
 }
@@ -35,12 +49,17 @@ int RenderThread::Go()
 	{
 		// call all registered draw tasks
 		m_preDrawTaskLock.Lock();
-		for (auto& task : m_preDrawTasks)
+		vector<GenericCallback> tasks = std::move(m_preDrawTasks);
+		m_preDrawTaskLock.Release();
+
+		for (auto& task : tasks)
 		{
 			task();		
 		}
-		m_preDrawTasks.clear();
+
+		m_preDrawTaskLock.Lock();
 		m_preDrawTaskLock.Release();
+
 
 		WaitUpdateDone();
 		SignalDrawStarted();

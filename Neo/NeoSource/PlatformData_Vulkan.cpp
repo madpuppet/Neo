@@ -80,6 +80,8 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
     vkDestroyBuffer(gil.Device(), stagingBuffer, nullptr);
     vkFreeMemory(gil.Device(), stagingBufferMemory, nullptr);
 
+    gil.generateMipmaps(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, assetData->width, assetData->height, 1);
+
     platformData->textureImageView = gil.createImageView(platformData->textureImage, fmt, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 
     return platformData;
@@ -345,24 +347,47 @@ ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData)
     auto platformData = new ModelPlatformData;
     auto device = gil.Device();
 
-    VkDeviceSize bufferSize = sizeof(assetData->verts[0]) * assetData->verts.size();
+    // vertex buffer
+    {
+        VkDeviceSize bufferSize = sizeof(assetData->verts[0]) * assetData->verts.size();
 
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    gil.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        gil.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
 
-    void* data;
-    vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
-    memcpy(data, assetData->verts.data(), (size_t)bufferSize);
-    vkUnmapMemory(device, stagingBufferMemory);
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, assetData->verts.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
 
-    gil.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->vertexBuffer, platformData->vertexBufferMemory);
-    gil.copyBuffer(stagingBuffer, platformData->vertexBuffer, bufferSize);
+        gil.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->vertexBuffer, platformData->vertexBufferMemory);
+        gil.copyBuffer(stagingBuffer, platformData->vertexBuffer, bufferSize);
 
-    vkDestroyBuffer(device, stagingBuffer, nullptr);
-    vkFreeMemory(device, stagingBufferMemory, nullptr);
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+    }
 
-    platformData->indiceCount = (int)assetData->indices.size();
+    // index buffer
+    {
+        VkDeviceSize bufferSize = sizeof(assetData->indices[0]) * assetData->indices.size();
+
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        gil.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(device, stagingBufferMemory, 0, bufferSize, 0, &data);
+        memcpy(data, assetData->indices.data(), (size_t)bufferSize);
+        vkUnmapMemory(device, stagingBufferMemory);
+
+        gil.createBuffer(bufferSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->indexBuffer, platformData->indexBufferMemory);
+
+        gil.copyBuffer(stagingBuffer, platformData->indexBuffer, bufferSize);
+
+        vkDestroyBuffer(device, stagingBuffer, nullptr);
+        vkFreeMemory(device, stagingBufferMemory, nullptr);
+        platformData->indiceCount = (int)assetData->indices.size();
+    }
 
     return platformData;
 }

@@ -1,20 +1,10 @@
 =========== DRAW THREAD ===================
 ... Wait SignalUpdateDone
 SignalDrawStarted ==> UPDATE THREAD
-GRAPHICS => StartFrame
-Do draws - add tasks to graphics thread
-GRAPHICS => EndFrame
-
-============ GRAPHICS THREAD ==============
-Init vulkan
-LOOP:
-
-StartFrame
+GIL::StartFrame
 ==> Reset Queue
-
-Misc Tasks
-
-EndFrame
+Do draws - add tasks to graphics thread
+GIL::EndFrame
 ==> Wait on GPU finished
 ==> Present screen
 ==> Execute Command Queue
