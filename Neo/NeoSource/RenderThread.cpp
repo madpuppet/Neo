@@ -57,10 +57,6 @@ int RenderThread::Go()
 			task();		
 		}
 
-		m_preDrawTaskLock.Lock();
-		m_preDrawTaskLock.Release();
-
-
 		WaitUpdateDone();
 		SignalDrawStarted();
 

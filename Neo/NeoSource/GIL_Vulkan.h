@@ -96,10 +96,6 @@ protected:
 	VkRenderPass m_renderPass;
 	VkCommandPool m_commandPool;
 
-	VkImage m_colorImage;
-	VkDeviceMemory m_colorImageMemory;
-	VkImageView m_colorImageView;
-
 	VkImage m_depthImage;
 	VkDeviceMemory m_depthImageMemory;
 	VkImageView m_depthImageView;
@@ -168,7 +164,6 @@ protected:
 
 	// these will change when we support samples, shaders, uniform buffers, texture, materials
 	void createCommandPool();
-	void createColorResources();
 	void createDepthResources();
 	void createFramebuffers();
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);

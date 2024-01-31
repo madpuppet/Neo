@@ -133,7 +133,6 @@ void GIL::Startup()
     createImageViews();
     createRenderPass();
     createCommandPool();
-    createColorResources();
     createDepthResources();
     createFramebuffers();
     createUniformBuffers();
@@ -248,16 +247,16 @@ void GIL::BeginFrame()
     clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
     clearValues[1].depthStencil = { 1.0f, 0 };
 
-    renderPassInfo.clearValueCount = static_cast<uint32_t>(clearValues.size());
+    renderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
     renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-
+    
     VkViewport viewport{};
-    viewport.x = 0.25f;
-    viewport.y = 0.25f;
-    viewport.width = (float)m_swapChainExtent.width * 0.5f;
-    viewport.height = (float)m_swapChainExtent.height * 0.5f;
+    viewport.x = 0.0f;
+    viewport.y = 0.0f;
+    viewport.width = (float)m_swapChainExtent.width;
+    viewport.height = (float)m_swapChainExtent.height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
@@ -266,9 +265,6 @@ void GIL::BeginFrame()
     scissor.offset = { 0, 0 };
     scissor.extent = m_swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-
-//TODO: this is Bind Material
-//    vkCmdBindPipeline(m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_graphicsPipeline);
 }
 
 void GIL::EndFrame()
@@ -762,7 +758,7 @@ void GIL::createRenderPass()
     colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
     colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+    colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentDescription depthAttachment{};
     depthAttachment.format = findDepthFormat();
@@ -773,16 +769,6 @@ void GIL::createRenderPass()
     depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
     depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
     depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
-
-    VkAttachmentDescription colorAttachmentResolve{};
-    colorAttachmentResolve.format = m_swapChainImageFormat;
-    colorAttachmentResolve.samples = VK_SAMPLE_COUNT_1_BIT;
-    colorAttachmentResolve.loadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachmentResolve.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    colorAttachmentResolve.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    colorAttachmentResolve.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    colorAttachmentResolve.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-    colorAttachmentResolve.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentReference colorAttachmentRef{};
     colorAttachmentRef.attachment = 0;
@@ -797,20 +783,19 @@ void GIL::createRenderPass()
     subpass.colorAttachmentCount = 1;
     subpass.pColorAttachments = &colorAttachmentRef;
     subpass.pDepthStencilAttachment = &depthAttachmentRef;
-    subpass.pResolveAttachments = nullptr;
 
     VkSubpassDependency dependency{};
     dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
     dependency.dstSubpass = 0;
     dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    dependency.srcAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
     dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
     dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
-    std::array<VkAttachmentDescription, 3> attachments = { colorAttachment, depthAttachment, colorAttachmentResolve };
+    std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
-    renderPassInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+    renderPassInfo.attachmentCount = static_cast<u32>(attachments.size());
     renderPassInfo.pAttachments = attachments.data();
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
@@ -856,10 +841,9 @@ void GIL::createFramebuffers()
     m_swapChainFramebuffers.resize(m_swapChainImageViews.size());
 
     for (size_t i = 0; i < m_swapChainImageViews.size(); i++) {
-        std::array<VkImageView, 3> attachments = {
-            m_colorImageView,
-            m_depthImageView,
-            m_swapChainImageViews[i]
+        std::array<VkImageView, 2> attachments = {
+            m_swapChainImageViews[i],
+            m_depthImageView
         };
 
         VkFramebufferCreateInfo framebufferInfo{};
@@ -906,13 +890,6 @@ VkShaderModule GIL::createShaderModule(const std::vector<char>& code)
     return shaderModule;
 }
 
-void GIL::createColorResources()
-{
-    VkFormat colorFormat = m_swapChainImageFormat;
-
-    createImage(m_swapChainExtent.width, m_swapChainExtent.height, 1, colorFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_TRANSIENT_ATTACHMENT_BIT | VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_colorImage, m_colorImageMemory);
-    m_colorImageView = createImageView(m_colorImage, colorFormat, VK_IMAGE_ASPECT_COLOR_BIT, 1);
-}
 
 void GIL::createDepthResources()
 {
@@ -1231,7 +1208,6 @@ void GIL::recreateSwapChain()
     cleanupSwapChain();
     createSwapChain();
     createImageViews();
-    createColorResources();
     createDepthResources();
     createFramebuffers();
 }
@@ -1240,10 +1216,6 @@ void GIL::cleanupSwapChain() {
     vkDestroyImageView(m_device, m_depthImageView, nullptr);
     vkDestroyImage(m_device, m_depthImage, nullptr);
     vkFreeMemory(m_device, m_depthImageMemory, nullptr);
-
-    vkDestroyImageView(m_device, m_colorImageView, nullptr);
-    vkDestroyImage(m_device, m_colorImage, nullptr);
-    vkFreeMemory(m_device, m_colorImageMemory, nullptr);
 
     for (auto framebuffer : m_swapChainFramebuffers) {
         vkDestroyFramebuffer(m_device, framebuffer, nullptr);
@@ -1446,7 +1418,7 @@ void GIL::RenderModel(Model *model)
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 1, &materialPD->descriptorSets[m_currentFrame], 0, nullptr);
 
-    vkCmdDrawIndexed(commandBuffer, static_cast<uint32_t>(modelAD->indices.size()), 1, 0, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, modelPD->indiceCount, 1, 0, 0, 0);
 }
 #endif
 

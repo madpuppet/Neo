@@ -80,7 +80,7 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
     vkDestroyBuffer(gil.Device(), stagingBuffer, nullptr);
     vkFreeMemory(gil.Device(), stagingBufferMemory, nullptr);
 
-    gil.generateMipmaps(platformData->textureImage, VK_FORMAT_R8G8B8A8_SRGB, assetData->width, assetData->height, 1);
+    gil.generateMipmaps(platformData->textureImage, fmt, assetData->width, assetData->height, 1);
 
     platformData->textureImageView = gil.createImageView(platformData->textureImage, fmt, VK_IMAGE_ASPECT_COLOR_BIT, 1);
 

@@ -32,7 +32,7 @@ struct ModelPlatformData
 	VkDeviceMemory vertexBufferMemory = nullptr;
 	VkBuffer indexBuffer = nullptr;
 	VkDeviceMemory indexBufferMemory = nullptr;
-	int indiceCount = 0;
+	u32 indiceCount = 0;
 };
 ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData);
 void ModelPlatformData_Destroy(ModelPlatformData* platformData);

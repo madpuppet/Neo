@@ -107,11 +107,11 @@ AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams
 			delete[] stbi_uc;
 			stbi_uc = mem;
 			texChannels = 4;
-			texAsset->format = PixFmt_R8G8B8A8_UNORM;
+			texAsset->format = PixFmt_R8G8B8A8_SRGB;
 		}
 		break;
 		case 4:
-			texAsset->format = PixFmt_R8G8B8A8_UNORM;
+			texAsset->format = PixFmt_R8G8B8A8_SRGB;
 			break;
 	}
 
