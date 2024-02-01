@@ -374,3 +374,5 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 
 	return true;
 }
+
+

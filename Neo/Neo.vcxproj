@@ -277,8 +277,8 @@
     <None Include="include\SDL_config.h.cmake" />
     <None Include="include\SDL_config.h.in" />
     <None Include="include\SDL_config_macosx.h.orig" />
-    <None Include="shaders\shader.frag" />
-    <None Include="shaders\shader.vert" />
+    <None Include="SourceData\shaders\shader.frag" />
+    <None Include="SourceData\shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameSource\Application.h" />

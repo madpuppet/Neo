@@ -84,6 +84,29 @@ public:
 	}
 };
 
+
+class NeoMaterialReader : public tinyobj::MaterialReader
+{
+public:
+	NeoMaterialReader() {}
+	virtual ~NeoMaterialReader() {}
+
+	virtual bool operator()(const string& matId,
+		std::vector<tinyobj::material_t>* materials,
+		std::map<string, int>* matMap, string* warn,
+		string* err)
+	{
+		tinyobj::material_t mat;
+		mat.name = StringGetFilenameNoExt(matId);
+		int pos = (int)materials->size();
+		(*matMap)[mat.name] = pos;
+		(*materials).push_back(mat);
+		return true;
+	}
+};
+
+
+
 AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* params)
 {
 	auto asset = new ModelAssetData;
@@ -100,7 +123,8 @@ AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* 
 	std::vector<tinyobj::material_t> materials;
 	string warn, err;
 
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &inputStream)) {
+	NeoMaterialReader matReader;
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &inputStream, &matReader)) {
 		throw std::runtime_error(warn + err);
 	}
 
@@ -132,7 +156,8 @@ AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* 
 		}
 	}
 
-	asset->materialName = "viking_room";
+	Assert(materials.size() == 1, "Only support single material objs atm");
+	asset->materialName = materials[0].name;
 
 	return asset;
 }
@@ -185,3 +210,4 @@ bool ModelAssetData::MemoryToAsset(const MemBlock& block)
 
 	return true;
 }
+

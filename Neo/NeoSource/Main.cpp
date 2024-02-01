@@ -1397,6 +1397,7 @@ public:
         }
 
         Error("failed to find suitable memory type!");
+        return -1;
     }
 
     void createCommandBuffers() {

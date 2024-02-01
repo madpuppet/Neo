@@ -34,6 +34,9 @@ class GIL : public Module<GIL>
 #if NEW_CODE
 
 public:
+	// main thread startup... creates window for message polling on main thread
+	void StartupMainThread();
+
 	// initial basic global rendering systems
 	void Startup();
 
@@ -168,7 +171,6 @@ protected:
 	void createFramebuffers();
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 	void createTextureSampler();
-	void loadModel();
 	void createVertexBuffer();
 	void createIndexBuffer();
 	void createUniformBuffers();
