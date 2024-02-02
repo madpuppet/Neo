@@ -28,6 +28,7 @@ Thread::Thread(int guid, const string &name)
 
 Thread::~Thread()
 {
+    StopAndWait();
 }
 
 void Thread::Start(bool lowPriority)
@@ -37,29 +38,27 @@ void Thread::Start(bool lowPriority)
 
 void Thread::WaitForThreadCompletion()
 {
-    if (!m_finished)
-    {
+    if (m_thread.joinable())
         m_thread.join();
-    }
 }
 
-void Thread::Stop()
+void Thread::StopAndWait()
 {
     Terminate();
     WaitForThreadCompletion();
 }
 
-void Thread::Begin()
+void Thread::SetName()
 {
     // optional per-platform code to set thread name, and core
     // if not implemented, will just use default names/any core
-#if defined(_NSWITCH)
+#if defined(PLATFORM_Switch)
     auto threadType = nn::os::GetCurrentThread();
     nn::os::SetThreadName(threadType, m_name.CStr());
     // allow threads to run on any core except the main core - we don't want the main core interrupted
     i64 coreMask = nn::os::GetThreadAvailableCoreMask() & ~1;
     nn::os::SetThreadCoreMask(threadType, nn::os::IdealCoreDontCare, coreMask);
-#elif defined(_WINDOWS)
+#elif defined(PLATFORM_Windows)
 #define MS_VC_EXCEPTION 0x406d1388
     typedef struct tagTHREADNAME_INFO
     {
@@ -70,20 +69,25 @@ void Thread::Begin()
     } THREADNAME_INFO;
     THREADNAME_INFO info;
     info.dwType = 0x1000;
-    info.szName = m_name.CStr();
+    info.szName = m_name.c_str();
     info.dwThreadID = GetCurrentThreadId();
     info.dwFlags = 0;
     __try
     {
-        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR *)&info);
+        RaiseException(MS_VC_EXCEPTION, 0, sizeof(info) / sizeof(DWORD), (const ULONG_PTR*)&info);
     }
     __except (EXCEPTION_CONTINUE_EXECUTION)
     {
     }
 #endif
+}
 
+void Thread::Begin()
+{
+    SetName();
     RegisterThread(m_guid, m_name);
     Go();
+    m_finished = true;
 }
 
 ThreadID Thread::CurrentThreadID()

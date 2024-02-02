@@ -40,6 +40,7 @@ void RenderThread::AddPreDrawTask(const GenericCallback& task)
 
 RenderThread::~RenderThread()
 {
+	StopAndWait();
 }
 
 int RenderThread::Go()
@@ -61,6 +62,10 @@ int RenderThread::Go()
 		}
 
 		WaitUpdateDone();
+
+		if (m_terminate)
+			break;
+
 		SignalDrawStarted();
 
 		gil.BeginFrame();
@@ -75,6 +80,7 @@ int RenderThread::Go()
 	}
 
 	gil.Shutdown();
+	Log("render thread terminate..");
 	return 0;
 }
 

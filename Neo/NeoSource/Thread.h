@@ -59,7 +59,10 @@ public:
     **/
 
     void Start(bool lowPriority = true);
-    void Stop();
+    void StopAndWait();
+
+    // set the name of the thread for platforms that support this
+    void SetName();
 
     /**
     * Request thread to terminate
@@ -158,14 +161,19 @@ protected:
 };
 
 // a worker thread that executes one off tasks
-class WorkerThread: public Thread
+class WorkerThread : public Thread
 {
     Mutex m_tasks;
     Semaphore m_taskSignals;
     fifo<std::function<void()>> m_taskList;
 
 public:
-    WorkerThread(int guid, const string &name) : Thread(guid, name) {}
+    WorkerThread(int guid, const string& name) : Thread(guid, name) {}
+    ~WorkerThread()
+    {
+        StopAndWait();
+        Log(STR("Worker Thread {} successfully shutdown", GetName()));
+    }
 
     // @param task - typically a lambda function that you want to run on this thread. it will be called once only and then forgotten
     //               the task will need alert the system of its completion via other methods
@@ -180,15 +188,25 @@ public:
 
     virtual int Go()
     {
+        m_taskSignals.Wait();
         while (!m_terminate)
         {
-            m_taskSignals.Wait();
             m_tasks.Lock();
             auto task = m_taskList.front();
             m_taskList.pop_front();
             m_tasks.Release();
             task();
+            m_taskSignals.Wait();
         }
+        Log(STR("Worker Thread {} Go is exitting...", GetName()));
         return 0;
     }
+
+    virtual void Terminate()
+    {
+        m_terminate = true;
+        m_taskSignals.Signal();
+    }
+
+    void SetName();
 };

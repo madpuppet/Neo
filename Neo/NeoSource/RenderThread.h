@@ -28,7 +28,7 @@ class RenderThread : public Module<RenderThread>, Thread
 	vector<RenderTask> m_drawTasks;
 
 	// set when GIL is initialised
-	bool m_gilInitialized = false;
+	volatile bool m_gilInitialized = false;
 
 public:
 	RenderThread();
@@ -48,6 +48,12 @@ public:
 	void AddPreDrawTask(const GenericCallback& task);
 
 	virtual int Go() override;
+
+	virtual void Terminate()
+	{
+		m_terminate = true;
+		SignalUpdateDone();
+	}
 
 	// synchronisation functions for syncing update & draw threads
 	// these called by the draw thread
