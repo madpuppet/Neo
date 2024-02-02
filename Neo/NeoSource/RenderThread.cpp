@@ -17,13 +17,11 @@ GRAPHICS = > EndFrame
 
 RenderThread::RenderThread() : m_gilTaskThread(ThreadGUID_GILTasks, "GILThread"), Thread(ThreadGUID_Render, "RenderThread")
 {
-#if NEW_CODE
 	// do this on main thread
 	auto& gil = GIL::Instance();
 	gil.StartupMainThread();
 	Start();
 	while (!m_gilInitialized);
-#endif
 }
 
 void RenderThread::AddPreDrawTask(const GenericCallback& task)

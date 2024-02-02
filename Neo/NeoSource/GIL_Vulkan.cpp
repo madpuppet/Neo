@@ -4,8 +4,6 @@
 #include "Material.h"
 #include "Model.h"
 
-#if NEW_CODE
-
 DECLARE_MODULE(GIL, NeoModulePri_GIL);
 
 #include <tiny_obj_loader.h>
@@ -1384,6 +1382,5 @@ void GIL::RenderModel(Model *model)
 
     vkCmdDrawIndexed(commandBuffer, modelPD->indiceCount, 1, 0, 0, 0);
 }
-#endif
 
 

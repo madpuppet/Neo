@@ -18,9 +18,7 @@
 #include "Thread.h"
 #include "Texture.h"
 
-#if NEW_CODE
 const int MAX_FRAMES_IN_FLIGHT = 2;
-#endif
 
 struct UniformBufferObject {
     alignas(16) mat4x4 model;
@@ -30,9 +28,6 @@ struct UniformBufferObject {
 
 class GIL : public Module<GIL>
 {
-
-#if NEW_CODE
-
 public:
 	// main thread startup... creates window for message polling on main thread
 	void StartupMainThread();
@@ -184,18 +179,9 @@ protected:
 	void updateUniformBuffer(uint32_t currentImage);
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
-#else //!NEW_CODE
-public:
-	void Startup() {}
-	void Shutdown() {}
-	void BeginFrame() {}
-	void EndFrame() {}
-	void WaitTilInitialised() {}
-#endif
 
 	// these methods are used by external functions like Texture Platform creation
 public:
-#if NEW_CODE
 	VkDevice Device() { return m_device; }
 	VkCommandPool CommandPool() { return m_commandPool; }
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
@@ -210,7 +196,6 @@ public:
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 	VkRenderPass& GetRenderPass() { return m_renderPass; };
 	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
-#endif
 };
 
 

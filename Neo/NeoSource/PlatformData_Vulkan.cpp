@@ -5,9 +5,6 @@
 #include "Material.h"
 #include "Model.h"
 
-#if NEW_CODE
-
-
 struct Vertex {
     glm::vec3 pos;
     glm::vec3 color;
@@ -396,17 +393,6 @@ void ModelPlatformData_Destroy(ModelPlatformData* platformData)
 {
 }
 
-
-#else
-TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData) { return nullptr; }
-void TexturePlatformData_Destroy(struct TexturePlatformData* platformData) {}
-ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData) { return nullptr; }
-void ShaderPlatformData_Destroy(ShaderPlatformData* platformData) {}
-MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData) { return nullptr; }
-void MaterialPlatformData_Destroy(MaterialPlatformData* platformData) {}
-ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData) { return nullptr; }
-void ModelPlatformData_Destroy(ModelPlatformData* platformData) {}
-#endif
 
 
 
