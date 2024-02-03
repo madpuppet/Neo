@@ -24,6 +24,7 @@ static int GetTime(const string name, const stringlist &extensions, u64& time)
 
 void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name, AssetCreateParams* params, const DeliverAssetDataCB& cb)
 {
+	Assert(!name.empty(), STR("Called Deliver asset with no name - type {}", assetType));
 	Assert(m_assetTypeInfoMap.contains(assetType), std::format("Cannot create asset: {} - unregistered asset type: {}", name, assetType));
 
 	auto assetTypeInfo = m_assetTypeInfoMap[assetType];
@@ -57,7 +58,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 				// if this is a non-optional source file and it wasn't found, then we can't convert the asset
 				if (srcExt.second && (ext == -1 || srcDateStamp == 0))
 				{
-					Log(std::format("Asset {} [{}] missing src file {}", name, assetType, idx));
+					Log(std::format("Asset '{}' [{}] missing src file {}", name, assetType, idx));
 					missingSrcFile = true;
 				}
 				idx++;
@@ -72,6 +73,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			}
 
 			// if asset is newer than source files, just load and createFromData
+			AssetData* assetData = assetTypeInfo->m_assetCreator();
 			if (assetDateStamp > earliestSourceDateStamp)
 			{
 				MemBlock serializedBlock;
@@ -86,8 +88,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 
 				// create from data
 				// this can return nullptr if version is old
-				AssetData* assetData = assetTypeInfo->m_assetCreateFromData(serializedBlock);
-				if (assetData)
+				if (assetData->MemoryToAsset(serializedBlock))
 				{
 					Log(STR("Deliver Asset: {}", name));
 					cb(assetData);
@@ -112,6 +113,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 					{
 						Error(std::format("Asset building error trying to load src: {}", src));
 						srcFiles.clear();
+						delete assetData;
 						cb(nullptr);
 						return;
 					}
@@ -121,7 +123,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 
 			// now create the AssetData from the src files
 			Log(STR("  deliver {} [{}] from src files", name, assetType));
-			AssetData *assetData = assetTypeInfo->m_assetCreateFromSource(srcFileMem, params);
+			assetData->SrcFilesToAsset(srcFileMem, params);
 			assetData->name = name;
 			assetData->type = assetType;
 

@@ -68,8 +68,7 @@ void Material::Reload()
 MaterialFactory::MaterialFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreateFromData = [](MemBlock memBlock) -> AssetData* { auto assetData = new MaterialAssetData; assetData->MemoryToAsset(memBlock); return assetData; };
-	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks, AssetCreateParams* params) -> AssetData* { return MaterialAssetData::Create(srcBlocks, params);  };
+	ati->m_assetCreator = []() -> AssetData* { return new MaterialAssetData; };
 	ati->m_assetExt = ".neomat";
 	ati->m_sourceExt.push_back({ { ".material" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_Material, ati);
@@ -130,9 +129,8 @@ static vector<string> s_samplerFilterNames = { "nearest", "linear", "nearestMipN
 static vector<string> s_samplerWrapNames = { "clamp", "repeat" };
 static vector<string> s_samplerCompareNames = { "none", "gequal", "lequal" };
 
-AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* params)
+bool MaterialAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
-	auto asset = new MaterialAssetData;
 	Assert(srcFiles.size() == 1, STR("Expected 1 src file for material"));
 
 	auto shad = new SHADReader("material", (const char*)srcFiles[0].Mem(), (int)srcFiles[0].Size());
@@ -141,27 +139,27 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 	{
 		if (fieldNode->IsName("vertexShader"))
 		{
-			asset->vertexShaderName = fieldNode->GetString();
+			vertexShaderName = fieldNode->GetString();
 		}
 		else if (fieldNode->IsName("pixelShader"))
 		{
-			asset->pixelShaderName = fieldNode->GetString();
+			pixelShaderName = fieldNode->GetString();
 		}
 		else if (fieldNode->IsName("blend"))
 		{
-			asset->blendMode = (MaterialBlendMode)fieldNode->GetEnum(s_blendModeNames);
+			blendMode = (MaterialBlendMode)fieldNode->GetEnum(s_blendModeNames);
 		}
 		else if (fieldNode->IsName("cull"))
 		{
-			asset->cullMode = (MaterialCullMode)fieldNode->GetEnum(s_cullModeNames);
+			cullMode = (MaterialCullMode)fieldNode->GetEnum(s_cullModeNames);
 		}
 		else if (fieldNode->IsName("zread"))
 		{
-			asset->zread = fieldNode->GetBool();
+			zread = fieldNode->GetBool();
 		}
 		else if (fieldNode->IsName("zwrite"))
 		{
-			asset->zwrite = fieldNode->GetBool();
+			zwrite = fieldNode->GetBool();
 		}
 		else if (fieldNode->IsName("uniforms"))
 		{
@@ -171,7 +169,7 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 				if (uniformNode->IsName("texture"))
 				{
 					auto uniform = new MaterialUniform_Texture(uniformNode->GetString());
-					asset->uniforms.push_back(uniform);
+					uniforms.push_back(uniform);
 					auto textureNodes = uniformNode->GetChildren();
 					for (auto textureNode : textureNodes)
 					{
@@ -206,7 +204,7 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 				else if (uniformNode->IsName("vec4"))
 				{
 					auto uniform = new MaterialUniform_Vec4(uniformNode->GetString());
-					asset->uniforms.push_back(uniform);
+					uniforms.push_back(uniform);
 					auto uniformChildren = uniformNode->GetChildren();
 					for (auto node : uniformChildren)
 					{
@@ -219,7 +217,7 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 				else if (uniformNode->IsName("f32"))
 				{
 					auto uniform = new MaterialUniform_F32(uniformNode->GetString());
-					asset->uniforms.push_back(uniform);
+					uniforms.push_back(uniform);
 					auto uniformChildren = uniformNode->GetChildren();
 					for (auto node : uniformChildren)
 					{
@@ -232,7 +230,7 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 				else if (uniformNode->IsName("i32"))
 				{
 					auto uniform = new MaterialUniform_I32(uniformNode->GetString());
-					asset->uniforms.push_back(uniform);
+					uniforms.push_back(uniform);
 					auto uniformChildren = uniformNode->GetChildren();
 					for (auto node : uniformChildren)
 					{
@@ -246,7 +244,7 @@ AssetData* MaterialAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParam
 		}
 	}
 
-	return asset;
+	return true;
 }
 
 MemBlock MaterialAssetData::AssetToMemory()

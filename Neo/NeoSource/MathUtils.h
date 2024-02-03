@@ -116,13 +116,13 @@ inline bool GetShiftEquivalent(int n, int& shifter)
 }
 
 // Convert degrees to radians
-inline float DegToRad(float fDeg)
+constexpr float DegToRad(float fDeg)
 {
 	return fDeg * (PI / 180.0f);
 }
 
 // Convert radians to degrees
-inline float RadToDeg(float fRad)
+constexpr float RadToDeg(float fRad)
 {
 	return fRad * ((1.0f / PI) * 180.0f);
 }
@@ -415,3 +415,19 @@ inline float Lerp(float minValue, float maxValue, float time)
 	return minValue + (maxValue - minValue) * time;
 }
 
+inline mat4x4 OrthoProj(const rect &orthoRect, float nearPlane, float farPlane)
+{
+	float left = orthoRect.min.x;
+	float right = orthoRect.min.x + orthoRect.size.x;
+	float bottom = orthoRect.min.y;
+	float top = orthoRect.min.y + orthoRect.size.y;
+
+	mat4x4 result = mat4x4(1);
+	result[0][0] = 2.0f / (right - left);
+	result[1][1] = -2.0f / (top - bottom);
+	result[2][2] = 1.0f / (farPlane - nearPlane);
+	result[3][0] = -(right + left) / (right - left);
+	result[3][1] = (top + bottom) / (top - bottom);
+	result[3][2] = -nearPlane / (farPlane - nearPlane);
+	return result;
+}

@@ -70,9 +70,9 @@ struct TextureAssetData : public AssetData
 public:
 	~TextureAssetData() {}
 
-	static AssetData* Create(vector<MemBlock> srcFiles, AssetCreateParams *params);
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
+	virtual bool SrcFilesToAsset(const vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) override;
 
 	u16 width;
 	u16 height;
@@ -87,7 +87,7 @@ class Texture : public Resource
 	void OnAssetDeliver(struct AssetData *data);
 
 	virtual void Reload() override;
-	virtual AssetType GetAssetType() { return AssetType_Texture; }
+	virtual AssetType GetAssetType() const override { return AssetType_Texture; }
 
 	int m_width;
 	int m_height;

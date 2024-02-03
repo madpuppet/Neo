@@ -18,6 +18,7 @@
 #define GLM_FORCE_RADIANS
 #define GLM_FORCE_DEPTH_ZERO_TO_ONE
 #define GLM_ENABLE_EXPERIMENTAL
+#define GLM_FORCE_LEFT_HANDED
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtx/hash.hpp>
@@ -95,11 +96,46 @@ typedef glm::quat       quat;
 typedef glm::ivec2      ivec2;
 typedef glm::ivec3      ivec3;
 typedef glm::ivec4      ivec4;
-typedef glm::mat3x4     mat3x4;
+typedef glm::mat4x3     mat4x3;
 typedef glm::mat4x4     mat4x4;
 typedef glm::vec4       color;
 
 typedef std::function<void(void)> GenericCallback;		// generic callback that takes a void* and returns void
+
+template <typename T>
+struct rectangle
+{
+	T min;
+	T size;
+
+	bool contains(const T& pos) const { return pos.x >= min.x && pos.y >= min.y && pos.x < min.x + size.x && pos.y < min.y + size.y; }
+	bool overlaps(rectangle<T> o) const
+	{
+		return min.x < (o.min.x + o.size.x) && (min.x + size.x) >= o.min.x && min.y < (o.min.y + o.size.y) && (min.y + size.y) >= o.min.y;
+	}
+	void translate(const T& offset) { min.x += offset.x; min.y += offset.y; };
+};
+using rect = rectangle<vec2>;
+using irect = rectangle<ivec2>;
+
+template <typename T>
+struct boundingVolume
+{
+	T min;
+	T size;
+
+	bool contains(const T& pos) const { return pos.x >= min.x && pos.y >= min.y && pos.z >= min.z && pos.x < min.x + size.x && pos.y < min.y + size.y && pos.z < min.z + size.z; }
+	bool overlaps(rectangle<T> o) const
+	{
+		return min.x < (o.min.x + o.size.x) && (min.x + size.x) >= o.min.x 
+			&& min.y < (o.min.y + o.size.y) && (min.y + size.y) >= o.min.y
+			&& min.z < (o.min.z + o.size.z) && (min.z + size.z) >= o.min.z;
+	}
+	void translate(const T& offset) { min.x += offset.x; min.y += offset.y; min.z += offset.z; };
+};
+using volume = boundingVolume<vec3>;
+using ivolume = boundingVolume<ivec3>;
+
 
 // neo containers... some are renamed from STL for more legibility
 template<typename T> using vector = std::vector<T>;

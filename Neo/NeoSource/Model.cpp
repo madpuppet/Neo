@@ -10,7 +10,7 @@
 #include <sstream>
 #include <streambuf>
 
-#define MODEL_VERSION 1
+#define MODEL_VERSION 2
 
 DECLARE_MODULE(ModelFactory, NeoModulePri_ModelFactory);
 
@@ -45,8 +45,7 @@ void Model::Reload()
 ModelFactory::ModelFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreateFromData = [](MemBlock memBlock) -> AssetData* { auto assetData = new ModelAssetData; assetData->MemoryToAsset(memBlock); return assetData; };
-	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks, AssetCreateParams* params) -> AssetData* { return ModelAssetData::Create(srcBlocks, params);  };
+	ati->m_assetCreator = []() -> AssetData* { return new ModelAssetData; };
 	ati->m_assetExt = ".neomdl";
 	ati->m_sourceExt.push_back({ { ".obj" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_Model, ati);
@@ -107,10 +106,11 @@ public:
 
 
 
-AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* params)
+bool ModelAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
-	auto asset = new ModelAssetData;
 	Assert(srcFiles.size() == 1, STR("Expected 1 src file for model"));
+
+#if 0
 
 	// Create a MemoryStream object using the memory block and its size
 	MemoryStream memoryStream(srcFiles[0].Mem(), srcFiles[0].Size());
@@ -124,8 +124,10 @@ AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* 
 	string warn, err;
 
 	NeoMaterialReader matReader;
-	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &inputStream, &matReader)) {
-		throw std::runtime_error(warn + err);
+	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &inputStream, &matReader)) 
+	{
+		Error(STR("Tiny Object unable to parse source file for model: {}", name));
+		return false;
 	}
 
 	hashtable<Vertex, u32> uniqueVertices{};
@@ -148,18 +150,48 @@ AssetData* ModelAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* 
 			vertex.col = { 1.0f, 1.0f, 1.0f };
 
 			if (uniqueVertices.count(vertex) == 0) {
-				uniqueVertices[vertex] = static_cast<uint32_t>(asset->verts.size());
-				asset->verts.push_back(vertex);
+				uniqueVertices[vertex] = static_cast<uint32_t>(verts.size());
+				verts.push_back(vertex);
 			}
 
-			asset->indices.push_back(uniqueVertices[vertex]);
+			indices.push_back(uniqueVertices[vertex]);
 		}
 	}
 
 	Assert(materials.size() == 1, "Only support single material objs atm");
-	asset->materialName = materials[0].name;
+	materialName = materials[0].name;
+#else
 
-	return asset;
+	verts.push_back({ { 0,0,1 }, { 1,0,0 }, { 0,1 } });
+	verts.push_back({ { 1,0,1 }, { 1,0,0 }, { 1,1 } });
+	verts.push_back({ { 0,1,1 }, { 1,0,0 }, { 0,0 } });
+	verts.push_back({ { 1,1,1 }, { 1,0,0 }, { 1,0 } });
+
+	verts.push_back({ { 0,0,3 }, { 0,1,0 }, { 0,1 } });
+	verts.push_back({ { 1,0,3 }, { 0,1,0 }, { 1,1 } });
+	verts.push_back({ { 0,1,3 }, { 0,1,0 }, { 0,0 } });
+	verts.push_back({ { 1,1,3 }, { 0,1,0 }, { 1,0 } });
+
+	indices.push_back(0);
+	indices.push_back(2);
+	indices.push_back(1);
+
+	indices.push_back(1);
+	indices.push_back(2);
+	indices.push_back(3);
+
+	indices.push_back(4);
+	indices.push_back(6);
+	indices.push_back(5);
+
+	indices.push_back(5);
+	indices.push_back(6);
+	indices.push_back(7);
+
+
+	materialName = "viking_room";
+#endif
+	return true;
 }
 
 MemBlock ModelAssetData::AssetToMemory()

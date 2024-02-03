@@ -18,7 +18,7 @@
 #include "Thread.h"
 #include "Texture.h"
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
+const int MAX_FRAMES_IN_FLIGHT = 3;
 
 struct UniformBufferObject {
     alignas(16) mat4x4 model;
@@ -60,6 +60,15 @@ public:
 	void WaitTilInitialised() { m_vulkanInitialised.Wait(); }
 
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
+
+	void SetModelMatrix(const mat4x4& modelMat);
+	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat);
+	void SetViewport(const rect &viewport, float minDepth, float maxDepth);
+	void SetScissor(const rect &scissorRect);
+
+	// TODO: should do a Platform Interface Layer for misc services not graphics related
+	// show message box and return TRUE if user would like to break
+	bool ShowMessageBox(const string& string);
 
 protected:
 

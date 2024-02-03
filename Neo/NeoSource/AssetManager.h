@@ -37,6 +37,7 @@ struct AssetData
 
 	virtual MemBlock AssetToMemory() = 0;
 	virtual bool MemoryToAsset(const MemBlock& block) = 0;
+	virtual bool SrcFilesToAsset(const vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) = 0;
 };
 
 // derive options asset creation params off this
@@ -52,11 +53,8 @@ public:
 class AssetTypeInfo
 {
 public:
-	// function to create an asset from its asset data file
-	std::function<AssetData* (MemBlock assetMem)> m_assetCreateFromData;
-
-	// function to turn the source files into a single asset file
-	std::function<AssetData* (const vector<MemBlock>& srcBlocks, AssetCreateParams* params)> m_assetCreateFromSource;
+	// function that creates an empty asset of this type
+	std::function<AssetData*(void)> m_assetCreator;
 
 	// extension for asset file
 	string m_assetExt;

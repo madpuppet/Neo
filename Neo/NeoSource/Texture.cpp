@@ -39,8 +39,7 @@ void Texture::Reload()
 TextureFactory::TextureFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreateFromData = [](MemBlock memBlock) -> AssetData* { auto assetData = new TextureAssetData; assetData->MemoryToAsset(memBlock); return assetData; };
-	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks, AssetCreateParams* params) -> AssetData* { return TextureAssetData::Create(srcBlocks, params);  };
+	ati->m_assetCreator = []() -> AssetData* { return new TextureAssetData; };
 	ati->m_assetExt = ".neotex";
 	ati->m_sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
 	ati->m_sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
@@ -72,24 +71,23 @@ void TextureFactory::Destroy(Texture* texture)
 	}
 }
 
-AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams* params)
+bool TextureAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
 	// src image has been altered, so convert it...
 	int texWidth, texHeight, texChannels;
 	stbi_uc* stbi_uc = stbi_load_from_memory(srcFiles[0].Mem(), (int)srcFiles[0].Size(), &texWidth, &texHeight, &texChannels, STBI_default);
 
 	// pack it into an asset
-	auto texAsset = new TextureAssetData;
-	texAsset->width = texWidth;
-	texAsset->height = texHeight;
-	texAsset->depth = texChannels;
-	switch (texAsset->depth)
+	width = texWidth;
+	height = texHeight;
+	depth = texChannels;
+	switch (depth)
 	{
 		case 1:
-			texAsset->format = PixFmt_R8_UNORM;
+			format = PixFmt_R8_UNORM;
 			break;
 		case 2:
-			texAsset->format = PixFmt_R8G8_UNORM;
+			format = PixFmt_R8G8_UNORM;
 			break;
 		case 3:
 			// gpu's don't support 3 channel... need to put in a fake ALPHA
@@ -107,16 +105,16 @@ AssetData* TextureAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams
 			delete[] stbi_uc;
 			stbi_uc = mem;
 			texChannels = 4;
-			texAsset->format = PixFmt_R8G8B8A8_SRGB;
+			format = PixFmt_R8G8B8A8_SRGB;
 		}
 		break;
 		case 4:
-			texAsset->format = PixFmt_R8G8B8A8_SRGB;
+			format = PixFmt_R8G8B8A8_SRGB;
 			break;
 	}
 
-	texAsset->images.push_back(MemBlock((u8*)stbi_uc, texWidth * texHeight * texChannels, false));
-	return texAsset;
+	images.push_back(MemBlock((u8*)stbi_uc, texWidth * texHeight * texChannels, false));
+	return true;
 }
 
 MemBlock TextureAssetData::AssetToMemory()

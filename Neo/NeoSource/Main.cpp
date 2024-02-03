@@ -77,7 +77,8 @@ void Error(const string &msg)
 #if defined(PLATFORM_Windows)
     OutputDebugStringA(errorStr.c_str());
 #endif
-    __debugbreak();
+    if (GIL::Instance().ShowMessageBox(errorStr))
+        __debugbreak();
 }
 
 #endif

@@ -7,11 +7,10 @@
 
 DECLARE_MODULE(ShaderFactory, NeoModulePri_ShaderFactory);
 
-AssetData* ShaderAssetData::Create(vector<MemBlock> srcFiles, AssetCreateParams *params)
+bool ShaderAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams *params)
 {
-	auto assetData = new ShaderAssetData();
-	assetData->spvData = std::move(srcFiles[0]);
-	return assetData;
+	spvData = std::move(srcFiles[0]);
+	return true;
 }
 
 MemBlock ShaderAssetData::AssetToMemory()
@@ -78,8 +77,7 @@ void Shader::Reload()
 ShaderFactory::ShaderFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreateFromData = [](MemBlock memBlock) -> AssetData* { auto assetData = new ShaderAssetData; assetData->MemoryToAsset(memBlock); return assetData; };
-	ati->m_assetCreateFromSource = [](const vector<MemBlock>& srcBlocks, AssetCreateParams* params) -> AssetData* { return ShaderAssetData::Create(srcBlocks, params);  };
+	ati->m_assetCreator = []() -> AssetData* { return new ShaderAssetData; };
 	ati->m_assetExt = ".neoshd";
 	ati->m_sourceExt.push_back({ { ".spv" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_Shader, ati);

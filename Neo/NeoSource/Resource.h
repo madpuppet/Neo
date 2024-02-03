@@ -13,7 +13,7 @@ public:
 	string GetName() const { return m_name; }
 	bool IsLoaded() { return m_dataLoaded; }
 	void MarkIsLoaded() { m_dataLoaded = true; }
-	virtual enum AssetType GetAssetType() = 0;
+	virtual enum AssetType GetAssetType() const = 0;
 
 	// some loaded assets can be marked as FailedToLoad - which means you need to use a default version of the resource, or abort and fix the problem
 	bool FailedToLoad() { return m_failedToLoad; }

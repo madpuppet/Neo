@@ -98,7 +98,7 @@ struct MaterialUniform_I32 : public MaterialUniform
 class Material : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
-	virtual AssetType GetAssetType() { return AssetType_Material; }
+	virtual AssetType GetAssetType() const override { return AssetType_Material; }
 
 	virtual void Reload() override;
 
@@ -143,9 +143,9 @@ struct MaterialAssetData : public AssetData
 public:
 	~MaterialAssetData() {}
 
-	static AssetData* Create(vector<MemBlock> srcFiles, AssetCreateParams* params);
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
+	virtual bool SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params);
 
 	string vertexShaderName;
 	string pixelShaderName;

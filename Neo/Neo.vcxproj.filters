@@ -16,9 +16,6 @@
     <Filter Include="Includes\glm">
       <UniqueIdentifier>{e72a2616-e492-430d-b97b-2ba74d0714e6}</UniqueIdentifier>
     </Filter>
-    <Filter Include="NeoSource\Filesystem">
-      <UniqueIdentifier>{0ec49fed-f5ea-43ad-b392-01ba523ee692}</UniqueIdentifier>
-    </Filter>
     <Filter Include="NeoSource\Resources">
       <UniqueIdentifier>{8f22e625-1271-43ee-8870-1dd2333f1b2a}</UniqueIdentifier>
     </Filter>
@@ -33,6 +30,9 @@
     </Filter>
     <Filter Include="NeoSource\Rendering">
       <UniqueIdentifier>{f5ea82ee-437d-4229-a184-dcf43cc056c1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="NeoSource\FileSystem">
+      <UniqueIdentifier>{0ec49fed-f5ea-43ad-b392-01ba523ee692}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -1452,22 +1452,22 @@
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\FileExcludes.h">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\FileManager.h">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\FileSystem.h">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\FileSystem_FlatArchive.h">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\FileSystem_FlatFolder.h">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\FileSystem_RawAccess.h">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\Resource.h">
       <Filter>NeoSource\Resources</Filter>
@@ -1513,6 +1513,9 @@
     </ClInclude>
     <ClInclude Include="NeoSource\Model.h">
       <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\View.h">
+      <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1574,19 +1577,19 @@
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\FileExcludes.cpp">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\FileManager.cpp">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\FileSystem_FlatArchive.cpp">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\FileSystem_FlatFolder.cpp">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\FileSystem_RawAccess.cpp">
-      <Filter>NeoSource\Filesystem</Filter>
+      <Filter>NeoSource\FileSystem</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\AssetManager.cpp">
       <Filter>NeoSource\Resources</Filter>
@@ -1624,5 +1627,11 @@
     <ClCompile Include="NeoSource\Model.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
+    <ClCompile Include="NeoSource\View.cpp">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <Natvis Include="NatvisFile.natvis" />
   </ItemGroup>
 </Project>

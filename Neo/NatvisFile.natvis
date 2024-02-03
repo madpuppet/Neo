@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?> 
+<AutoVisualizer xmlns="http://schemas.microsoft.com/vstudio/debugger/natvis/2010">
+  <Type Name="vector3">
+    <Expand>
+      <!-- Show only the 'x' variable -->
+      <Item Name="x">x</Item>
+      <Item Name="y">y</Item>
+      <Item Name="z">z</Item>
+    </Expand>
+  </Type>
+
+  <Type Name="glm::vec3">
+    <Expand>
+      <!-- Show only the 'x' variable -->
+      <Item Name="x">x</Item>
+      <Item Name="y">y</Item>
+      <Item Name="z">z</Item>
+    </Expand>
+  </Type>
+</AutoVisualizer>

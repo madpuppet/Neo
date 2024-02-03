@@ -2,6 +2,7 @@
 
 #include "Module.h"
 #include "Model.h"
+#include "View.h"
 
 class Application : public Module<Application>
 {
@@ -14,5 +15,6 @@ public:
 
 protected:
 	ModelRef m_vikingRoom;
+	View m_view;
 };
 

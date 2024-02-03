@@ -221,7 +221,7 @@ void GIL::BeginFrame()
         throw std::runtime_error("failed to acquire swap chain image!");
     }
 
-    updateUniformBuffer(m_currentFrame);        // NEED View support
+//    updateUniformBuffer(m_currentFrame);        // NEED View support
 
     vkResetFences(m_device, 1, &m_inFlightFences[m_currentFrame]);
 
@@ -254,6 +254,7 @@ void GIL::BeginFrame()
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     
+#if 0
     VkViewport viewport{};
     viewport.x = 0.0f;
     viewport.y = 0.0f;
@@ -267,6 +268,56 @@ void GIL::BeginFrame()
     scissor.offset = { 0, 0 };
     scissor.extent = m_swapChainExtent;
     vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
+#endif
+}
+
+void GIL::SetModelMatrix(const mat4x4& modelMat)
+{
+    UniformBufferObject* ubo = (UniformBufferObject*)m_uniformBuffersMapped[m_currentFrame];
+    ubo->model = modelMat;
+}
+
+mat4x4 InverseSimple(const mat4x4 & m)
+{
+    mat4x4 temp;
+    temp[0] = { m[0][0], m[1][0], m[2][0], 0 };
+    temp[1] = { m[0][1], m[1][1], m[2][1], 0 };
+    temp[2] = { m[0][2], m[1][2], m[2][2], 0 };
+
+    temp[3][0] = -(m[3][0] * m[0][0] + m[3][1] * m[0][1] + m[3][2] * m[0][2]);
+    temp[3][1] = -(m[3][0] * m[1][0] + m[3][1] * m[1][1] + m[3][2] * m[1][2]);
+    temp[3][2] = -(m[3][0] * m[2][0] + m[3][1] * m[2][1] + m[3][2] * m[2][2]);
+    temp[3][3] = 1.0f;
+    return temp;
+}
+
+void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat)
+{
+    UniformBufferObject* ubo = (UniformBufferObject * )m_uniformBuffersMapped[m_currentFrame];
+    ubo->view = viewMat;
+    ubo->proj = projMat;
+}
+
+void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
+{
+    VkViewport vp{};
+    vp.x = viewport.min.x;
+    vp.y = viewport.min.y;
+    vp.width = viewport.size.x;
+    vp.height = viewport.size.y;
+    vp.minDepth = minDepth;
+    vp.maxDepth = maxDepth;
+    vkCmdSetViewport(m_commandBuffers[m_currentFrame], 0, 1, &vp);
+}
+
+void GIL::SetScissor(const rect& scissorRect)
+{
+    VkRect2D scissor{};
+    scissor.offset.x = (u32)scissorRect.min.x;
+    scissor.offset.y = (u32)scissorRect.min.y;
+    scissor.extent.width = (u32)scissorRect.size.x;
+    scissor.extent.height = (u32)scissorRect.size.y;
+    vkCmdSetScissor(m_commandBuffers[m_currentFrame], 0, 1, &scissor);
 }
 
 void GIL::EndFrame()
@@ -1383,4 +1434,27 @@ void GIL::RenderModel(Model *model)
     vkCmdDrawIndexed(commandBuffer, modelPD->indiceCount, 1, 0, 0, 0);
 }
 
+
+bool GIL::ShowMessageBox(const string& string)
+{
+    SDL_MessageBoxButtonData buttons[2];
+    buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
+    buttons[0].buttonid = 1;
+    buttons[0].text = "Break";
+    buttons[1].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
+    buttons[1].buttonid = 0;
+    buttons[1].text = "Ignore";
+
+    SDL_MessageBoxData data;
+    data.flags = SDL_MESSAGEBOX_ERROR;
+    data.window = m_window;
+    data.title = "Neo Assert Hit...";
+    data.message = string.c_str();
+    data.numbuttons = 2;
+    data.buttons = buttons;
+    data.colorScheme = nullptr;
+    int result = 0;
+    SDL_ShowMessageBox(&data, &result);
+    return result == 1;
+}
 

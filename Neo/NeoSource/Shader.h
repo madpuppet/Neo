@@ -29,9 +29,9 @@ struct ShaderAssetCreateParams : public AssetCreateParams
 struct ShaderAssetData : public AssetData
 {
 public:
-	static AssetData* Create(vector<MemBlock> srcFiles, AssetCreateParams *params);
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
+	virtual bool SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params);
 
 	MemBlock spvData;
 };
@@ -41,7 +41,7 @@ class Shader : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
 	virtual void Reload() override;
-	virtual AssetType GetAssetType() { return AssetType_Shader; }
+	virtual AssetType GetAssetType() const override { return AssetType_Shader; }
 	ShaderType m_shaderType;
 	ShaderAssetData* m_assetData;
 	struct ShaderPlatformData* m_platformData;

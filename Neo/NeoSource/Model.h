@@ -9,7 +9,7 @@
 class Model : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
-	virtual AssetType GetAssetType() { return AssetType_Model; }
+	virtual AssetType GetAssetType() const override { return AssetType_Model; }
 
 	virtual void Reload() override;
 
@@ -45,9 +45,9 @@ struct ModelAssetData : public AssetData
 {
 	~ModelAssetData() {}
 
-	static AssetData* Create(vector<MemBlock> srcFiles, AssetCreateParams* params);
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
+	virtual bool SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params) override;
 
 	struct Vertex
 	{
