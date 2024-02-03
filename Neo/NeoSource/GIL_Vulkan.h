@@ -45,6 +45,9 @@ public:
 	// execute queue for this frame 
 	void EndFrame();
 
+	// resize frame buffers
+	void ResizeFrameBuffers(int width, int height);
+
 	// graphics functions
 	void CreateRenderTarget();  // texture for use in render target state
 	void CreateRenderTargetState();		// color, depth, cullmode
@@ -67,6 +70,8 @@ public:
 	void SetViewport(const rect &viewport, float minDepth, float maxDepth);
 	void SetScissor(const rect &scissorRect);
 
+	ivec2 GetFrameBufferSize() { return m_frameBufferSize; }
+
 	// TODO: should do a Platform Interface Layer for misc services not graphics related
 	// show message box and return TRUE if user would like to break
 	bool ShowMessageBox(const string& string);
@@ -83,6 +88,7 @@ protected:
 	SDL_Window* m_window;
 	SDL_Joystick* m_joystick;
 	Semaphore m_vulkanInitialised;
+	ivec2 m_frameBufferSize{ 800,600 };
 
 	VkInstance m_instance;
 	VkDebugUtilsMessengerEXT m_debugMessenger;

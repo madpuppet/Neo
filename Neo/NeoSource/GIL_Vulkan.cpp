@@ -8,9 +8,6 @@ DECLARE_MODULE(GIL, NeoModulePri_GIL);
 
 #include <tiny_obj_loader.h>
 
-const uint32_t WIDTH = 800;
-const uint32_t HEIGHT = 600;
-
 const vector<const char*> validationLayers = {
     "VK_LAYER_KHRONOS_validation"
 };
@@ -119,7 +116,7 @@ void GIL::StartupMainThread()
         exit(0);
     }
 
-    m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
+    m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_frameBufferSize.x, m_frameBufferSize.y, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
     m_joystick = SDL_JoystickOpen(0);
 }
 
@@ -205,6 +202,13 @@ void GIL::createFormatMappings()
 
 void GIL::Shutdown()
 {
+}
+
+void GIL::ResizeFrameBuffers(int width, int height)
+{
+    m_frameBufferSize.x = width;
+    m_frameBufferSize.y = height;
+    recreateSwapChain();
 }
 
 void GIL::BeginFrame()
@@ -303,10 +307,10 @@ void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat)
 void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
 {
     VkViewport vp{};
-    vp.x = viewport.min.x;
-    vp.y = viewport.min.y;
-    vp.width = viewport.size.x;
-    vp.height = viewport.size.y;
+    vp.x = viewport.min.x * m_frameBufferSize.x;
+    vp.y = viewport.min.y * m_frameBufferSize.y;
+    vp.width = viewport.size.x * m_frameBufferSize.x;
+    vp.height = viewport.size.y * m_frameBufferSize.y;
     vp.minDepth = minDepth;
     vp.maxDepth = maxDepth;
     vkCmdSetViewport(m_commandBuffers[m_currentFrame], 0, 1, &vp);
@@ -315,10 +319,10 @@ void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
 void GIL::SetScissor(const rect& scissorRect)
 {
     VkRect2D scissor{};
-    scissor.offset.x = (u32)scissorRect.min.x;
-    scissor.offset.y = (u32)scissorRect.min.y;
-    scissor.extent.width = (u32)scissorRect.size.x;
-    scissor.extent.height = (u32)scissorRect.size.y;
+    scissor.offset.x = (u32)(scissorRect.min.x * m_frameBufferSize.x);
+    scissor.offset.y = (u32)(scissorRect.min.y * m_frameBufferSize.y);
+    scissor.extent.width = (u32)(scissorRect.size.x * m_frameBufferSize.x);
+    scissor.extent.height = (u32)(scissorRect.size.y * m_frameBufferSize.y);
     vkCmdSetScissor(m_commandBuffers[m_currentFrame], 0, 1, &scissor);
 }
 

@@ -44,6 +44,19 @@ int main(int argc, char* args[])
                 case SDL_QUIT:
                     m_quit = true;
                     break;
+
+                case SDL_WINDOWEVENT:
+                    if (e.window.event == SDL_WINDOWEVENT_RESIZED) 
+                    {
+                        int newWidth = e.window.data1;
+                        int newHeight = e.window.data2;
+                        if (GIL::Exists())
+                        {
+                            GIL::Instance().ResizeFrameBuffers(newWidth, newHeight);
+                        }
+                    }
+                    break;
+
             }
         }
         Application::Instance().Update();

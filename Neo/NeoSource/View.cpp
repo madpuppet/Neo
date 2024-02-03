@@ -59,7 +59,8 @@ void View::Apply()
 	mat4x4 projMat;
 	if (m_isPerspective)
 	{
-		projMat = glm::perspective(m_perspective.fov, m_viewport.size.x / m_viewport.size.y, m_perspective.nearPlane, m_perspective.farPlane);
+		ivec2 screenSize = gil.GetFrameBufferSize();
+		projMat = glm::perspective(m_perspective.fov, (m_viewport.size.x * screenSize.x) / (m_viewport.size.y * screenSize.y), m_perspective.nearPlane, m_perspective.farPlane);
 		projMat[1][1] *= -1.0f;
 	}
 	else

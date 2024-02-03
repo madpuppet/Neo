@@ -20,9 +20,9 @@ Application::Application()
 	persp.farPlane = 50.0f;
 	m_view.SetPerspective(persp);
 
-	m_view.SetViewport({ { 0,0 }, { 800, 600 } });
+	m_view.SetViewport({ { 0,0 }, { 1, 1 } });
 	m_view.SetDepthRange(0.1f, 1.0f);
-	m_view.SetScissorRect({ { 0,0 }, { 800,600 } });
+	m_view.SetScissorRect({ { 0,0 }, { 1,1 } });
 }
 
 Application::~Application()
