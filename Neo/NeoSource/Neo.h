@@ -96,7 +96,6 @@ typedef glm::quat       quat;
 typedef glm::ivec2      ivec2;
 typedef glm::ivec3      ivec3;
 typedef glm::ivec4      ivec4;
-typedef glm::mat4x3     mat4x3;
 typedef glm::mat4x4     mat4x4;
 typedef glm::vec4       color;
 

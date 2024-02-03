@@ -145,7 +145,7 @@ public:
 
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
-	virtual bool SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params);
+	virtual bool SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params);
 
 	string vertexShaderName;
 	string pixelShaderName;

@@ -71,7 +71,7 @@ void TextureFactory::Destroy(Texture* texture)
 	}
 }
 
-bool TextureAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params)
+bool TextureAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
 	// src image has been altered, so convert it...
 	int texWidth, texHeight, texChannels;

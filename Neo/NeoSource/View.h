@@ -38,6 +38,8 @@ public:
 	void SetPerspective(const PerspectiveInfo& info);
 	void SetLookAt(const vec3& eye, const vec3& target, const vec3& up);
 	void SetDepthRange(float minDepth, float maxDepth);
+
+	// set scissor rect - top-left == 0,0,   bottom-right == 1,1
 	void SetScissorRect(const rect& scissorRect);
 
 	void Apply();
@@ -50,6 +52,6 @@ protected:
 	mat4x4 m_cameraMatrix = { mat4x4(1) };
 	rect m_viewport;
 	rect m_scissor;
-	float m_minDepth;
-	float m_maxDepth;
+	float m_minDepth = 0.0f;
+	float m_maxDepth = 1.0f;
 };

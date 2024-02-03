@@ -37,7 +37,7 @@ struct AssetData
 
 	virtual MemBlock AssetToMemory() = 0;
 	virtual bool MemoryToAsset(const MemBlock& block) = 0;
-	virtual bool SrcFilesToAsset(const vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) = 0;
+	virtual bool SrcFilesToAsset(vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) = 0;
 };
 
 // derive options asset creation params off this

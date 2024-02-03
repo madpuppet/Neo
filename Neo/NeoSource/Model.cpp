@@ -106,11 +106,11 @@ public:
 
 
 
-bool ModelAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params)
+bool ModelAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
 	Assert(srcFiles.size() == 1, STR("Expected 1 src file for model"));
 
-#if 0
+#if 1
 
 	// Create a MemoryStream object using the memory block and its size
 	MemoryStream memoryStream(srcFiles[0].Mem(), srcFiles[0].Size());
@@ -138,8 +138,8 @@ bool ModelAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCrea
 
 			vertex.pos = {
 				attrib.vertices[3 * index.vertex_index + 0],
-				attrib.vertices[3 * index.vertex_index + 1],
-				attrib.vertices[3 * index.vertex_index + 2]
+				attrib.vertices[3 * index.vertex_index + 2],
+				-attrib.vertices[3 * index.vertex_index + 1]
 			};
 
 			vertex.uv = {
@@ -162,15 +162,15 @@ bool ModelAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCrea
 	materialName = materials[0].name;
 #else
 
-	verts.push_back({ { 0,0,1 }, { 1,0,0 }, { 0,1 } });
-	verts.push_back({ { 1,0,1 }, { 1,0,0 }, { 1,1 } });
-	verts.push_back({ { 0,1,1 }, { 1,0,0 }, { 0,0 } });
-	verts.push_back({ { 1,1,1 }, { 1,0,0 }, { 1,0 } });
+	verts.push_back({ { 0,0,0 }, { 1,0,0 }, { 0,1 } });
+	verts.push_back({ { 1,0,0 }, { 1,0,0 }, { 1,1 } });
+	verts.push_back({ { 0,1,0 }, { 1,0,0 }, { 0,0 } });
+	verts.push_back({ { 1,1,0 }, { 1,0,0 }, { 1,0 } });
 
-	verts.push_back({ { 0,0,3 }, { 0,1,0 }, { 0,1 } });
-	verts.push_back({ { 1,0,3 }, { 0,1,0 }, { 1,1 } });
-	verts.push_back({ { 0,1,3 }, { 0,1,0 }, { 0,0 } });
-	verts.push_back({ { 1,1,3 }, { 0,1,0 }, { 1,0 } });
+	verts.push_back({ { 0,0,1 }, { 0,1,0 }, { 0,1 } });
+	verts.push_back({ { 0.5f,0,1 }, { 0,1,0 }, { 1,1 } });
+	verts.push_back({ { 0,0.5f,1 }, { 0,1,0 }, { 0,0 } });
+	verts.push_back({ { 0.5f,0.5f,1 }, { 0,1,0 }, { 1,0 } });
 
 	indices.push_back(0);
 	indices.push_back(2);

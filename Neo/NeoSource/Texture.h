@@ -72,7 +72,7 @@ public:
 
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
-	virtual bool SrcFilesToAsset(const vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) override;
+	virtual bool SrcFilesToAsset(vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) override;
 
 	u16 width;
 	u16 height;

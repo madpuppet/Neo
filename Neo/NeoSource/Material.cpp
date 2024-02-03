@@ -129,7 +129,7 @@ static vector<string> s_samplerFilterNames = { "nearest", "linear", "nearestMipN
 static vector<string> s_samplerWrapNames = { "clamp", "repeat" };
 static vector<string> s_samplerCompareNames = { "none", "gequal", "lequal" };
 
-bool MaterialAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params)
+bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
 	Assert(srcFiles.size() == 1, STR("Expected 1 src file for material"));
 

@@ -7,7 +7,7 @@
 
 DECLARE_MODULE(ShaderFactory, NeoModulePri_ShaderFactory);
 
-bool ShaderAssetData::SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams *params)
+bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams *params)
 {
 	spvData = std::move(srcFiles[0]);
 	return true;

@@ -27,8 +27,9 @@ const vector<const char*> deviceExtensions = {
 static std::vector<char> readFile(const string& filename) {
     std::ifstream file(filename, std::ios::ate | std::ios::binary);
 
-    if (!file.is_open()) {
-        throw std::runtime_error("failed to open file!");
+    if (!file.is_open())
+    {
+        Error("failed to open file!");
     }
 
     size_t fileSize = (size_t)file.tellg();
@@ -217,8 +218,9 @@ void GIL::BeginFrame()
         recreateSwapChain();
         return;
     }
-    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR) {
-        throw std::runtime_error("failed to acquire swap chain image!");
+    else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
+    {
+        Error("failed to acquire swap chain image!");
     }
 
 //    updateUniformBuffer(m_currentFrame);        // NEED View support
@@ -233,8 +235,9 @@ void GIL::BeginFrame()
     VkCommandBufferBeginInfo beginInfo{};
     beginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS) {
-        throw std::runtime_error("failed to begin recording command buffer!");
+    if (vkBeginCommandBuffer(commandBuffer, &beginInfo) != VK_SUCCESS)
+    {
+        Error("failed to begin recording command buffer!");
     }
 
     // start render pass == TODO: this should be a specific "setup render pass" function
@@ -326,8 +329,9 @@ void GIL::EndFrame()
 
     vkCmdEndRenderPass(commandBuffer);
 
-    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to record command buffer!");
+    if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
+    {
+        Error("failed to record command buffer!");
     }
 
     VkSubmitInfo submitInfo{};
@@ -346,8 +350,9 @@ void GIL::EndFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS) {
-        throw std::runtime_error("failed to submit draw command buffer!");
+    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS)
+    {
+        Error("failed to submit draw command buffer!");
     }
 
     VkPresentInfoKHR presentInfo{};
@@ -405,7 +410,7 @@ void GIL::pickPhysicalDevice()
 
     if (deviceCount == 0) 
     {
-        throw std::runtime_error("failed to find GPUs with Vulkan support!");
+        Error("failed to find GPUs with Vulkan support!");
     }
 
     std::vector<VkPhysicalDevice> devices(deviceCount);
@@ -420,8 +425,9 @@ void GIL::pickPhysicalDevice()
         }
     }
 
-    if (m_physicalDevice == VK_NULL_HANDLE) {
-        throw std::runtime_error("failed to find a suitable GPU!");
+    if (m_physicalDevice == VK_NULL_HANDLE)
+    {
+        Error("failed to find a suitable GPU!");
     }
 }
 
@@ -484,8 +490,9 @@ void GIL::createLogicalDevice()
         createInfo.enabledLayerCount = 0;
     }
 
-    if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create logical device!");
+    if (vkCreateDevice(m_physicalDevice, &createInfo, nullptr, &m_device) != VK_SUCCESS)
+    {
+        Error("failed to create logical device!");
     }
 
     vkGetDeviceQueue(m_device, indices.graphicsFamily.value(), 0, &m_graphicsQueue);
@@ -526,8 +533,9 @@ GIL::QueueFamilyIndices GIL::findQueueFamilies(VkPhysicalDevice device)
 }
 
 void GIL::createInstance() {
-    if (m_enableValidationLayers && !checkValidationLayerSupport()) {
-        throw std::runtime_error("validation layers requested, but not available!");
+    if (m_enableValidationLayers && !checkValidationLayerSupport())
+    {
+        Error("validation layers requested, but not available!");
     }
 
     VkApplicationInfo appInfo{};
@@ -560,8 +568,9 @@ void GIL::createInstance() {
         createInfo.pNext = nullptr;
     }
 
-    if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create instance!");
+    if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS) 
+    {
+        Error("failed to create instance!");
     }
 }
 
@@ -624,8 +633,9 @@ void GIL::setupDebugMessenger()
     VkDebugUtilsMessengerCreateInfoEXT createInfo;
     populateDebugMessengerCreateInfo(createInfo);
 
-    if (CreateDebugUtilsMessengerEXT(m_instance, &createInfo, nullptr, &m_debugMessenger) != VK_SUCCESS) {
-        throw std::runtime_error("failed to set up debug messenger!");
+    if (CreateDebugUtilsMessengerEXT(m_instance, &createInfo, nullptr, &m_debugMessenger) != VK_SUCCESS) 
+    {
+        Error("failed to set up debug messenger!");
     }
 }
 
@@ -718,7 +728,7 @@ void GIL::createSwapChain()
 
     if (vkCreateSwapchainKHR(m_device, &createInfo, nullptr, &m_swapChain) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to create swap chain!");
+        Error("failed to create swap chain!");
     }
 
     vkGetSwapchainImagesKHR(m_device, m_swapChain, &imageCount, nullptr);
@@ -794,8 +804,9 @@ VkImageView GIL::createImageView(VkImage image, VkFormat format, VkImageAspectFl
     viewInfo.subresourceRange.layerCount = 1;
 
     VkImageView imageView;
-    if (vkCreateImageView(m_device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create image view!");
+    if (vkCreateImageView(m_device, &viewInfo, nullptr, &imageView) != VK_SUCCESS) 
+    {
+        Error("failed to create image view!");
     }
 
     return imageView;
@@ -855,8 +866,9 @@ void GIL::createRenderPass()
     renderPassInfo.dependencyCount = 1;
     renderPassInfo.pDependencies = &dependency;
 
-    if (vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create render pass!");
+    if (vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS) 
+    {
+        Error("failed to create render pass!");
     }
 }
 
@@ -885,7 +897,8 @@ VkFormat GIL::findSupportedFormat(const vector<VkFormat>& candidates, VkImageTil
         }
     }
 
-    throw std::runtime_error("failed to find supported format!");
+    Error("failed to find supported format!");
+    return VK_FORMAT_UNDEFINED;
 }
 
 
@@ -908,8 +921,9 @@ void GIL::createFramebuffers()
         framebufferInfo.height = m_swapChainExtent.height;
         framebufferInfo.layers = 1;
 
-        if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create framebuffer!");
+        if (vkCreateFramebuffer(m_device, &framebufferInfo, nullptr, &m_swapChainFramebuffers[i]) != VK_SUCCESS)
+        {
+            Error("failed to create framebuffer!");
         }
     }
 }
@@ -922,8 +936,9 @@ void GIL::createCommandPool() {
     poolInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
     poolInfo.queueFamilyIndex = queueFamilyIndices.graphicsFamily.value();
 
-    if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create graphics command pool!");
+    if (vkCreateCommandPool(m_device, &poolInfo, nullptr, &m_commandPool) != VK_SUCCESS)
+    {
+        Error("failed to create graphics command pool!");
     }
 }
 
@@ -937,7 +952,7 @@ VkShaderModule GIL::createShaderModule(const std::vector<char>& code)
     VkShaderModule shaderModule;
     if (vkCreateShaderModule(m_device, &createInfo, nullptr, &shaderModule) != VK_SUCCESS) 
     {
-        throw std::runtime_error("failed to create shader module!");
+        Error("failed to create shader module!");
     }
 
     return shaderModule;
@@ -969,8 +984,9 @@ void GIL::createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkI
     imageInfo.samples = VK_SAMPLE_COUNT_1_BIT;
     imageInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateImage(m_device, &imageInfo, nullptr, &image) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create image!");
+    if (vkCreateImage(m_device, &imageInfo, nullptr, &image) != VK_SUCCESS)
+    {
+        Error("failed to create image!");
     }
 
     VkMemoryRequirements memRequirements;
@@ -981,8 +997,9 @@ void GIL::createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkI
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate image memory!");
+    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &imageMemory) != VK_SUCCESS)
+    {
+        Error("failed to allocate image memory!");
     }
 
     vkBindImageMemory(m_device, image, imageMemory, 0);
@@ -999,7 +1016,8 @@ uint32_t GIL::findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties)
         }
     }
 
-    throw std::runtime_error("failed to find suitable memory type!");
+    Error("failed to find suitable memory type!");
+    return 0;
 }
 
 void GIL::createTextureSampler() 
@@ -1025,8 +1043,9 @@ void GIL::createTextureSampler()
     samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
     samplerInfo.mipLodBias = 0.0f;
 
-    if (vkCreateSampler(m_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create texture sampler!");
+    if (vkCreateSampler(m_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS) 
+    {
+        Error("failed to create texture sampler!");
     }
 }
 
@@ -1093,8 +1112,9 @@ void GIL::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProp
     bufferInfo.usage = usage;
     bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
 
-    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create buffer!");
+    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS) 
+    {
+        Error("failed to create buffer!");
     }
 
     VkMemoryRequirements memRequirements;
@@ -1173,8 +1193,9 @@ void GIL::createDescriptorPool()
     poolInfo.pPoolSizes = poolSizes.data();
     poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
 
-    if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) {
-        throw std::runtime_error("failed to create descriptor pool!");
+    if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) 
+    {
+        Error("failed to create descriptor pool!");
     }
 }
 
@@ -1188,8 +1209,9 @@ void GIL::createCommandBuffers()
     allocInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
     allocInfo.commandBufferCount = (uint32_t)m_commandBuffers.size();
 
-    if (vkAllocateCommandBuffers(m_device, &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) {
-        throw std::runtime_error("failed to allocate command buffers!");
+    if (vkAllocateCommandBuffers(m_device, &allocInfo, m_commandBuffers.data()) != VK_SUCCESS) 
+    {
+        Error("failed to allocate command buffers!");
     }
 }
 
@@ -1209,8 +1231,9 @@ void GIL::createSyncObjects()
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++) {
         if (vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_imageAvailableSemaphores[i]) != VK_SUCCESS ||
             vkCreateSemaphore(m_device, &semaphoreInfo, nullptr, &m_renderFinishedSemaphores[i]) != VK_SUCCESS ||
-            vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) {
-            throw std::runtime_error("failed to create synchronization objects for a frame!");
+            vkCreateFence(m_device, &fenceInfo, nullptr, &m_inFlightFences[i]) != VK_SUCCESS) 
+        {
+            Error("failed to create synchronization objects for a frame!");
         }
     }
 }
@@ -1276,18 +1299,12 @@ void GIL::transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageL
         sourceStage = VK_PIPELINE_STAGE_TRANSFER_BIT;
         destinationStage = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
     }
-    else {
-        throw std::invalid_argument("unsupported layout transition!");
+    else
+    {
+        Error("unsupported layout transition!");
     }
 
-    vkCmdPipelineBarrier(
-        commandBuffer,
-        sourceStage, destinationStage,
-        0,
-        0, nullptr,
-        0, nullptr,
-        1, &barrier
-    );
+    vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 
     endSingleTimeCommands(commandBuffer);
 }
@@ -1321,9 +1338,7 @@ void GIL::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth,
     VkFormatProperties formatProperties;
     vkGetPhysicalDeviceFormatProperties(m_physicalDevice, imageFormat, &formatProperties);
 
-    if (!(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT)) {
-        throw std::runtime_error("texture image format does not support linear blitting!");
-    }
+    Assert(formatProperties.optimalTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_FILTER_LINEAR_BIT,"texture image format does not support linear blitting!");
 
     VkCommandBuffer commandBuffer = beginSingleTimeCommands();
 

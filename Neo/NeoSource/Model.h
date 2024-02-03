@@ -47,7 +47,7 @@ struct ModelAssetData : public AssetData
 
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
-	virtual bool SrcFilesToAsset(const vector<MemBlock> &srcFiles, AssetCreateParams* params) override;
+	virtual bool SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params) override;
 
 	struct Vertex
 	{
