@@ -167,6 +167,11 @@
       </AdditionalOptions>
       <AdditionalDependencies>Dbghelp.lib;SDL2.lib;SDL2_ttf.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PreBuildEvent>
+      <Command>C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.vert -o .\neo\sourceData\shaders\vert.spv
+C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\neo\sourceData\shaders\frag.spv
+</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <None Include="glm\ext\matrix_clip_space.inl" />

@@ -16,5 +16,6 @@ public:
 protected:
 	ModelRef m_vikingRoom;
 	View m_view;
+	mat4x4 m_modelMatrix;
 };
 

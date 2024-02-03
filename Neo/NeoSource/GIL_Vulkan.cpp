@@ -122,6 +122,7 @@ void GIL::StartupMainThread()
     }
 
     m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, WIDTH, HEIGHT, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
+    m_joystick = SDL_JoystickOpen(0);
 }
 
 void GIL::Startup()
@@ -1049,7 +1050,8 @@ void GIL::createTextureSampler()
     }
 }
 
-void GIL::createVertexBuffer() {
+void GIL::createVertexBuffer()
+{
     VkDeviceSize bufferSize = sizeof(s_vertices[0]) * s_vertices.size();
 
     VkBuffer stagingBuffer;

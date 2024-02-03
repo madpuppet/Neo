@@ -64,7 +64,6 @@ void Log(const string& msg)
 #if defined(PLATFORM_Windows)
     OutputDebugString(outStr.c_str());
 #endif
-
 }
 
 #if defined(_DEBUG)

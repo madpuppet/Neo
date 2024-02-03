@@ -139,7 +139,7 @@ bool ModelAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreatePara
 			vertex.pos = {
 				attrib.vertices[3 * index.vertex_index + 0],
 				attrib.vertices[3 * index.vertex_index + 2],
-				-attrib.vertices[3 * index.vertex_index + 1]
+				attrib.vertices[3 * index.vertex_index + 1]
 			};
 
 			vertex.uv = {
@@ -162,15 +162,15 @@ bool ModelAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreatePara
 	materialName = materials[0].name;
 #else
 
-	verts.push_back({ { 0,0,0 }, { 1,0,0 }, { 0,1 } });
-	verts.push_back({ { 1,0,0 }, { 1,0,0 }, { 1,1 } });
-	verts.push_back({ { 0,1,0 }, { 1,0,0 }, { 0,0 } });
+	verts.push_back({ { -1,-1,0 }, { 1,0,0 }, { 0,1 } });
+	verts.push_back({ { 1,-1,0 }, { 1,0,0 }, { 1,1 } });
+	verts.push_back({ { -1,1,0 }, { 1,0,0 }, { 0,0 } });
 	verts.push_back({ { 1,1,0 }, { 1,0,0 }, { 1,0 } });
 
-	verts.push_back({ { 0,0,1 }, { 0,1,0 }, { 0,1 } });
-	verts.push_back({ { 0.5f,0,1 }, { 0,1,0 }, { 1,1 } });
-	verts.push_back({ { 0,0.5f,1 }, { 0,1,0 }, { 0,0 } });
-	verts.push_back({ { 0.5f,0.5f,1 }, { 0,1,0 }, { 1,0 } });
+	verts.push_back({ { -1,-1,1 }, { 0,1,0 }, { 0,1 } });
+	verts.push_back({ { 1,-1,1 }, { 0,1,0 }, { 1,1 } });
+	verts.push_back({ { -1,1,1 }, { 0,1,0 }, { 0,0 } });
+	verts.push_back({ { 1,1,1 }, { 0,1,0 }, { 1,0 } });
 
 	indices.push_back(0);
 	indices.push_back(2);

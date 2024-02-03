@@ -15,15 +15,7 @@ void View::SetPerspective(const PerspectiveInfo& info)
 
 void View::SetLookAt(const vec3& eye, const vec3& target, const vec3& up)
 {
-	vec3 z = glm::normalize(target - eye);
-	vec3 x = glm::cross(up, z);
-	vec3 y = glm::cross(z, x);
-	x = glm::normalize(x);
-	y = glm::normalize(y);
-	m_cameraMatrix[0] = vec4(x, 0.0f);
-	m_cameraMatrix[1] = vec4(y, 0.0f);
-	m_cameraMatrix[2] = vec4(z, 0.0f);
-	m_cameraMatrix[3] = vec4(eye, 1.0f);
+	m_cameraMatrix = LookAt(eye, target, up);
 }
 
 void View::SetViewport(const rect& viewport)
@@ -75,8 +67,7 @@ void View::Apply()
 		projMat = OrthoProj(m_orthographic.orthoRect, m_orthographic.nearPlane, m_orthographic.farPlane);
 	}
 
-	mat4x4 viewMat = mat4x4(1);
-
+	mat4x4 viewMat = glm::inverse(m_cameraMatrix);
 	gil.SetViewMatrices(viewMat, projMat);
 	gil.SetViewport(m_viewport, m_minDepth, m_maxDepth);
 	gil.SetScissor(m_scissor);

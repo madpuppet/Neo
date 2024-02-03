@@ -431,3 +431,17 @@ inline mat4x4 OrthoProj(const rect &orthoRect, float nearPlane, float farPlane)
 	result[3][2] = -nearPlane / (farPlane - nearPlane);
 	return result;
 }
+
+inline mat4x4 LookAt(const vec3& eye, const vec3& target, const vec3& up)
+{
+	mat4x4 result;
+	vec3 z = glm::normalize(target - eye);
+	vec3 x = glm::normalize(glm::cross(z, up));
+	vec3 y = glm::cross(x, z);
+	result[0] = vec4(x, 0.0f);
+	result[1] = vec4(y, 0.0f);
+	result[2] = vec4(z, 0.0f);
+	result[3] = vec4(eye, 1.0f);
+	return result;
+}
+

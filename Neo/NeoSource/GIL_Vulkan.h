@@ -17,6 +17,7 @@
 #include "PlatformData_Vulkan.h"
 #include "Thread.h"
 #include "Texture.h"
+#include "MathUtils.h"
 
 const int MAX_FRAMES_IN_FLIGHT = 3;
 
@@ -69,6 +70,7 @@ public:
 	// TODO: should do a Platform Interface Layer for misc services not graphics related
 	// show message box and return TRUE if user would like to break
 	bool ShowMessageBox(const string& string);
+	float GetJoystickAxis(int idx) { return Clamp(SDL_JoystickGetAxis(m_joystick, idx) / 32767.0f, -1.0f, 1.0f); }
 
 protected:
 
@@ -79,6 +81,7 @@ protected:
 #endif
 
 	SDL_Window* m_window;
+	SDL_Joystick* m_joystick;
 	Semaphore m_vulkanInitialised;
 
 	VkInstance m_instance;
