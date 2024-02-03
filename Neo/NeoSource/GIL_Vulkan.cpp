@@ -2,13 +2,11 @@
 #include "GIL_Vulkan.h"
 #include "Texture.h"
 #include "Material.h"
-#include "Model.h"
+#include "StaticMesh.h"
 
 DECLARE_MODULE(GIL, NeoModulePri_GIL);
 
 #include <tiny_obj_loader.h>
-
-const string MODEL_PATH = "sourceData/models/viking_room.obj";
 
 const uint32_t WIDTH = 800;
 const uint32_t HEIGHT = 600;
@@ -1421,15 +1419,15 @@ void GIL::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth,
 }
 
 
-void GIL::RenderModel(Model *model)
+void GIL::RenderStaticMesh(StaticMesh *mesh)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
     // check platform data has been created successfully
-    auto modelPD = model->GetPlatformData();
-    auto modelAD = model->GetAssetData();
-    auto material = *(modelAD->material);
-    if (!modelPD || !modelAD || !material)
+    auto meshPD = mesh->GetPlatformData();
+    auto meshAD = mesh->GetAssetData();
+    auto material = *(meshAD->material);
+    if (!meshPD || !meshAD || !material)
         return;
 
     auto materialPD = material->GetPlatformData();
@@ -1440,15 +1438,15 @@ void GIL::RenderModel(Model *model)
     auto commandBuffer = m_commandBuffers[m_currentFrame];
     vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipeline);
 
-    VkBuffer vertexBuffers[] = { modelPD->vertexBuffer };
+    VkBuffer vertexBuffers[] = { meshPD->vertexBuffer };
     VkDeviceSize offsets[] = { 0 };
     vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
 
-    vkCmdBindIndexBuffer(commandBuffer, modelPD->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    vkCmdBindIndexBuffer(commandBuffer, meshPD->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
 
     vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 1, &materialPD->descriptorSets[m_currentFrame], 0, nullptr);
 
-    vkCmdDrawIndexed(commandBuffer, modelPD->indiceCount, 1, 0, 0, 0);
+    vkCmdDrawIndexed(commandBuffer, meshPD->indiceCount, 1, 0, 0, 0);
 }
 
 

@@ -6,44 +6,44 @@
 #include "Shader.h"
 #include "Material.h"
 
-class Model : public Resource
+class StaticMesh : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
-	virtual AssetType GetAssetType() const override { return AssetType_Model; }
+	virtual AssetType GetAssetType() const override { return AssetType_StaticMesh; }
 
 	virtual void Reload() override;
 
-	struct ModelAssetData* m_assetData;
-	struct ModelPlatformData* m_platformData;
+	struct StaticMeshAssetData* m_assetData;
+	struct StaticMeshPlatformData* m_platformData;
 
 public:
-	Model(const string& name);
-	Model(const string& name, Material* parent);
-	virtual ~Model();
+	StaticMesh(const string& name);
+	StaticMesh(const string& name, Material* parent);
+	virtual ~StaticMesh();
 
-	ModelAssetData* GetAssetData() { return m_assetData; }
-	ModelPlatformData* GetPlatformData() { return m_platformData; }
+	StaticMeshAssetData* GetAssetData() { return m_assetData; }
+	StaticMeshPlatformData* GetPlatformData() { return m_platformData; }
 };
 
 // texture factory keeps a map of all the currently created textures
-class ModelFactory : public Module<ModelFactory>
+class StaticMeshFactory : public Module<StaticMeshFactory>
 {
-	map<u64, Model*> m_resources;
+	map<u64, StaticMesh*> m_resources;
 
 public:
-	ModelFactory();
+	StaticMeshFactory();
 
-	Model* Create(const string& name);
-	void Destroy(Model* resource);
+	StaticMesh* Create(const string& name);
+	void Destroy(StaticMesh* resource);
 };
 
-using ModelRef = ResourceRef<Model, ModelFactory>;
+using StaticMeshRef = ResourceRef<StaticMesh, StaticMeshFactory>;
 
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk
-struct ModelAssetData : public AssetData
+struct StaticMeshAssetData : public AssetData
 {
-	~ModelAssetData() {}
+	~StaticMeshAssetData() {}
 
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
@@ -66,8 +66,8 @@ struct ModelAssetData : public AssetData
 };
 
 namespace std {
-	template<> struct hash<ModelAssetData::Vertex> {
-		size_t operator()(ModelAssetData::Vertex const& vertex) const {
+	template<> struct hash<StaticMeshAssetData::Vertex> {
+		size_t operator()(StaticMeshAssetData::Vertex const& vertex) const {
 			return ((hash<vec3>()(vertex.pos) ^ (hash<vec3>()(vertex.col) << 1)) >> 1) ^ (hash<vec2>()(vertex.uv) << 1);
 		}
 	};

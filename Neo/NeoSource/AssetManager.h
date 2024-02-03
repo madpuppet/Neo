@@ -9,7 +9,7 @@ enum AssetType
 {
 	AssetType_Texture,
 	AssetType_Shader,
-	AssetType_Model,
+	AssetType_StaticMesh,
 	AssetType_Animation,
 	AssetType_Database,
 	AssetType_Material

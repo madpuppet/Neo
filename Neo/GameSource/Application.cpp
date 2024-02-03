@@ -49,6 +49,6 @@ void Application::Draw()
 
 	m_view.Apply();
 	GIL::Instance().SetModelMatrix(m_modelMatrix);
-	GIL::Instance().RenderModel(m_vikingRoom);
+	GIL::Instance().RenderStaticMesh(m_vikingRoom);
 }
 

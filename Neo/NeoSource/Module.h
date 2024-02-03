@@ -10,7 +10,7 @@ enum NeoModulePri
 	NeoModulePri_TextureFactory,
 	NeoModulePri_ShaderFactory,
 	NeoModulePri_MaterialFactory,
-	NeoModulePri_ModelFactory,
+	NeoModulePri_StaticMeshFactory,
 	NeoModulePri_GIL,
 	NeoModulePri_RenderThread,
 

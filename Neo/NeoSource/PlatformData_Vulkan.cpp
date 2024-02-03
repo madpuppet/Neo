@@ -3,7 +3,7 @@
 #include "Texture.h"
 #include "Shader.h"
 #include "Material.h"
-#include "Model.h"
+#include "StaticMesh.h"
 
 struct Vertex {
     glm::vec3 pos;
@@ -334,14 +334,14 @@ void MaterialPlatformData_Destroy(MaterialPlatformData* platformData)
     delete platformData;
 }
 
-ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData)
+StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData* assetData)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
-    Log(STR("PLATFORM DATA for MODEL: {}", assetData->name));
+    Log(STR("PLATFORM DATA for StaticMesh: {}", assetData->name));
 
     auto& gil = GIL::Instance();
-    auto platformData = new ModelPlatformData;
+    auto platformData = new StaticMeshPlatformData;
     auto device = gil.Device();
 
     // vertex buffer
@@ -389,7 +389,7 @@ ModelPlatformData* ModelPlatformData_Create(struct ModelAssetData* assetData)
     return platformData;
 }
 
-void ModelPlatformData_Destroy(ModelPlatformData* platformData)
+void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData)
 {
 }
 

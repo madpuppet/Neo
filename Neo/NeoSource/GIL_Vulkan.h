@@ -56,7 +56,7 @@ public:
 
 	// add model to render queue
 	// must be called on render thread
-	void RenderModel(class Model* model);
+	void RenderStaticMesh(class StaticMesh* mesh);
 
 	void WaitTilInitialised() { m_vulkanInitialised.Wait(); }
 

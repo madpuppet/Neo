@@ -1,5 +1,5 @@
 #include "Neo.h"
-#include "Model.h"
+#include "StaticMesh.h"
 #include "Material.h"
 #include "StringUtils.h"
 #include "SHAD.h"
@@ -10,23 +10,23 @@
 #include <sstream>
 #include <streambuf>
 
-#define MODEL_VERSION 2
+#define STATICMESH_VERSION 2
 
-DECLARE_MODULE(ModelFactory, NeoModulePri_ModelFactory);
+DECLARE_MODULE(StaticMeshFactory, NeoModulePri_StaticMeshFactory);
 
-Model::Model(const string& name) : Resource(name)
+StaticMesh::StaticMesh(const string& name) : Resource(name)
 {
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Model, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
+	AssetManager::Instance().DeliverAssetDataAsync(AssetType_StaticMesh, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
 }
 
-Model::~Model()
+StaticMesh::~StaticMesh()
 {
 }
 
-void Model::OnAssetDeliver(AssetData* data)
+void StaticMesh::OnAssetDeliver(AssetData* data)
 {
-	Assert(data->type == AssetType_Model, "Bad Asset Type");
-	m_assetData = dynamic_cast<ModelAssetData*>(data);
+	Assert(data->type == AssetType_StaticMesh, "Bad Asset Type");
+	m_assetData = dynamic_cast<StaticMeshAssetData*>(data);
 
 	// create dependant resources
 	vector<Resource*> dependantResources;
@@ -35,30 +35,30 @@ void Model::OnAssetDeliver(AssetData* data)
 
 	// we need to wait for our dependant resources, like Shaders and Textures,  to load first before creating our platform data (which are pipeline states)
 	// note that if they are already loaded, this will just trigger off the callback immediately
-	ResourceLoadedManager::Instance().AddDependancyList(this, dependantResources, [this]() { m_platformData = ModelPlatformData_Create(m_assetData); OnLoadComplete(); });
+	ResourceLoadedManager::Instance().AddDependancyList(this, dependantResources, [this]() { m_platformData = StaticMeshPlatformData_Create(m_assetData); OnLoadComplete(); });
 }
 
-void Model::Reload()
+void StaticMesh::Reload()
 {
 }
 
-ModelFactory::ModelFactory()
+StaticMeshFactory::StaticMeshFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreator = []() -> AssetData* { return new ModelAssetData; };
+	ati->m_assetCreator = []() -> AssetData* { return new StaticMeshAssetData; };
 	ati->m_assetExt = ".neomdl";
 	ati->m_sourceExt.push_back({ { ".obj" }, true });		// on of these src image files
-	AssetManager::Instance().RegisterAssetType(AssetType_Model, ati);
+	AssetManager::Instance().RegisterAssetType(AssetType_StaticMesh, ati);
 }
 
-Model* ModelFactory::Create(const string& name)
+StaticMesh* StaticMeshFactory::Create(const string& name)
 {
 	u64 hash = StringHash64(name);
 	auto it = m_resources.find(hash);
 	if (it == m_resources.end())
 	{
-		Model* resource = new Model(name);
-		m_resources.insert(std::pair<u64, Model*>(hash, resource));
+		StaticMesh* resource = new StaticMesh(name);
+		m_resources.insert(std::pair<u64, StaticMesh*>(hash, resource));
 
 		return resource;
 	}
@@ -66,7 +66,7 @@ Model* ModelFactory::Create(const string& name)
 	return it->second;
 }
 
-void ModelFactory::Destroy(Model* resource)
+void StaticMeshFactory::Destroy(StaticMesh* resource)
 {
 	if (resource && resource->DecRef() == 0)
 	{
@@ -106,9 +106,9 @@ public:
 
 
 
-bool ModelAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
+bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
-	Assert(srcFiles.size() == 1, STR("Expected 1 src file for model"));
+	Assert(srcFiles.size() == 1, STR("Expected 1 src file for StaticMesh"));
 
 #if 1
 
@@ -126,7 +126,7 @@ bool ModelAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreatePara
 	NeoMaterialReader matReader;
 	if (!tinyobj::LoadObj(&attrib, &shapes, &materials, &warn, &err, &inputStream, &matReader)) 
 	{
-		Error(STR("Tiny Object unable to parse source file for model: {}", name));
+		Error(STR("Tiny Object unable to parse source file for StaticMesh: {}", name));
 		return false;
 	}
 
@@ -194,11 +194,11 @@ bool ModelAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreatePara
 	return true;
 }
 
-MemBlock ModelAssetData::AssetToMemory()
+MemBlock StaticMeshAssetData::AssetToMemory()
 {
 	Serializer_BinaryWriteGrow stream;
-	stream.WriteU16(AssetType_Model);
-	stream.WriteU16(MODEL_VERSION);
+	stream.WriteU16(AssetType_StaticMesh);
+	stream.WriteU16(STATICMESH_VERSION);
 	stream.WriteString(name);
 
 	u32 vertSize = (u32)(verts.size() * sizeof(Vertex));
@@ -212,21 +212,21 @@ MemBlock ModelAssetData::AssetToMemory()
 	return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
 }
 
-bool ModelAssetData::MemoryToAsset(const MemBlock& block)
+bool StaticMeshAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
 	type = (AssetType)stream.ReadU16();
 	version = stream.ReadU16();
 	name = stream.ReadString();
 
-	if (type != AssetType_Model)
+	if (type != AssetType_StaticMesh)
 	{
-		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Model));
+		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_StaticMesh));
 		return false;
 	}
-	if (version != MODEL_VERSION)
+	if (version != STATICMESH_VERSION)
 	{
-		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, MODEL_VERSION));
+		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, STATICMESH_VERSION));
 		return false;
 	}
 

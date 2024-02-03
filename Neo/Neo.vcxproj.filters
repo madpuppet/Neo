@@ -1511,7 +1511,7 @@
     <ClInclude Include="NeoSource\SHAD.h">
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\Model.h">
+    <ClInclude Include="NeoSource\StaticMesh.h">
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\View.h">
@@ -1624,7 +1624,7 @@
     <ClCompile Include="NeoSource\ResourceLoadedManager.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
-    <ClCompile Include="NeoSource\Model.cpp">
+    <ClCompile Include="NeoSource\StaticMesh.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\View.cpp">
