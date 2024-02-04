@@ -1,5 +1,5 @@
-vertexShader: vert
-pixelShader: frag
+vertexShader: standard
+pixelShader: standard
 blendmode: opaque
 cull: back
 zread: true

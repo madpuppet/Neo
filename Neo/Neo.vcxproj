@@ -640,6 +640,7 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
+    <ClInclude Include="NeoSource\PixelShader.h" />
     <ClInclude Include="NeoSource\StaticMesh.h" />
     <ClInclude Include="NeoSource\Module.h" />
     <ClInclude Include="NeoSource\Neo.h" />
@@ -652,7 +653,7 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <ClInclude Include="NeoSource\ResourceRef.h" />
     <ClInclude Include="NeoSource\Serializer.h" />
     <ClInclude Include="NeoSource\SHAD.h" />
-    <ClInclude Include="NeoSource\Shader.h" />
+    <ClInclude Include="NeoSource\VertexShader.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
     <ClInclude Include="NeoSource\Texture.h" />
     <ClInclude Include="NeoSource\Thread.h" />
@@ -686,6 +687,7 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <ClCompile Include="NeoSource\Material.cpp" />
     <ClCompile Include="NeoSource\MemBlock.cpp" />
     <ClCompile Include="NeoSource\Memory.cpp" />
+    <ClCompile Include="NeoSource\PixelShader.cpp" />
     <ClCompile Include="NeoSource\StaticMesh.cpp" />
     <ClCompile Include="NeoSource\Module.cpp" />
     <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp" />
@@ -694,7 +696,7 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <ClCompile Include="NeoSource\ResourceLoadedManager.cpp" />
     <ClCompile Include="NeoSource\Serializer.cpp" />
     <ClCompile Include="NeoSource\SHAD.cpp" />
-    <ClCompile Include="NeoSource\Shader.cpp" />
+    <ClCompile Include="NeoSource\VertexShader.cpp" />
     <ClCompile Include="NeoSource\StringUtils.cpp" />
     <ClCompile Include="NeoSource\Texture.cpp" />
     <ClCompile Include="NeoSource\Thread.cpp" />

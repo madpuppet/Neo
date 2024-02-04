@@ -32,8 +32,8 @@ void Material::OnAssetDeliver(AssetData* data)
 
 		// create dependant resources
 		vector<Resource*> dependantResources;
-		m_assetData->pixelShader.Create(m_assetData->pixelShaderName, ShaderType_Pixel);
-		m_assetData->vertexShader.Create(m_assetData->vertexShaderName, ShaderType_Vertex);
+		m_assetData->pixelShader.Create(m_assetData->pixelShaderName);
+		m_assetData->vertexShader.Create(m_assetData->vertexShaderName);
 		dependantResources.push_back(*m_assetData->pixelShader);
 		dependantResources.push_back(*m_assetData->vertexShader);
 		for (auto uniform : m_assetData->uniforms)

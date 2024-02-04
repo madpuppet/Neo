@@ -23,6 +23,11 @@ void View::SetViewport(const rect& viewport)
 	m_viewport = viewport;
 }
 
+void View::SetCameraMatrix(const mat4x4& camMatrix)
+{
+	m_cameraMatrix = camMatrix;
+}
+
 void View::SetDepthRange(float minDepth, float maxDepth)
 {
 	m_minDepth = minDepth;

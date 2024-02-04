@@ -10,7 +10,7 @@
 #include <sstream>
 #include <streambuf>
 
-#define STATICMESH_VERSION 2
+#define STATICMESH_VERSION 1
 
 DECLARE_MODULE(StaticMeshFactory, NeoModulePri_StaticMeshFactory);
 
@@ -139,7 +139,7 @@ bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreat
 			vertex.pos = {
 				attrib.vertices[3 * index.vertex_index + 0],
 				attrib.vertices[3 * index.vertex_index + 2],
-				attrib.vertices[3 * index.vertex_index + 1]
+				-attrib.vertices[3 * index.vertex_index + 1]
 			};
 
 			vertex.uv = {

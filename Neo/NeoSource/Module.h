@@ -8,7 +8,9 @@ enum NeoModulePri
 	NeoModulePri_AssetManager,
 	NeoModulePri_ResourceLoadedManager,
 	NeoModulePri_TextureFactory,
-	NeoModulePri_ShaderFactory,
+	NeoModulePri_VertexShaderFactory,
+	NeoModulePri_PixelShaderFactory,
+	NeoModulePri_ComputeShaderFactory,
 	NeoModulePri_MaterialFactory,
 	NeoModulePri_StaticMeshFactory,
 	NeoModulePri_GIL,
@@ -51,14 +53,14 @@ template<class T> T* Module<T>::s_instance = nullptr;
 
 
 #define DECLARE_MODULE(x, pri) \
-class __RegisterModule##x  \
+class __RegisterModule##pri  \
 {  \
 public:  \
-	__RegisterModule##x()  \
+	__RegisterModule##pri()  \
 	{  \
 		RegisterModule([]() { new x(); }, []() { delete& x::Instance(); }, #x, pri);  \
 	}  \
-} __registerModule##x;
+} __registerModule##pri;
 
 void RegisterModule(std::function<void()> newFunc, std::function<void()> deleteFunc, string name, int priority);
 void StartupModules();

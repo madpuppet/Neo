@@ -3,7 +3,8 @@
 #include "Resource.h"
 #include "AssetManager.h"
 #include "ResourceRef.h"
-#include "Shader.h"
+#include "VertexShader.h"
+#include "PixelShader.h"
 
 enum MaterialBlendMode
 {
@@ -155,8 +156,8 @@ public:
 	bool zread = false;
 	bool zwrite = false;
 
-	ShaderRef vertexShader;
-	ShaderRef pixelShader;
+	VertexShaderRef vertexShader;
+	PixelShaderRef pixelShader;
 
 	MaterialRef m_parent;
 };

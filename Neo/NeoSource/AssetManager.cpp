@@ -6,7 +6,7 @@
 
 DECLARE_MODULE(AssetManager, NeoModulePri_AssetManager);
 
-AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, string("AssetManager"))
+AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, "AssetManager", 64)
 {
 	m_assetTasks.Start();
 }

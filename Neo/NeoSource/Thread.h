@@ -165,7 +165,7 @@ class WorkerThread : public Thread
 {
     Mutex m_tasks;
     Semaphore m_taskSignals;
-    fifo<std::function<void()>> m_taskList;
+    fifo<GenericCallback> m_taskList;
 
 public:
     WorkerThread(int guid, const string& name) : Thread(guid, name) {}
@@ -178,7 +178,7 @@ public:
     // @param task - typically a lambda function that you want to run on this thread. it will be called once only and then forgotten
     //               the task will need alert the system of its completion via other methods
     //               tasks are always run in order of being added
-    void AddTask(std::function<void()> task)
+    void AddTask(GenericCallback task)
     {
         m_tasks.Lock();
         m_taskList.emplace_back(task);
@@ -209,4 +209,95 @@ public:
     }
 
     void SetName();
+};
+
+class WorkerFarmWorker : public Thread
+{
+    GenericCallback m_task;
+
+public:
+    WorkerFarmWorker(int guid, const string& name, GenericCallback& task) : m_task(task), Thread(guid, name) {}
+    ~WorkerFarmWorker() { StopAndWait(); }
+    virtual int Go() { m_task(); return 0; }
+};
+
+class WorkerFarm : public Thread
+{
+    // active threads
+    vector<Thread*> m_threads;
+
+    // delayed tasks - max threads reached
+    vector<GenericCallback> m_queuedTasks;
+
+    // protect access to threads list
+    Mutex m_threadLock;
+
+    // this gets signalled every time a thread is complete
+    // so on each single, look for a finished thread and join it/delete it
+    Semaphore m_threadComplete;
+
+    // maximum threads to have alive at any one time
+    int m_maxThreads;
+
+public:
+    WorkerFarm(int guid, const string& name, int maxThreads) : m_maxThreads(maxThreads), Thread(guid, name) {}
+    ~WorkerFarm()
+    {
+        StopAndWait();
+    }
+
+    void AddTask(GenericCallback task)
+    {
+        m_threadLock.Lock();
+        if (m_threads.size() >= m_maxThreads)
+        {
+            m_queuedTasks.push_back(task);
+        }
+        else
+        {
+            auto thread = new WorkerFarmWorker(m_guid, m_name + "Worker", task);
+            m_threads.push_back(thread);
+            thread->Start();
+        }
+        m_threadLock.Release();
+    }
+
+    virtual void Terminate() override
+    {
+        m_terminate = true;
+        m_threadComplete.Signal();
+    }
+
+    virtual int Go()
+    {
+        // wait for a thread to finish
+        m_threadComplete.Wait();
+        while (!m_terminate)
+        {
+            // find and remove the first finished thread
+            m_threadLock.Lock();
+            for (auto it = m_threads.begin(); it != m_threads.end(); it++)
+            {
+                if ((*it)->IsFinished())
+                {
+                    delete (*it);
+                    m_threads.erase(it);
+                    break;
+                }
+            }
+            // one task finished, so there must be a space for a new one to start
+            if (!m_queuedTasks.empty())
+            {
+                auto task = m_queuedTasks.back();
+                m_queuedTasks.pop_back();
+                auto thread = new WorkerFarmWorker(0, m_name, task);
+                m_threads.push_back(thread);
+            }
+            m_threadLock.Release();
+
+            // wait for next thread to finish
+            m_threadComplete.Wait();
+        }
+        return 0;
+    }
 };

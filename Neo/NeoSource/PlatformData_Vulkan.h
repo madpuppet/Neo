@@ -9,12 +9,20 @@ struct TexturePlatformData
 TexturePlatformData* TexturePlatformData_Create(struct TextureAssetData* assetData);
 void TexturePlatformData_Destroy(TexturePlatformData* platformData);
 
-struct ShaderPlatformData
+struct VertexShaderPlatformData
 {
 	VkShaderModule shaderModule;
 };
-ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
-void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
+VertexShaderPlatformData* VertexShaderPlatformData_Create(struct VertexShaderAssetData* assetData);
+void VertexShaderPlatformData_Destroy(VertexShaderPlatformData* platformData);
+
+struct PixelShaderPlatformData
+{
+	VkShaderModule shaderModule;
+};
+PixelShaderPlatformData* PixelShaderPlatformData_Create(struct PixelShaderAssetData* assetData);
+void PixelShaderPlatformData_Destroy(PixelShaderPlatformData* platformData);
+
 
 struct MaterialPlatformData
 {

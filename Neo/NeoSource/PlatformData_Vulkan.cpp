@@ -1,51 +1,10 @@
 #include "Neo.h"
 #include "PlatformData_Vulkan.h"
 #include "Texture.h"
-#include "Shader.h"
+#include "VertexShader.h"
+#include "PixelShader.h"
 #include "Material.h"
 #include "StaticMesh.h"
-
-struct Vertex {
-    glm::vec3 pos;
-    glm::vec3 color;
-    glm::vec2 texCoord;
-
-    static VkVertexInputBindingDescription getBindingDescription() {
-        VkVertexInputBindingDescription bindingDescription{};
-        bindingDescription.binding = 0;
-        bindingDescription.stride = sizeof(Vertex);
-        bindingDescription.inputRate = VK_VERTEX_INPUT_RATE_VERTEX;
-
-        return bindingDescription;
-    }
-
-    static std::array<VkVertexInputAttributeDescription, 3> getAttributeDescriptions() {
-        std::array<VkVertexInputAttributeDescription, 3> attributeDescriptions{};
-
-        attributeDescriptions[0].binding = 0;
-        attributeDescriptions[0].location = 0;
-        attributeDescriptions[0].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[0].offset = offsetof(Vertex, pos);
-
-        attributeDescriptions[1].binding = 0;
-        attributeDescriptions[1].location = 1;
-        attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-        attributeDescriptions[1].offset = offsetof(Vertex, color);
-
-        attributeDescriptions[2].binding = 0;
-        attributeDescriptions[2].location = 2;
-        attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-        attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
-
-        return attributeDescriptions;
-    }
-
-    bool operator==(const Vertex& other) const {
-        return pos == other.pos && color == other.color && texCoord == other.texCoord;
-    }
-};
-
-
 
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
@@ -93,33 +52,49 @@ void TexturePlatformData_Destroy(struct TexturePlatformData* platformData)
     vkFreeMemory(device, platformData->textureImageMemory, nullptr);
 }
 
-ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData)
+
+
+VkShaderModule CreateShader(VkDevice device, MemBlock spv)
 {
+    VkShaderModule shaderModule = nullptr;
+
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
-
-    Log(STR("PLATFORM DATA for SHADER: {}", assetData->name));
-
-    ShaderPlatformData* platformData = new ShaderPlatformData;
-    auto device = GIL::Instance().Device();
 
     VkShaderModuleCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    createInfo.codeSize = assetData->spvData.Size();
-    createInfo.pCode = (u32*)assetData->spvData.Mem();
+    createInfo.codeSize = spv.Size();
+    createInfo.pCode = (u32*)spv.Mem();
 
-    if (vkCreateShaderModule(device, &createInfo, nullptr, &platformData->shaderModule) != VK_SUCCESS) 
-    {
-        Error(std::format("Failed to create shader module for shader: {}!", assetData->name));
-    }
+    vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
+    return shaderModule;
+}
 
+PixelShaderPlatformData* PixelShaderPlatformData_Create(struct PixelShaderAssetData* assetData)
+{
+    PixelShaderPlatformData* platformData = new PixelShaderPlatformData;
+    platformData->shaderModule = CreateShader(GIL::Instance().Device(), assetData->spvData);
     return platformData;
 }
 
-void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
+void PixelShaderPlatformData_Destroy(PixelShaderPlatformData* platformData)
 {
     auto device = GIL::Instance().Device();
     vkDestroyShaderModule(device, platformData->shaderModule, nullptr);
 }
+
+VertexShaderPlatformData* VertexShaderPlatformData_Create(struct VertexShaderAssetData* assetData)
+{
+    VertexShaderPlatformData* platformData = new VertexShaderPlatformData;
+    platformData->shaderModule = CreateShader(GIL::Instance().Device(), assetData->spvData);
+    return platformData;
+}
+
+void VertexShaderPlatformData_Destroy(VertexShaderPlatformData* platformData)
+{
+    auto device = GIL::Instance().Device();
+    vkDestroyShaderModule(device, platformData->shaderModule, nullptr);
+}
+
 
 MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 {

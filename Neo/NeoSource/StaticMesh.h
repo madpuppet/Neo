@@ -3,7 +3,6 @@
 #include "Resource.h"
 #include "AssetManager.h"
 #include "ResourceRef.h"
-#include "Shader.h"
 #include "Material.h"
 
 class StaticMesh : public Resource

@@ -8,7 +8,9 @@
 enum AssetType
 {
 	AssetType_Texture,
-	AssetType_Shader,
+	AssetType_VertexShader,
+	AssetType_PixelShader,
+	AssetType_ComputeShader,
 	AssetType_StaticMesh,
 	AssetType_Animation,
 	AssetType_Database,
@@ -21,7 +23,7 @@ struct std::formatter<AssetType> : std::formatter<int> {
 		return ctx.begin();
 	}
 	auto format(const AssetType& obj, std::format_context& ctx) const {
-		const char* enumNames[] = { "Texture", "Shader", "Model", "Animation", "Database", "Material" };
+		const char* enumNames[] = { "Texture", "VertexShader", "PixelShader", "ComputeShader", "Model", "Animation", "Database", "Material" };
 		return std::format_to(ctx.out(), "{}", enumNames[(int)obj]);
 	}
 };
@@ -31,7 +33,7 @@ struct AssetData
 	AssetData() = default;
 	virtual ~AssetData() = default;
 
-	AssetType type;	// for debug purposes
+	AssetType type;
 	string name;	// for debug purposes
 	u16 version;	// increment the version to force a rebuild of assets
 
@@ -70,7 +72,7 @@ typedef std::function<void(AssetData*)> DeliverAssetDataCB;
 class AssetManager : public Module<AssetManager>
 {
 	// asset delivery thread can handle a maximum number of tasks at once
-	WorkerThread m_assetTasks;
+	WorkerFarm m_assetTasks;
 
 	// map of asset type creators
 	map<int, AssetTypeInfo*> m_assetTypeInfoMap;

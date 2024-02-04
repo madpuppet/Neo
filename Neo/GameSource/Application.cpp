@@ -23,6 +23,11 @@ Application::Application()
 	m_view.SetViewport({ { 0,0 }, { 1, 1 } });
 	m_view.SetDepthRange(0.1f, 1.0f);
 	m_view.SetScissorRect({ { 0,0 }, { 1,1 } });
+
+	m_modelMatrix = mat4x4(1);
+
+	m_cameraPYR = { DegToRad(45.0f), 0, 0};
+	m_cameraPos = { 0, 1.5f, -1.0f };
 }
 
 Application::~Application()
@@ -31,14 +36,21 @@ Application::~Application()
 
 void Application::Update()
 {
-	static float time = 0.0f;
-	time += 0.001f;
-	vec3 eye{ sinf(time)*1.0f, 1.5f, cosf(time) * 1.0f };
-	vec3 target{ 0,0,0 };
-	vec3 up{ 0,1,0 };
-	m_view.SetLookAt(eye, target, up);
+	float x = GIL::Instance().GetJoystickAxis(0) * 0.001f;
+	float y = -GIL::Instance().GetJoystickAxis(1) * 0.001f;
+	float yaw = GIL::Instance().GetJoystickAxis(2) * 0.001f;
+	float pitch = GIL::Instance().GetJoystickAxis(3) * 0.001f;
 
-	m_modelMatrix = glm::rotate(glm::mat4(1.0f), time*0.1f, glm::vec3(0.0f, 1.0f, 0.0f));
+	m_cameraPYR.x += pitch;
+	m_cameraPYR.y += yaw;
+
+	mat4x4 pitchMatrix = glm::rotate(glm::mat4(1.0f), m_cameraPYR.x, glm::vec3(1.0f, 0.0f, 0.0f));
+	mat4x4 yawMatrix = glm::rotate(glm::mat4(1.0f), m_cameraPYR.y, glm::vec3(0.0f, 1.0f, 0.0f));
+	mat4x4 camMatrix = yawMatrix * pitchMatrix;
+	
+	m_cameraPos += x * vec3(camMatrix[0]) + y * vec3(camMatrix[2]);
+	camMatrix[3] = vec4(m_cameraPos, 1.0);
+	m_view.SetCameraMatrix(camMatrix);
 }
 
 void Application::Draw()

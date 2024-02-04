@@ -1,0 +1,87 @@
+material
+- needs to know all the uniform buffers we are using
+- uniform buffers can be:
+   push - 1 per render (<=128 bytes)
+   local - need 1 per material use
+   camera - need 1 per camera view
+   frame - need 1 per frame
+
+
+Register uniform buffers by name
+  -- size
+  -- scope
+  -- max instances  (how many instances of this buffer will we need?)
+
+Material Apply
+  -- alloc buffer
+  -- for push/local,  fill the buffer
+  
+
+
+
+
+### SHADER ATTRIBUTE BINDINGS ###
+
+struct Vertex
+- declares variables
+- creates binding description (dynamic)
+- creates attribute descriptions (dynamic)
+- equal operator (for hashing)
+- template std::hash (for hashing)
+
+Material PD ->  binding description & attribute description
+
+# materials need to know which vertex definition the vertex shader uses
+# static mesh needs to know what vertex format to pack vertices into
+
+
+
+
+// shader files
+myshader_v.shader		// vertex shader
+myshader_f.shader		// fragment shader
+myshader_c.shader		// compute shader
+
+// goals
+-- scan vertex shader to see what attributes are input.
+
+
+
+
+// include a buffer into the shader
+#buffer view
+
+// declare buffer in C++
+DeclareBuffer( "view", vector<BufferItems> );
+
+struct BufferItem
+{
+ string name;				// "model"
+ DataType dataType;			// "f32 / vec2 / vec3 / vec4 / ivec2 / ivec3 / ivec4 / mat4"
+}
+
+
+
+declare uniform buffers in code by name.
+
+shader
+
+#buffer view
+
+
+
+
+PIPELINE
+   ubo bindings  (changes per material)
+   sampler bindings
+   cullmode
+   depthStencil mode
+   
+Material setting override list -> use to adjust settings after pipeline is bound
+These would be transferred from UPDATE -> DRAW at first use in draw frame.
+x,y,z,p,y,r,sx,sy,sz
+
+
+
+
+
