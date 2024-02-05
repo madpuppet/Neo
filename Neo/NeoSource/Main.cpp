@@ -31,7 +31,7 @@
 int main(int argc, char* args[])
 {
     gMemoryTracker.EnableTracking(true);
-    StartupModules();
+    NeoStartupModules();
 
     bool m_quit = false;
     SDL_Event e;
@@ -59,13 +59,13 @@ int main(int argc, char* args[])
 
             }
         }
-        Application::Instance().Update();
+        NeoUpdateModules();
         RenderThread::Instance().SignalUpdateDone();
         RenderThread::Instance().WaitDrawStarted();
     }
     
     gMemoryTracker.Dump();
-    ShutdownModules();
+    NeoShutdownModules();
     return EXIT_SUCCESS;
 }
 

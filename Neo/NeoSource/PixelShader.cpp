@@ -7,7 +7,7 @@
 
 bool CompileShader(MemBlock srcBlock, MemBlock& spvBlock, AssetType assetType);
 
-DECLARE_MODULE(PixelShaderFactory, NeoModulePri_PixelShaderFactory);
+DECLARE_MODULE(PixelShaderFactory, NeoModuleInitPri_PixelShaderFactory, NeoModulePri_None, NeoModulePri_None);
 
 bool PixelShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreateParams* params)
 {

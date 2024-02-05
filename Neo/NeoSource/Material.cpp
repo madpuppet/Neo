@@ -6,7 +6,7 @@
 
 #define MATERIAL_VERSION 1
 
-DECLARE_MODULE(MaterialFactory, NeoModulePri_MaterialFactory);
+DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
 
 Material::Material(const string& name) : Resource(name)
 {

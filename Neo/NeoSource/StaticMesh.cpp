@@ -12,7 +12,7 @@
 
 #define STATICMESH_VERSION 1
 
-DECLARE_MODULE(StaticMeshFactory, NeoModulePri_StaticMeshFactory);
+DECLARE_MODULE(StaticMeshFactory, NeoModuleInitPri_StaticMeshFactory, NeoModulePri_None, NeoModulePri_None);
 
 StaticMesh::StaticMesh(const string& name) : Resource(name)
 {

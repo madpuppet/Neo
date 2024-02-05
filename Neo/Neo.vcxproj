@@ -282,8 +282,6 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <None Include="include\SDL_config.h.cmake" />
     <None Include="include\SDL_config.h.in" />
     <None Include="include\SDL_config_macosx.h.orig" />
-    <None Include="SourceData\shaders\shader.frag" />
-    <None Include="SourceData\shaders\shader.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="GameSource\Application.h" />
@@ -776,6 +774,18 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="SourceData\shaders\standard.psh">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </None>
+    <None Include="SourceData\shaders\standard.vsh">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+    </None>
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

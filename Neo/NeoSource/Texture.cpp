@@ -6,7 +6,7 @@
 
 #define TEXTURE_VERSION 1
 
-DECLARE_MODULE(TextureFactory, NeoModulePri_TextureFactory);
+DECLARE_MODULE(TextureFactory, NeoModuleInitPri_TextureFactory, NeoModulePri_None, NeoModulePri_None);
 
 Texture::Texture(const string& name) : Resource(name)
 {

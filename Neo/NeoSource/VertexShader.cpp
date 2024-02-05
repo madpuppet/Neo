@@ -7,7 +7,7 @@
 
 bool CompileShader(MemBlock srcBlock, MemBlock& spvBlock, AssetType assetType);
 
-DECLARE_MODULE(VertexShaderFactory, NeoModulePri_VertexShaderFactory);
+DECLARE_MODULE(VertexShaderFactory, NeoModuleInitPri_VertexShaderFactory, NeoModulePri_None, NeoModulePri_None);
 
 bool VertexShaderAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams *params)
 {
@@ -125,6 +125,7 @@ bool CompileShader(MemBlock srcBlock, MemBlock &spvBlock, AssetType assetType)
 	static int count = 0;
 	string srcPath = std::format("{}{}.shader", tempFilePath.string(), ++count);
 	string spvPath = std::format("{}{}.spv", tempFilePath.string(), ++count);
+	string errPath = std::format("{}{}.err", tempFilePath.string(), ++count);
 
 	// write shader file
 	std::ofstream outFile(srcPath, std::ios::binary);
@@ -144,10 +145,10 @@ bool CompileShader(MemBlock srcBlock, MemBlock &spvBlock, AssetType assetType)
 	switch (assetType)
 	{
 		case AssetType_VertexShader:
-			stage = " -fshader-stage=vertex ";
+			stage = "-fshader-stage=vertex ";
 			break;
 		case AssetType_PixelShader:
-			stage = " -fshader-stage=fragment ";
+			stage = "-fshader-stage=fragment ";
 			break;
 		default:
 			Error("Unsupported asset type for shader compile!");
@@ -155,7 +156,7 @@ bool CompileShader(MemBlock srcBlock, MemBlock &spvBlock, AssetType assetType)
 	}
 
 	// compile the file
-	std::string command = "glslc " + stage + srcPath + " -o " + spvPath;
+	std::string command = "glslc " + stage + srcPath + " -o " + spvPath + " 2>" + errPath;
 	int result = std::system(command.c_str());
 	if (result != 0) 
 	{

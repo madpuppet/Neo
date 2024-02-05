@@ -1,7 +1,7 @@
 #include "Neo.h"
 #include "RenderThread.h"
 
-DECLARE_MODULE(RenderThread, NeoModulePri_RenderThread);
+DECLARE_MODULE(RenderThread, NeoModuleInitPri_RenderThread, NeoModulePri_None, NeoModulePri_None);
 
 /*
 

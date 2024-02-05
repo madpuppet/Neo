@@ -2,7 +2,7 @@
 #include "Application.h"
 #include "RenderThread.h"
 
-DECLARE_MODULE(Application, NeoModulePri_Application);
+DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early, NeoModulePri_Early);
 
 const char* GAME_NAME = "TestGame";
 

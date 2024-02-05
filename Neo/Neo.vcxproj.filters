@@ -360,10 +360,7 @@
     <None Include="glm\ext\vector_ulp.inl">
       <Filter>Includes\glm</Filter>
     </None>
-    <None Include="SourceData\shaders\shader.frag">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="SourceData\shaders\shader.vert">
+    <None Include="SourceData\shaders\standard.psh">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>
@@ -1639,5 +1636,10 @@
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SourceData\shaders\standard.vsh">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

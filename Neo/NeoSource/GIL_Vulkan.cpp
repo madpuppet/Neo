@@ -4,7 +4,7 @@
 #include "Material.h"
 #include "StaticMesh.h"
 
-DECLARE_MODULE(GIL, NeoModulePri_GIL);
+DECLARE_MODULE(GIL, NeoModuleInitPri_GIL, NeoModulePri_None, NeoModulePri_None);
 
 #include <tiny_obj_loader.h>
 
