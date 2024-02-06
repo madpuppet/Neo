@@ -75,13 +75,23 @@ struct UniformBufferObject {
     alignas(16) mat4x4 proj;
 };
 
+// geometry buffers hold vertex & index data for rendering sets of geometry
+struct NeoGeometryBuffer
+{
+	VkBuffer vertexBuffer = nullptr;
+	VkDeviceMemory vertexBufferMemory = nullptr;
+	VkBuffer indexBuffer = nullptr;
+	VkDeviceMemory indexBufferMemory = nullptr;
+};
+
 class GIL : public Module<GIL>
 {
 public:
-	// main thread startup... creates window for message polling on main thread
+	// startup procedures that need to run on the main thread... creates window for message polling on main thread
 	void StartupMainThread();
 
 	// initial basic global rendering systems
+	// these run on the RenderThread
 	void Startup();
 
 	// destroy all vulkan resources
@@ -97,13 +107,18 @@ public:
 	void ResizeFrameBuffers(int width, int height);
 
 	// graphics functions
-	void CreateRenderTarget();  // texture for use in render target state
-	void CreateRenderTargetState();		// color, depth, cullmode
-	void CreateUniformBuffer();
-	void CreateSampler();
-	void CreateShader();
-	void CreateRenderState(); // sets up shaders, color blendings, msaa, 
-	void CreateVertexAttributeBinding();
+	// create and destroy vertex&indice buffers for use with geometry rendering
+	NeoGeometryBuffer* CreateGeometryBuffer(void* vertData, u32 bufferSize, void* indiceData, u32 indiceSize);
+	void DestroyGeometryBuffer(NeoGeometryBuffer* buffer);
+
+	// use material
+	void BindMaterial(class Material* material);
+
+	// bind geometry buffers
+	void BindGeometryBuffer(NeoGeometryBuffer* buffer);
+
+	// render primitive
+	void RenderPrimitive(PrimType primType, u32 vertStart, u32 vertCount, u32 indexStart, u32 indexCount);
 
 	// add model to render queue
 	// must be called on render thread
@@ -244,7 +259,6 @@ protected:
 	void recreateSwapChain();
 	void updateUniformBuffer(uint32_t currentImage);
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
-
 
 	// these methods are used by external functions like Texture Platform creation
 public:

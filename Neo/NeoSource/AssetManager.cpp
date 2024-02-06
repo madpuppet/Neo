@@ -39,7 +39,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			string assetDataPath = string("data:") + name + assetTypeInfo->m_assetExt;
 			fm.GetTime(assetDataPath, assetDateStamp);
 
-			LOG(Asset, STR("#1 Request Asset: {} [{}]", name, assetType));
+			LOG(Asset, STR(">> Request Asset: {} [{}]", name, assetType));
 
 			// get datestamp of each source file
 			stringlist srcFiles;

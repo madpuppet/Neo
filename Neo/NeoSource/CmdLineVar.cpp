@@ -43,7 +43,7 @@ void NeoParseCommandLine(int argc, char* argv[])
 
 void NeoDumpCmdLineVars()
 {
-	LOG(Any, "#1 DUMP COMMAND LINE VARIABLES");
+	LOG(Any, "## DUMP COMMAND LINE VARIABLES");
 	for (auto it : s_cmdLines)
 	{
 		it.second.dump();
@@ -52,7 +52,7 @@ void NeoDumpCmdLineVars()
 
 void CmdLineVar<bool>::Dump()
 {
-	LOG(Any, STR("#2 token: {}\ndesc: {}\ndefault: {}", m_name, m_desc, m_defaultValue));
+	LOG(Any, STR("-- token: {}\ndesc: {}\ndefault: {}", m_name, m_desc, m_defaultValue));
 	if (m_exists) LOG(CmdLine, STR("value: {}", m_value));
 }
 
@@ -67,7 +67,7 @@ void CmdLineVar<bool>::ProcessToken(stringlist values)
 
 void CmdLineVar<string>::Dump()
 {
-	LOG(Any, STR("#2 token: {}\ndesc: {}\ndefault: {}", m_name, m_desc, m_defaultValue));
+	LOG(Any, STR("-- token: {}\ndesc: {}\ndefault: {}", m_name, m_desc, m_defaultValue));
 	if (m_exists) LOG(CmdLine, STR("value: {}", m_value));
 }
 
@@ -88,7 +88,7 @@ void CmdLineVar<stringlist>::Dump()
 			defaultValue += ", ";
 	}
 
-	LOG(Any, STR("#2 token: {}\ndesc: {}\ndefault: {}", m_name, m_desc, defaultValue));
+	LOG(Any, STR("-- token: {}\ndesc: {}\ndefault: {}", m_name, m_desc, defaultValue));
 	if (m_exists)
 	{
 		string strValue;

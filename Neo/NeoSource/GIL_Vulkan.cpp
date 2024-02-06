@@ -210,22 +210,7 @@ void GIL::BeginFrame()
     renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    
-#if 0
-    VkViewport viewport{};
-    viewport.x = 0.0f;
-    viewport.y = 0.0f;
-    viewport.width = (float)m_swapChainExtent.width;
-    viewport.height = (float)m_swapChainExtent.height;
-    viewport.minDepth = 0.0f;
-    viewport.maxDepth = 1.0f;
-    vkCmdSetViewport(commandBuffer, 0, 1, &viewport);
-
-    VkRect2D scissor{};
-    scissor.offset = { 0, 0 };
-    scissor.extent = m_swapChainExtent;
-    vkCmdSetScissor(commandBuffer, 0, 1, &scissor);
-#endif
+  
 }
 
 void GIL::SetModelMatrix(const mat4x4& modelMat)
@@ -304,9 +289,10 @@ void GIL::EndFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    if (vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]) != VK_SUCCESS)
+    auto rc = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]);
+    if (rc != VK_SUCCESS)
     {
-        Error("failed to submit draw command buffer!");
+        Error(STR("failed to submit draw command buffer! rc {}", (int)rc));
     }
 
     VkPresentInfoKHR presentInfo{};
@@ -498,7 +484,7 @@ void GIL::createInstance() {
     appInfo.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
     appInfo.pEngineName = "No Engine";
     appInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
-    appInfo.apiVersion = VK_API_VERSION_1_0;
+    appInfo.apiVersion = VK_API_VERSION_1_3;
 
     VkInstanceCreateInfo createInfo{};
     createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
@@ -1080,9 +1066,10 @@ void GIL::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProp
     allocInfo.allocationSize = memRequirements.size;
     allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
 
-    if (vkAllocateMemory(m_device, &allocInfo, nullptr, &bufferMemory) != VK_SUCCESS)
+    auto rc = vkAllocateMemory(m_device, &allocInfo, nullptr, &bufferMemory);
+    if (rc != VK_SUCCESS)
     {
-        Error("failed to allocate buffer memory!");
+        Error(STR("failed to allocate buffer memory! RC {}", (int)rc));
     }
 
     vkBindBufferMemory(m_device, buffer, bufferMemory, 0);
@@ -1138,15 +1125,15 @@ void GIL::createDescriptorPool()
 {
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*2);
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*2);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT);
+    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*2);
 
     if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) 
     {
@@ -1373,6 +1360,53 @@ void GIL::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth,
     endSingleTimeCommands(commandBuffer);
 }
 
+// use material
+void GIL::BindMaterial(Material* material)
+{
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
+    auto materialPD = material->GetPlatformData();
+    if (materialPD)
+    {
+        auto commandBuffer = m_commandBuffers[m_currentFrame];
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipeline);
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 1, &materialPD->descriptorSets[m_currentFrame], 0, nullptr);
+    }
+}
+
+// bind geometry buffers
+void GIL::BindGeometryBuffer(NeoGeometryBuffer* buffer)
+{
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
+    auto commandBuffer = m_commandBuffers[m_currentFrame];
+    VkBuffer vertexBuffers[] = { buffer->vertexBuffer };
+    VkDeviceSize offsets[] = { 0 };
+    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
+    if (buffer->indexBuffer)
+    {
+        vkCmdBindIndexBuffer(commandBuffer, buffer->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
+    }
+}
+
+// render primitive
+void GIL::RenderPrimitive(PrimType primType, u32 vertStart, u32 vertCount, u32 indexStart, u32 indexCount)
+{
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
+    auto commandBuffer = m_commandBuffers[m_currentFrame];
+    vkCmdSetPrimitiveTopology(commandBuffer, VkPrimitiveTopology(primType));
+
+    if (indexCount == 0)
+    {
+        vkCmdDraw(commandBuffer, vertCount, 1, vertStart, 0);
+    }
+    else
+    {
+        vkCmdDrawIndexed(commandBuffer, indexCount, 1, indexStart, 0, 0);
+    }
+}
+
 
 void GIL::RenderStaticMesh(StaticMesh *mesh)
 {
@@ -1382,26 +1416,12 @@ void GIL::RenderStaticMesh(StaticMesh *mesh)
     auto meshPD = mesh->GetPlatformData();
     auto meshAD = mesh->GetAssetData();
     auto material = *(meshAD->material);
-    if (!meshPD || !meshAD || !material)
+    if (!meshPD || !meshAD || !material || !meshPD->geomBuffer)
         return;
 
-    auto materialPD = material->GetPlatformData();
-    auto materialAD = material->GetAssetData();
-    if (!materialPD || !materialAD)
-        return;
-
-    auto commandBuffer = m_commandBuffers[m_currentFrame];
-    vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipeline);
-
-    VkBuffer vertexBuffers[] = { meshPD->vertexBuffer };
-    VkDeviceSize offsets[] = { 0 };
-    vkCmdBindVertexBuffers(commandBuffer, 0, 1, vertexBuffers, offsets);
-
-    vkCmdBindIndexBuffer(commandBuffer, meshPD->indexBuffer, 0, VK_INDEX_TYPE_UINT32);
-
-    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 1, &materialPD->descriptorSets[m_currentFrame], 0, nullptr);
-
-    vkCmdDrawIndexed(commandBuffer, meshPD->indiceCount, 1, 0, 0, 0);
+    BindMaterial(material);
+    BindGeometryBuffer(meshPD->geomBuffer);
+    RenderPrimitive(PrimType_TriangleList, 0, 0, 0, meshPD->indiceCount);;
 }
 
 
@@ -1428,10 +1448,6 @@ bool GIL::ShowMessageBox(const string& string)
     return result == 1;
 }
 
-void GIL::CreateSampler()
-{
-}
-
 float GIL::GetJoystickAxis(int idx)
 {
     float joyval = Clamp(SDL_JoystickGetAxis(m_joystick, idx) / 32767.0f, -1.0f, 1.0f);
@@ -1439,3 +1455,58 @@ float GIL::GetJoystickAxis(int idx)
         joyval = 0.0f;
     return joyval;
 }
+
+NeoGeometryBuffer* GIL::CreateGeometryBuffer(void* vertData, u32 vertDataSize, void* indiceData, u32 indiceDataSize)
+{
+    auto buffer = new NeoGeometryBuffer;
+
+    VkBuffer vertStagingBuffer;
+    VkDeviceMemory vertStagingBufferMemory;
+    createBuffer(vertDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertStagingBuffer, vertStagingBufferMemory);
+
+    void* data;
+    vkMapMemory(m_device, vertStagingBufferMemory, 0, vertDataSize, 0, &data);
+    memcpy(data, vertData, (size_t)vertDataSize);
+    vkUnmapMemory(m_device, vertStagingBufferMemory);
+
+    createBuffer(vertDataSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer->vertexBuffer, buffer->vertexBufferMemory);
+    copyBuffer(vertStagingBuffer, buffer->vertexBuffer, vertDataSize);
+
+    vkDestroyBuffer(m_device, vertStagingBuffer, nullptr);
+    vkFreeMemory(m_device, vertStagingBufferMemory, nullptr);
+
+    if (indiceDataSize)
+    {
+        VkBuffer indiceStagingBuffer;
+        VkDeviceMemory indiceStagingBufferMemory;
+        createBuffer(indiceDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, indiceStagingBuffer, indiceStagingBufferMemory);
+    
+        void* data;
+        vkMapMemory(m_device, indiceStagingBufferMemory, 0, indiceDataSize, 0, &data);
+        memcpy(data, indiceData, (size_t)indiceDataSize);
+        vkUnmapMemory(m_device, indiceStagingBufferMemory);
+
+        createBuffer(indiceDataSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer->indexBuffer, buffer->indexBufferMemory);
+        copyBuffer(indiceStagingBuffer, buffer->indexBuffer, indiceDataSize);
+
+        vkDestroyBuffer(m_device, indiceStagingBuffer, nullptr);
+        vkFreeMemory(m_device, indiceStagingBufferMemory, nullptr);
+    }
+    return buffer;
+}
+void GIL::DestroyGeometryBuffer(NeoGeometryBuffer* buffer)
+{
+    if (buffer)
+    {
+        vkDestroyBuffer(m_device, buffer->vertexBuffer, nullptr);
+        vkFreeMemory(m_device, buffer->vertexBufferMemory, nullptr);
+        if (buffer->indexBuffer)
+        {
+            vkDestroyBuffer(m_device, buffer->indexBuffer, nullptr);
+            vkFreeMemory(m_device, buffer->indexBufferMemory, nullptr);
+        }
+        delete buffer;
+    }
+}
+
+

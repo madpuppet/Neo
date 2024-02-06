@@ -3,6 +3,7 @@
 #include "Module.h"
 #include "StaticMesh.h"
 #include "View.h"
+#include "PolyRenderer.h"
 
 class Application : public Module<Application>
 {
@@ -19,5 +20,7 @@ protected:
 	mat4x4 m_modelMatrix;
 	vec3 m_cameraPYR = { 0,0,0 };
 	vec3 m_cameraPos = { 0,0,0 };
+	PolyRenderer m_render;
+	MaterialRef m_particleMat;
 };
 

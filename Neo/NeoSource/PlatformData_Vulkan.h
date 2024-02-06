@@ -36,10 +36,7 @@ void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);
 
 struct StaticMeshPlatformData
 {
-	VkBuffer vertexBuffer = nullptr;
-	VkDeviceMemory vertexBufferMemory = nullptr;
-	VkBuffer indexBuffer = nullptr;
-	VkDeviceMemory indexBufferMemory = nullptr;
+	struct NeoGeometryBuffer* geomBuffer = nullptr;
 	u32 indiceCount = 0;
 };
 StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData* assetData);

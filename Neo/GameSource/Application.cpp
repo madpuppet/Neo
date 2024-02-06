@@ -29,6 +29,8 @@ Application::Application()
 
 	m_cameraPYR = { DegToRad(45.0f), 0, 0};
 	m_cameraPos = { 0, 1.5f, -1.0f };
+
+	m_particleMat.Create("particles");
 }
 
 Application::~Application()
@@ -53,6 +55,32 @@ void Application::Update()
 	m_cameraPos += x * vec3(camMatrix[0]) + y * vec3(camMatrix[2]);
 	camMatrix[3] = vec4(m_cameraPos, 1.0);
 	m_view.SetCameraMatrix(camMatrix);
+
+	m_render.BeginFrame();
+	m_render.UseMaterial(m_particleMat);
+	m_render.StartPrimitive(PrimType_TriangleList);
+
+	static float time = 0.0f;
+	time += dt;
+	time = fmodf(time, 2 * PI);
+	for (int i = 0; i < 1000; i++)
+	{
+		float x = sinf(time * 2.0f) * 0.5f + cosf(time + i) * 0.5f;
+		float y = sinf(time+i*0.1f) + cosf(time*4.0f)*0.1f;
+		float z = (float)i / 500.0f;
+		vec3 pos1{ x+0.1f, y, z };
+		vec3 pos2{ x-0.1f, y, z };
+		vec3 pos3{ x, y+0.1f, z };
+		vec2 uv1{ 0,0 };
+		vec2 uv2{ 1,0 };
+		vec2 uv3{ 0.5f,1.0f };
+		u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
+		m_render.AddVert(pos1, uv1, col);
+		m_render.AddVert(pos2, uv2, col);
+		m_render.AddVert(pos3, uv3, col);
+	}
+	m_render.EndPrimitive();
+	m_render.EndFrame();
 }
 
 void Application::Draw()
@@ -64,5 +92,6 @@ void Application::Draw()
 	m_view.Apply();
 	GIL::Instance().SetModelMatrix(m_modelMatrix);
 	GIL::Instance().RenderStaticMesh(m_vikingRoom);
+	m_render.Draw();
 }
 

@@ -78,7 +78,7 @@ int main(int argc, char* argv[])
 
 #if defined(_DEBUG)
 
-void Error(const string &msg)
+void Error(const string& msg)
 {
     NOMEMTRACK();
     string errorStr = string("ERROR: ") + msg + "\n";
@@ -86,8 +86,16 @@ void Error(const string &msg)
 #if defined(PLATFORM_Windows)
     OutputDebugStringA(errorStr.c_str());
 #endif
-    if (GIL::Instance().ShowMessageBox(errorStr))
+
+    if (Thread::IsOnThread(ThreadGUID_Main))
+    {
+        if (GIL::Instance().ShowMessageBox(errorStr))
+            __debugbreak();
+    }
+    else
+    {
         __debugbreak();
+    }
 }
 
 #endif

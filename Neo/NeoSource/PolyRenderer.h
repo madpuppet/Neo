@@ -17,23 +17,31 @@ class PolyRenderer
 		u32 cmdData = 0;		// material IDX or Primitive Type
 		u32 vertStart = 0;
 		u32 vertCount = 0;
-		u32 indiceStart = 0;
-		u32 indiceCount = 0;
+		u32 indexStart = 0;
+		u32 indexCount = 0;
 	};
 	vector<Vertex> m_verts;
 	vector<u32> m_indices;
-	vector<MaterialRef> m_materials;
-	vector<Cmd> m_cmds;
+	vector<MaterialRef> m_materials[2];
+	vector<Cmd> m_cmds[2];
+	struct NeoGeometryBuffer* m_geomBuffer[3]{};
 
 	PrimType m_primitiveType = PrimType_TriangleList;
-	int m_currentFrame = 0;
 	u32 m_vertStart = 0;
-	u32 m_indiceStart = 0;
+	u32 m_indexStart = 0;
+	int m_currentFrame = 0;
+	int m_currentGeomBuffer = 0;
 
 public:
+	// these functions used drawing the draw frame
 	void BeginFrame();
 	void UseMaterial(Material* mat);
-	void StartPrimitve(PrimType primType);
+	void StartPrimitive(PrimType primType);
 	void AddVert(vec3 pos, vec2 uv, u32 col);
+	void EndPrimitive();
+	void EndFrame();
+
+	// this function used when ready to actually render the cmd list on the RenderThread
+	void Draw();
 };
 

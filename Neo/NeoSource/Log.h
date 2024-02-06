@@ -6,6 +6,6 @@ extern void NeoEnableLogFiltering(bool enable);
 extern bool NeoLogEnabled(const string &filter);
 extern void NeoLog(const string &filter, const string& text);
 extern bool __NeoLogFilteringEnabled;
-extern CmdLineVar<bool> CLV_DisableLogging;
+extern CmdLineVar<bool> CLV_EnableLogging;
 
-#define LOG(filter, text) if (!CLV_DisableLogging.Value() && (!__NeoLogFilteringEnabled || NeoLogEnabled(#filter))) NeoLog(#filter, text)
+#define LOG(filter, text) if (CLV_EnableLogging.Value() && (!__NeoLogFilteringEnabled || NeoLogEnabled(#filter))) NeoLog(#filter, text)

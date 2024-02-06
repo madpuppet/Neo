@@ -2,8 +2,9 @@
 #include "Log.h"
 #include "StringUtils.h"
 
-CmdLineVar<bool> CLV_DisableLogging("nolog","disable logging",false);
+CmdLineVar<bool> CLV_EnableLogging("logenable","enable logging",true);
 CmdLineVar<string> CLV_LogFile("logfile", "set path to log file", "local:log.txt");
+CmdLineVar<bool> CLV_LogTimes("logtime", "show timestamp on logs", true);
 
 bool __NeoLogFilteringEnabled = false;
 
@@ -23,12 +24,12 @@ void NeoSetLogFilters(const stringlist& filters)
 
 bool NeoLogEnabled(const string& filter)
 {
-	return !CLV_DisableLogging.Value() && (filter.empty() || (s_filtersEnabled.find(filter) != s_filtersEnabled.end()));
+	return CLV_EnableLogging.Value() && (filter.empty() || (s_filtersEnabled.find(filter) != s_filtersEnabled.end()));
 }
 
 void NeoEnableFileLogging()
 {
-	if (!CLV_DisableLogging.Value())
+	if (CLV_EnableLogging.Value())
 		FileManager::Instance().StreamWriteBegin(s_logHandle, CLV_LogFile.Value());
 }
 

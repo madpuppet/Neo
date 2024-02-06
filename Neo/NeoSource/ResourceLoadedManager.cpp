@@ -9,7 +9,7 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 	// find any callbacks to this resource
 	ScopedMutexLock lock(m_mutex);
 
-	LOG(Asset, STR("#2 COMPLETED: {} [{}]",resource->GetName(), resource->GetAssetType()));
+	LOG(Asset, STR("<< COMPLETED: {} [{}]",resource->GetName(), resource->GetAssetType()));
 
 	// we need to do this here, so it is mutex locked
 	resource->MarkIsLoaded();

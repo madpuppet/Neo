@@ -9,4 +9,6 @@ void TimeManager::Update()
 	std::chrono::duration<double> diff = timeNow - m_lastTime;
 	m_timeDelta = diff.count();
 	m_lastTime = timeNow;
+
+	LOG(Time, STR("DeltaTime {}ms {}fps", (int)(m_timeDelta * 1000), 1.0f / m_timeDelta));
 }
