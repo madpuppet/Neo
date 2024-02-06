@@ -143,12 +143,12 @@ bool TextureAssetData::MemoryToAsset(const MemBlock& block)
 
 	if (type != AssetType_Texture)
 	{
-		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Texture));
+		LOG(Texture, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Texture));
 		return false;
 	}
 	if (version != TEXTURE_VERSION)
 	{
-		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, TEXTURE_VERSION));
+		LOG(Texture, STR("Rebuilding {} - old version {} - expected {}", name, version, TEXTURE_VERSION));
 		return false;
 	}
 

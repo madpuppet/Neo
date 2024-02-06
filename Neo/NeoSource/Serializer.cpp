@@ -433,7 +433,7 @@ Serializer_BinaryStreamWrite::Serializer_BinaryStreamWrite(const string &filenam
 	}
 	else
 	{
-		Log(string("Failed to create file: ") + filename);
+		LOG(File, string("Failed to create file: ") + filename);
 		m_rawMem = 0;
 		m_compressedMem = 0;
 	}
@@ -614,7 +614,7 @@ Serializer_BinaryStreamRead::Serializer_BinaryStreamRead(const string &filename)
 		m_memSize = 0;
 		m_chunkStackSize = 0;
 		SetError(SerializerError_FileNotFound);
-		Log(string("Unable to open stream: ") + filename);
+		LOG(File, string("Unable to open stream: ") + filename);
 	}
 }
 

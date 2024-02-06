@@ -152,9 +152,6 @@ typedef u64             CallbackHandle;
 CallbackHandle AllocUniqueCallbackHandle();
 
 #define STR(...) std::format(__VA_ARGS__)
-#define LOG(...) Log(STR(__VA_ARGS__))
-
-void Log(const string &msg);
 
 #if defined(_DEBUG)
 void Error(const string &msg);
@@ -166,6 +163,8 @@ inline void Error(const string& msg) {}
 
 #include "Memory.h"
 #include "Module.h"
+#include "CmdLineVar.h"
+#include "Log.h"
 #include "GIL_Common.h"
 
 extern const char* GAME_NAME;

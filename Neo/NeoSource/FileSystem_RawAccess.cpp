@@ -5,7 +5,7 @@
 FileSystem_RawAccess::FileSystem_RawAccess(const string &name, int priority, bool writable)
 	: m_name(name), m_priority(priority), m_writable(writable)
 {
-	Log(std::format("Mount Raw Access [{}]",name));
+	LOG(File, std::format("Mount Raw Access [{}]",name));
 }
 
 FileSystem_RawAccess::~FileSystem_RawAccess()

@@ -51,8 +51,8 @@ struct StaticMeshAssetData : public AssetData
 	struct Vertex
 	{
 		vec3 pos;
-		vec3 col;
 		vec2 uv;
+		u32 col;
 		bool operator==(const Vertex& other) const {
 			return pos == other.pos && col == other.col && uv == other.uv;
 		}
@@ -67,7 +67,7 @@ struct StaticMeshAssetData : public AssetData
 namespace std {
 	template<> struct hash<StaticMeshAssetData::Vertex> {
 		size_t operator()(StaticMeshAssetData::Vertex const& vertex) const {
-			return ((hash<vec3>()(vertex.pos) ^ (hash<vec3>()(vertex.col) << 1)) >> 1) ^ (hash<vec2>()(vertex.uv) << 1);
+			return ((hash<vec3>()(vertex.pos) ^ (hash<u32>()(vertex.col) << 1)) >> 1) ^ (hash<vec2>()(vertex.uv) << 1);
 		}
 	};
 }

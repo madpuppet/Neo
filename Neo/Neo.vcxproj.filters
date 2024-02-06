@@ -363,6 +363,9 @@
     <None Include="SourceData\shaders\standard.psh">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="SourceData\shaders\standard.vsh">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="NeoSource\MemBlock.h">
@@ -689,7 +692,7 @@
     <ClInclude Include="NeoSource\Memory.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\Timer.h">
+    <ClInclude Include="NeoSource\TimeManager.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
     <ClInclude Include="GameSource\Application.h">
@@ -1517,6 +1520,15 @@
     <ClInclude Include="NeoSource\PixelShader.h">
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\Log.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\CmdLineVar.h">
+      <Filter>NeoSource</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\PolyRenderer.h">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1633,13 +1645,20 @@
     <ClCompile Include="NeoSource\PixelShader.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
+    <ClCompile Include="NeoSource\TimeManager.cpp">
+      <Filter>NeoSource</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Log.cpp">
+      <Filter>NeoSource</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\CmdLineVar.cpp">
+      <Filter>NeoSource</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\PolyRenderer.cpp">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
-  </ItemGroup>
-  <ItemGroup>
-    <FxCompile Include="SourceData\shaders\standard.vsh">
-      <Filter>Shaders</Filter>
-    </FxCompile>
   </ItemGroup>
 </Project>

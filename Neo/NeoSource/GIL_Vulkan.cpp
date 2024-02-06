@@ -54,7 +54,7 @@ VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMes
 
 static VKAPI_ATTR VkBool32 VKAPI_CALL DebugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData)
 {
-    Log(STR("Warning - validation layer: {}", pCallbackData->pMessage));
+    LOG(Gfx, STR("Warning - validation layer: {}", pCallbackData->pMessage));
     return VK_FALSE;
 }
 
@@ -63,7 +63,7 @@ void GIL::StartupMainThread()
     // create WINDOW
     if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_TIMER) < 0)
     {
-        Log(STR("SDL could not initialize! SDL Error: {}\n", SDL_GetError()));
+        LOG(Gfx, STR("SDL could not initialize! SDL Error: {}\n", SDL_GetError()));
         exit(0);
     }
 
@@ -146,7 +146,7 @@ void GIL::createFormatMappings()
             vkGetPhysicalDeviceFormatProperties(m_physicalDevice, fmt.second, &formatProperties);
 
             if (!(formatProperties.linearTilingFeatures & VK_FORMAT_FEATURE_SAMPLED_IMAGE_BIT))
-                Log(STR("Texture Format {} => {} Not Supported", (int)fmt.first, (int)fmt.second));
+                LOG(Texture, STR("Texture Format {} => {} Not Supported", (int)fmt.first, (int)fmt.second));
         }
     }
 }

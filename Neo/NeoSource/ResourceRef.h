@@ -10,7 +10,15 @@ public:
 	ResourceRef(const ResourceRef &o) : m_ptr(0) { Set(o.m_ptr); }
 
 	// move - just copy the ptr and clear the old pointer. reference count stays the same
-	ResourceRef(const ResourceRef&& o) noexcept : m_ptr(o.m_ptr) { o.m_ptr = 0; }
+	ResourceRef(ResourceRef&& o) noexcept : m_ptr(o.m_ptr) { o.m_ptr = 0; }
+
+	// create from a type ptr
+	ResourceRef(T* o)
+	{
+		m_ptr = o;
+		if (m_ptr)
+			m_ptr->IncRef();
+	}
 
 	T* operator *() const         { return const_cast<T*>(m_ptr); }
 	T* operator ->() const        { return const_cast<T*>(m_ptr); }

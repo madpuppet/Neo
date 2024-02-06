@@ -10,7 +10,7 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
-    Log(STR("PLATFORM DATA for TEXTURE: {}", assetData->name));
+    LOG(Texture, STR("PLATFORM DATA for TEXTURE: {}", assetData->name));
 
     TexturePlatformData* platformData = new TexturePlatformData;
 
@@ -100,7 +100,7 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
-    Log(STR("PLATFORM DATA for MATERIAL: {}", assetData->name));
+    LOG(Material, STR("PLATFORM DATA for MATERIAL: {}", assetData->name));
 
     auto platformData = new MaterialPlatformData;
     auto& gil = GIL::Instance();
@@ -313,7 +313,7 @@ StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
-    Log(STR("PLATFORM DATA for StaticMesh: {}", assetData->name));
+    LOG(Gfx, STR("PLATFORM DATA for StaticMesh: {}", assetData->name));
 
     auto& gil = GIL::Instance();
     auto platformData = new StaticMeshPlatformData;

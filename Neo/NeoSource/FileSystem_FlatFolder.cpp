@@ -8,7 +8,7 @@ FileSystem_FlatFolder::FileSystem_FlatFolder(const string &name, const string &f
     , m_readDirBuffer(0), m_rootFolderHandle(0)
 #endif
 {
-	Log(std::format("Mount Flat Folder FS [{}] : {}", name, folder));
+	LOG(File, std::format("Mount Flat Folder FS [{}] : {}", name, folder));
 	Rescan();
 	
 #if defined(PLATFORM_Windows)
@@ -280,7 +280,7 @@ bool FileSystem_FlatFolder::Rename(const string &oldName, const string &newName)
 
 	if (Exists(newName))
 	{
-		Log(std::format("Attempt to rename {} to {} but name already exists!", oldName, newName));
+		LOG(File, std::format("Attempt to rename {} to {} but name already exists!", oldName, newName));
 		return false;
 	}
 
@@ -298,7 +298,7 @@ bool FileSystem_FlatFolder::Rename(const string &oldName, const string &newName)
 			AddEntry(StringGetFilename(winNew), winNew);
 			return true;
 		}
-		Log(std::format("Failed trying to rename: {} -> {}", winExisting, winNew));
+		LOG(File, std::format("Failed trying to rename: {} -> {}", winExisting, winNew));
 	}
 	return false;
 	
@@ -423,7 +423,7 @@ void FileSystem_FlatFolder::ScanFolder(const string &folder)
 #if defined(_DEBUG)
 						Error(std::format("Duplicate Files: {} == {}", path, existing->second->fullPath));
 #else
-						Log(std::format("Duplicate Files: {} == {}\n", path, existing->second->fullPath));
+						LOG(File, std::format("Duplicate Files: {} == {}\n", path, existing->second->fullPath));
 #endif
 					}
 				}

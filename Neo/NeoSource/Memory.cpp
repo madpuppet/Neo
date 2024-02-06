@@ -1,6 +1,5 @@
 #include "Neo.h"
 #include "Memory.h"
-#include "Timer.h"
 #include "FileManager.h"
 
 bool gMemTrackEnabled = false;

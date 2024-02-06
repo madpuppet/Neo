@@ -28,9 +28,16 @@
 #include "Application.h"  //TODO: we shouldn't know about Application - it should just itself to a generic update callback
 #include "RenderThread.h"
 
-int main(int argc, char* args[])
+CmdLineVar<stringlist> CLV_LogFilter("log", "select log filters to show", { "" });
+
+int main(int argc, char* argv[])
 {
     gMemoryTracker.EnableTracking(true);
+    NeoParseCommandLine(argc, argv);
+    if (CLV_LogFilter.Exists())
+        NeoSetLogFilters(CLV_LogFilter.Value());
+
+    NeoDumpCmdLineVars();
     NeoStartupModules();
 
     bool m_quit = false;
@@ -67,16 +74,6 @@ int main(int argc, char* args[])
     gMemoryTracker.Dump();
     NeoShutdownModules();
     return EXIT_SUCCESS;
-}
-
-void Log(const string& msg)
-{
-    NOMEMTRACK();
-    string outStr = msg + "\n";
-    printf("%s", outStr.c_str());
-#if defined(PLATFORM_Windows)
-    OutputDebugString(outStr.c_str());
-#endif
 }
 
 #if defined(_DEBUG)

@@ -339,7 +339,7 @@ bool FileManager::StreamWriteEnd(FileHandle handle)
 
 bool FileManager::StreamReadBegin(FileHandle &handle, const string &name)
 {
-	Log(std::format("Stream Read {}", name));
+	LOG(File, std::format("Stream Read {}", name));
 
 	SCOPED_MUTEX;
 	handle = ++m_nextUniqueFileHandle;

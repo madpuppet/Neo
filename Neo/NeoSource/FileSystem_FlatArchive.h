@@ -34,7 +34,7 @@ public:
 	virtual bool Write(const string &name, MemBlock &block) { return false; }
 	virtual bool Delete(const string &name) { return false; }
 	virtual bool Rename(const string &oldName, const string &newName) { return false; }
-	virtual bool StreamWriteBegin(FileHandle handle, const string &name) { return false; }
+	virtual bool StreamWriteBegin(FileHandle handle, const string &name) override { return false; }
 	virtual bool StreamWrite(FileHandle handle, u8 *mem, u32 size) { return false; }
 	virtual bool StreamFlush(FileHandle handle) { return false; }
 	virtual bool StreamWriteEnd(FileHandle handle) { return false; }

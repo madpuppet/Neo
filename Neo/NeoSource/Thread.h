@@ -172,7 +172,7 @@ public:
     ~WorkerThread()
     {
         StopAndWait();
-        Log(STR("Worker Thread {} successfully shutdown", GetName()));
+        LOG(Asset, STR("Worker Thread {} successfully shutdown", GetName()));
     }
 
     // @param task - typically a lambda function that you want to run on this thread. it will be called once only and then forgotten
@@ -198,7 +198,7 @@ public:
             task();
             m_taskSignals.Wait();
         }
-        Log(STR("Worker Thread {} Go is exitting...", GetName()));
+        LOG(Asset, STR("Worker Thread {} Go is exitting...", GetName()));
         return 0;
     }
 

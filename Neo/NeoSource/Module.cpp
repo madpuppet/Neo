@@ -44,7 +44,7 @@ void NeoStartupModules()
 
 	for (int i=0; i<s_moduleCount; i++)
 	{
-		Log(string("STARTUP MODULE: ") + s_modules[i]->name);
+		LOG(Module,string("STARTUP MODULE: ") + s_modules[i]->name);
 		s_modules[i]->base = s_modules[i]->newFunc();
 	}
 }
@@ -53,7 +53,7 @@ void NeoShutdownModules()
 {
 	for (int i=s_moduleCount-1; i>=0; --i)
 	{
-		Log(string("Shutdown module: ") + s_modules[i]->name);
+		LOG(Module,string("Shutdown module: ") + s_modules[i]->name);
 		s_modules[i]->deleteFunc();
 	}
 }

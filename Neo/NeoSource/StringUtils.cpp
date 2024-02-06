@@ -262,4 +262,27 @@ int StringFindInList(const string& str, const stringlist& list)
     return -1;
 }
 
+// Split a string into a vector of strings using a comma as a delimiter
+vector<string> StringSplit(const string& src, char delimiter)
+{
+    vector<string> result;
+    std::istringstream iss(src);
+    string token;
 
+    while (std::getline(iss, token, delimiter)) 
+    {
+        result.push_back(StringTrim(token));
+    }
+    return result;
+}
+
+string StringTrim(const string& str)
+{
+    size_t first = str.find_first_not_of(" \t\n\r");
+    size_t last = str.find_last_not_of(" \t\n\r");
+
+    if (first == std::string::npos || last == std::string::npos)
+        return "";
+
+    return str.substr(first, last - first + 1);
+}

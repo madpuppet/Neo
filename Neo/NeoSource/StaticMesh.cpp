@@ -10,7 +10,7 @@
 #include <sstream>
 #include <streambuf>
 
-#define STATICMESH_VERSION 1
+#define STATICMESH_VERSION 2
 
 DECLARE_MODULE(StaticMeshFactory, NeoModuleInitPri_StaticMeshFactory, NeoModulePri_None, NeoModulePri_None);
 
@@ -147,7 +147,7 @@ bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreat
 				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
 			};
 
-			vertex.col = { 1.0f, 1.0f, 1.0f };
+			vertex.col = vec4ToR8G8B8A8({ 1.0f, 1.0f, 1.0f, 1.0f });
 
 			if (uniqueVertices.count(vertex) == 0) {
 				uniqueVertices[vertex] = static_cast<uint32_t>(verts.size());
@@ -221,12 +221,12 @@ bool StaticMeshAssetData::MemoryToAsset(const MemBlock& block)
 
 	if (type != AssetType_StaticMesh)
 	{
-		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_StaticMesh));
+		LOG(Mesh, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_StaticMesh));
 		return false;
 	}
 	if (version != STATICMESH_VERSION)
 	{
-		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, STATICMESH_VERSION));
+		LOG(Mesh, STR("Rebuilding {} - old version {} - expected {}", name, version, STATICMESH_VERSION));
 		return false;
 	}
 

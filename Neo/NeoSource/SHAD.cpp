@@ -381,7 +381,7 @@ SHADReader_Node *SHADReader::ReadNode()
 				m_tabSize = indent;
 			if ((indent % m_tabSize) != 0 && m_errorsLogged<10)
 			{
-				Log(STR("{}({}): has bad indent of {} (should be multiple of first indent: {})!", m_filename, m_currentLine, indent, m_tabSize));
+				LOG(SHAD, STR("{}({}): has bad indent of {} (should be multiple of first indent: {})!", m_filename, m_currentLine, indent, m_tabSize));
 				m_errorsLogged++;
 			}
 		}
@@ -451,7 +451,7 @@ SHADReader_Node *SHADReader::ParseNode(SHADReader_Node *parent, SHADReader_Node 
 		}
 		else
 		{
-			Log(STR("{}({}) Aborting parse: Unexpected node indent {}", m_filename, m_currentLine, node->indent));
+			LOG(SHAD, STR("{}({}) Aborting parse: Unexpected node indent {}", m_filename, m_currentLine, node->indent));
 			parent->childCount = 0;
 			return 0;
 		}
@@ -656,15 +656,15 @@ void SHADReader_Node::Dump()
 	if (childCount > 0)
 	{
 		line+=" {";
-		Log(line);
+		LOG(SHAD, line);
 		for (u32 i=0; i<childCount; i++)
 			children[i]->Dump();
 		string closeLine;
 		if (indent > 0)
 			closeLine = string(spaces, &spaces[indent * 2]);
 		closeLine += "}";
-		Log(closeLine);
+		LOG(SHAD, closeLine);
 	}
 	else
-		Log(line);
+		LOG(SHAD, line);
 }

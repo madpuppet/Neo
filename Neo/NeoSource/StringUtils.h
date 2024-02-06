@@ -52,6 +52,12 @@ bool StringSplit(const string& input, string& left, string& right, char delimite
 // split an absolute path string into a filesystem and a path
 void StringSplitIntoFSAndPath(const string& str, string& fs, string& path);
 
+// split string into parts
+vector<string> StringSplit(const string& src, char delimiter);
+
+// trim white space off the string
+string StringTrim(const string& str);
+
 // some wrappers for getting info frame paths
 inline string StringGetDirectory(const string &path) { string fs, d; StringSplitIntoFileParts(path, &fs, &d, 0, 0); return fs + d; }
 inline string StringGetPathNoExt(const string& path) { string fs, d, fn; StringSplitIntoFileParts(path, &fs, &d, &fn, 0); return StringAddPath(fs + d, fn); }

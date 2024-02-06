@@ -1,9 +1,11 @@
 #pragma once
 
+#include "TimeManager.h"
+
 class Resource
 {
 public:
-	Resource(const string &name) : m_name(name) {}
+	Resource(const string& name) : m_name(name) { m_creationStartTime = NeoTimeNow; }
 	virtual ~Resource() {}
 
 	int IncRef() { return ++m_refCount; }
@@ -27,5 +29,7 @@ protected:
 	bool m_dataLoaded = false;
 	bool m_failedToLoad = false;
 	friend class ResourceLoadedManager;
+
+	double m_creationStartTime;
 };
 

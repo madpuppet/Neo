@@ -12,6 +12,7 @@ enum GetFolderListMode
 };
 
 typedef u32 FileHandle;
+#define nullFileHandle 0
 
 typedef std::function<void(class FileSystem*, const string&)> FileSystem_FileChangeCallback;
 typedef std::function<bool(const string &)> FileSystem_FilenameFilterDelegate;

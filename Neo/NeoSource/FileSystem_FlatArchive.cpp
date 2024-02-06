@@ -8,7 +8,7 @@
 FileSystem_FlatArchive::FileSystem_FlatArchive(const string &name, const string &path, int priority)
 	: m_name(name), m_path(path), m_priority(priority), m_dataStart(0)
 {
-	Log(std::format("MOUNT ARCHIVE: {}", name));
+	LOG(File, std::format("MOUNT ARCHIVE: {}", name));
 
 	m_threadID = Thread::CurrentThreadID();
 	m_fh = fopen(path.c_str(), "rb");
@@ -31,7 +31,7 @@ FileSystem_FlatArchive::FileSystem_FlatArchive(const string &name, const string 
 					m_entries.insert(std::pair<u64, TOCEntry*>(hash, entry));
 					tocPtr += entry->tocEntrySize;
 
-					Log(std::format("TOC: <{}->{}> {}", entry->compressedSize, entry->decompressedSize, entry->name));
+					LOG(File, std::format("TOC: <{}->{}> {}", entry->compressedSize, entry->decompressedSize, entry->name));
 				}
 			}
 			else
@@ -111,12 +111,12 @@ bool FileSystem_FlatArchive::Exists(const string &name)
 
 void FileSystem_FlatArchive::GetListByFolder(const string &folder, std::vector<string> &files, GetFolderListMode folderMode)
 {
-	Log("GetListByFolder NOT IMPLEMENTED!");
+	LOG(File, "GetListByFolder NOT IMPLEMENTED!");
 }
 
 void FileSystem_FlatArchive::GetListByExcludes(FileExcludes *excludes, std::vector<string> &files)
 {
-	Log("GetListByExcludes NOT IMPLEMENTED!");
+	LOG(File, "GetListByExcludes NOT IMPLEMENTED!");
 }
 
 void FileSystem_FlatArchive::GetListByDelegate(const FileSystem_FilenameFilterDelegate &fileChecker, std::vector<string> &list)
@@ -171,7 +171,7 @@ bool FileSystem_FlatArchive::StreamReadBegin(FileHandle handle, const string &na
 	auto fileStream = new FileStream;
 	if (Read(name, fileStream->memory))
 	{
-		Log(std::format("STREAM READ BEGIN {} -> {}", name, fileStream->memory.Size()));
+		LOG(File, std::format("STREAM READ BEGIN {} -> {}", name, fileStream->memory.Size()));
 		fileStream->id = handle;
 		fileStream->readPtr = fileStream->memory.Mem();
 		fileStream->remaining = (u32)fileStream->memory.Size();
@@ -274,7 +274,7 @@ void FileSystem_FlatArchive::WriteArchive(const string &outputFile)
 		toc->offset = dataOffset;
 		toc->tocEntrySize = btoc->tocEntrySize;
 		dataOffset += toc->compressedSize;
-		Log(STR("TOC[%5d] : <%d -> %d>(%d%%) @ %8d %s", btoc->tocEntryOffset, toc->decompressedSize, toc->compressedSize, toc->compressedSize * 100 / toc->decompressedSize, toc->offset, toc->name));
+		LOG(File, STR("TOC[%5d] : <%d -> %d>(%d%%) @ %8d %s", btoc->tocEntryOffset, toc->decompressedSize, toc->compressedSize, toc->compressedSize * 100 / toc->decompressedSize, toc->offset, toc->name));
 	}
 
 	// finally ready to write out the toc and those files out

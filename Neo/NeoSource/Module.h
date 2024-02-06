@@ -6,6 +6,7 @@ enum NeoModuleInitPri
 {
 	NeoModuleInitPri_FileManager,
 	NeoModuleInitPri_AssetManager,
+	NeoModuleInitPri_TimeManager,
 	NeoModuleInitPri_ResourceLoadedManager,
 	NeoModuleInitPri_TextureFactory,
 	NeoModuleInitPri_VertexShaderFactory,

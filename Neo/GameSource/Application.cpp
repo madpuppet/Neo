@@ -1,6 +1,7 @@
 #include "Neo.h"
 #include "Application.h"
 #include "RenderThread.h"
+#include "TimeManager.h"
 
 DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early, NeoModulePri_Early);
 
@@ -36,10 +37,11 @@ Application::~Application()
 
 void Application::Update()
 {
-	float x = GIL::Instance().GetJoystickAxis(0) * 0.001f;
-	float y = -GIL::Instance().GetJoystickAxis(1) * 0.001f;
-	float yaw = GIL::Instance().GetJoystickAxis(2) * 0.001f;
-	float pitch = GIL::Instance().GetJoystickAxis(3) * 0.001f;
+	float dt = (float)NeoTimeDelta;
+	float x = GIL::Instance().GetJoystickAxis(0) * dt;
+	float y = -GIL::Instance().GetJoystickAxis(1) * dt;
+	float yaw = GIL::Instance().GetJoystickAxis(2) * dt;
+	float pitch = GIL::Instance().GetJoystickAxis(3) * dt;
 
 	m_cameraPYR.x += pitch;
 	m_cameraPYR.y += yaw;

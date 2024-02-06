@@ -39,7 +39,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			string assetDataPath = string("data:") + name + assetTypeInfo->m_assetExt;
 			fm.GetTime(assetDataPath, assetDateStamp);
 
-			Log(STR("#1 Request Asset: {} [{}]", name, assetType));
+			LOG(Asset, STR("#1 Request Asset: {} [{}]", name, assetType));
 
 			// get datestamp of each source file
 			stringlist srcFiles;
@@ -58,7 +58,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 				// if this is a non-optional source file and it wasn't found, then we can't convert the asset
 				if (srcExt.second && (ext == -1 || srcDateStamp == 0))
 				{
-					Log(std::format("Asset '{}' [{}] missing src file {}", name, assetType, idx));
+					LOG(Asset, std::format("Asset '{}' [{}] missing src file {}", name, assetType, idx));
 					missingSrcFile = true;
 				}
 				idx++;
@@ -76,21 +76,23 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			AssetData* assetData = assetTypeInfo->m_assetCreator();
 			if (assetDateStamp > earliestSourceDateStamp)
 			{
-				MemBlock serializedBlock;
-				Log(STR("  deliver {} [{}] from asset data", name, assetType));
+				MemBlock assetBlock;
+				LOG(Asset, STR("  deliver {} [{}] from asset data", name, assetType));
 				
-				if (!fm.Read(assetDataPath, serializedBlock))
+				if (!fm.Read(assetDataPath, assetBlock))
 				{
 					Error(std::format("Failed to read asset data file: {}\nTry deleting that file and run again.", assetDataPath));
 					cb(nullptr);
 					return;
 				}
+				MemBlock serializedBlock;
+				assetBlock.DecompressTo(serializedBlock);
 
 				// create from data
 				// this can return nullptr if version is old
 				if (assetData->MemoryToAsset(serializedBlock))
 				{
-					Log(STR("Deliver Asset: {}", name));
+					LOG(Asset, STR("Deliver Asset: {}", name));
 					cb(assetData);
 					return;
 				}
@@ -122,7 +124,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			}
 
 			// now create the AssetData from the src files
-			Log(STR("  deliver {} [{}] from src files", name, assetType));
+			LOG(Asset, STR("  deliver {} [{}] from src files", name, assetType));
 			assetData->SrcFilesToAsset(srcFileMem, params);
 			assetData->name = name;
 			assetData->type = assetType;
@@ -130,14 +132,16 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			// write out the asset to then data folder
 			// write the texture asset to data
 			MemBlock serializedBlock = assetData->AssetToMemory();
-			if (!fm.Write(assetDataPath, serializedBlock))
+			MemBlock assetBlock;
+			serializedBlock.CompressTo(assetBlock);
+			if (!fm.Write(assetDataPath, assetBlock))
 			{
 				// non fatal error, since we have converted the asset ok, we just can't write it
 				Error(std::format("Error trying to write asset to path: {}\nCheck disk space and permissions.", assetDataPath));
 			}
 
 			// finally we can deliver the asset back to the resource
-			Log(STR("Deliver Asset: {}", name));
+			LOG(Asset, STR("Deliver Asset: {}", name));
 			cb(assetData);
 		}
 	);

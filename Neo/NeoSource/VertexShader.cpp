@@ -33,12 +33,12 @@ bool VertexShaderAssetData::MemoryToAsset(const MemBlock& block)
 
 	if (type != AssetType_VertexShader)
 	{
-		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_VertexShader));
+		LOG(Shader, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_VertexShader));
 		return false;
 	}
 	if (version != SHADER_VERSION)
 	{
-		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, SHADER_VERSION));
+		LOG(Shader, STR("Rebuilding {} - old version {} - expected {}", name, version, SHADER_VERSION));
 		return false;
 	}
 

@@ -23,8 +23,8 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct Vertex {
 	glm::vec3 pos;
-	glm::vec3 color;
 	glm::vec2 texCoord;
+	u32 color;
 
 	static VkVertexInputBindingDescription getBindingDescription() {
 		VkVertexInputBindingDescription bindingDescription{};
@@ -45,13 +45,13 @@ struct Vertex {
 
 		attributeDescriptions[1].binding = 0;
 		attributeDescriptions[1].location = 1;
-		attributeDescriptions[1].format = VK_FORMAT_R32G32B32_SFLOAT;
-		attributeDescriptions[1].offset = offsetof(Vertex, color);
+		attributeDescriptions[1].format = VK_FORMAT_R32G32_SFLOAT;
+		attributeDescriptions[1].offset = offsetof(Vertex, texCoord);
 
 		attributeDescriptions[2].binding = 0;
 		attributeDescriptions[2].location = 2;
-		attributeDescriptions[2].format = VK_FORMAT_R32G32_SFLOAT;
-		attributeDescriptions[2].offset = offsetof(Vertex, texCoord);
+		attributeDescriptions[2].format = VK_FORMAT_R8G8B8A8_UNORM;
+		attributeDescriptions[2].offset = offsetof(Vertex, color);
 
 		return attributeDescriptions;
 	}
@@ -64,7 +64,7 @@ template<> struct std::hash<Vertex>
 {
 	size_t operator()(Vertex const& vertex) const
 	{
-		return ((std::hash<glm::vec3>()(vertex.pos) ^ (std::hash<glm::vec3>()(vertex.color) << 1)) >> 1) ^ (std::hash<glm::vec2>()(vertex.texCoord) << 1);
+		return ((std::hash<glm::vec3>()(vertex.pos) ^ (std::hash<u32>()(vertex.color) << 1)) >> 1) ^ (std::hash<glm::vec2>()(vertex.texCoord) << 1);
 	}
 };
 

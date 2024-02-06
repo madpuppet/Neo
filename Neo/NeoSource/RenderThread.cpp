@@ -80,7 +80,7 @@ int RenderThread::Go()
 	}
 
 	gil.Shutdown();
-	Log("render thread terminate..");
+	LOG(Render, "render thread terminate..");
 	return 0;
 }
 

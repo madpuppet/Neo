@@ -122,6 +122,10 @@
       </IgnoreAllDefaultLibraries>
       <AdditionalOptions>/NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
     </Link>
+    <PreBuildEvent>
+      <Command>
+      </Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -168,9 +172,8 @@
       <AdditionalDependencies>Dbghelp.lib;SDL2.lib;SDL2_ttf.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.vert -o .\neo\sourceData\shaders\vert.spv
-C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\neo\sourceData\shaders\frag.spv
-</Command>
+      <Command>
+      </Command>
     </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -626,6 +629,7 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <ClInclude Include="include\SDL_vulkan.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\tiny_obj_loader.h" />
+    <ClInclude Include="NeoSource\CmdLineVar.h" />
     <ClInclude Include="NeoSource\FileExcludes.h" />
     <ClInclude Include="NeoSource\FileManager.h" />
     <ClInclude Include="NeoSource\FileSystem.h" />
@@ -634,11 +638,13 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <ClInclude Include="NeoSource\FileSystem_RawAccess.h" />
     <ClInclude Include="NeoSource\GIL_Common.h" />
     <ClInclude Include="NeoSource\GIL_Vulkan.h" />
+    <ClInclude Include="NeoSource\Log.h" />
     <ClInclude Include="NeoSource\Material.h" />
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
     <ClInclude Include="NeoSource\PixelShader.h" />
+    <ClInclude Include="NeoSource\PolyRenderer.h" />
     <ClInclude Include="NeoSource\StaticMesh.h" />
     <ClInclude Include="NeoSource\Module.h" />
     <ClInclude Include="NeoSource\Neo.h" />
@@ -651,11 +657,15 @@ C:\VulkanSDK\1.3.268.0\Bin\glslc.exe .\neo\sourceData\shaders\shader.frag -o .\n
     <ClInclude Include="NeoSource\ResourceRef.h" />
     <ClInclude Include="NeoSource\Serializer.h" />
     <ClInclude Include="NeoSource\SHAD.h" />
+    <ClCompile Include="NeoSource\CmdLineVar.cpp" />
+    <ClCompile Include="NeoSource\Log.cpp" />
+    <ClCompile Include="NeoSource\PolyRenderer.cpp" />
+    <ClCompile Include="NeoSource\TimeManager.cpp" />
     <ClInclude Include="NeoSource\VertexShader.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
     <ClInclude Include="NeoSource\Texture.h" />
     <ClInclude Include="NeoSource\Thread.h" />
-    <ClInclude Include="NeoSource\Timer.h" />
+    <ClInclude Include="NeoSource\TimeManager.h" />
     <ClInclude Include="NeoSource\View.h" />
     <ClInclude Include="NeoSource\zlib\crc32.h" />
     <ClInclude Include="NeoSource\zlib\deflate.h" />

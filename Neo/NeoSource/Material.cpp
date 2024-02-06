@@ -46,7 +46,7 @@ void Material::OnAssetDeliver(AssetData* data)
 			}
 		}
 
-		Log(STR("Adding Dependancy List: {}", dependantResources.size()));
+		LOG(Material, STR("Adding Dependancy List: {}", dependantResources.size()));
 
 		// we need to wait for our dependant resources, like Shaders and Textures,  to load first before creating our platform data (which are pipeline states)
 		// note that if they are already loaded, this will just trigger off the callback immediately
@@ -311,12 +311,12 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 
 	if (type != AssetType_Material)
 	{
-		Log(STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Material));
+		LOG(Material, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Material));
 		return false;
 	}
 	if (version != MATERIAL_VERSION)
 	{
-		Log(STR("Rebuilding {} - old version {} - expected {}", name, version, MATERIAL_VERSION));
+		LOG(Material, STR("Rebuilding {} - old version {} - expected {}", name, version, MATERIAL_VERSION));
 		return false;
 	}
 
