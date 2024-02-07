@@ -629,6 +629,7 @@
     <ClInclude Include="include\SDL_vulkan.h" />
     <ClInclude Include="include\stb_image.h" />
     <ClInclude Include="include\tiny_obj_loader.h" />
+    <ClInclude Include="NeoSource\BitmapFont.h" />
     <ClInclude Include="NeoSource\CmdLineVar.h" />
     <ClInclude Include="NeoSource\FileExcludes.h" />
     <ClInclude Include="NeoSource\FileManager.h" />
@@ -657,6 +658,7 @@
     <ClInclude Include="NeoSource\ResourceRef.h" />
     <ClInclude Include="NeoSource\Serializer.h" />
     <ClInclude Include="NeoSource\SHAD.h" />
+    <ClCompile Include="NeoSource\BitmapFont.cpp" />
     <ClCompile Include="NeoSource\CmdLineVar.cpp" />
     <ClCompile Include="NeoSource\Log.cpp" />
     <ClCompile Include="NeoSource\PolyRenderer.cpp" />

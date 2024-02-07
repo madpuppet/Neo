@@ -68,8 +68,9 @@ public:
 	void WriteBool(bool value) { WriteU8( value != 0 ); }
 	void WriteString(const string &value);
     void WriteVec3(const vec3 &value);
-	void WriteIVec3(const ivec3 &value);
 	void WriteVec4(const vec4& value);
+	void WriteIVec3(const ivec3& value);
+	void WriteIVec4(const ivec4& value);
 	void WriteQuat(const quat &value);
 	void WriteID(u32 value);
 
@@ -87,6 +88,7 @@ public:
 	Serializer& operator << (const string &value) {WriteString(value); return *this;}
 	Serializer& operator << (const ivec2 &value) {WriteI32(value.x);WriteI32(value.y);return *this;}
 	Serializer& operator << (const ivec3 &value) {WriteIVec3(value);return *this;};
+	Serializer& operator << (const ivec4& value) {WriteIVec4(value); return *this; };
 	Serializer& operator << (const vec3 &value) {WriteVec3(value);return *this;}
 	Serializer& operator << (const vec4 &value) {WriteVec4(value);return *this;}
 	Serializer& operator << (const quat &value) {WriteQuat(value);return *this;}
@@ -108,6 +110,7 @@ public:
     vec4 ReadVec4();
 	ivec2 ReadIVec2();
 	ivec3 ReadIVec3();
+	ivec4 ReadIVec4();
 	quat ReadQuat();
 	u32 ReadID();
 
@@ -125,6 +128,7 @@ public:
 	Serializer& operator >> (string &value) {value = ReadString(); return *this;}
 	Serializer& operator >> (ivec2 &value) {value = ReadIVec2(); return *this;}
 	Serializer& operator >> (ivec3 &value) {value = ReadIVec3(); return *this;}
+	Serializer& operator >> (ivec4 &value) {value = ReadIVec4(); return *this; }
 	Serializer& operator >> (vec3 &value) {value = ReadVec3(); return *this;}
 	Serializer& operator >> (quat &value) {value = ReadQuat(); return *this;}
 
@@ -144,6 +148,7 @@ public:
 	Serializer& operator & (string &value) { return (IsReadMode() ? *this >> value : *this << value); }
 	Serializer& operator & (ivec2 &value) { return (IsReadMode() ? *this >> value : *this << value); }
 	Serializer& operator & (ivec3 &value) { return (IsReadMode() ? *this >> value : *this << value); }
+	Serializer& operator & (ivec4 &value) { return (IsReadMode() ? *this >> value : *this << value); }
 	Serializer& operator & (vec3 &value) { return (IsReadMode() ? *this >> value : *this << value); }
 	Serializer& operator & (quat &value) { return (IsReadMode() ? *this >> value : *this << value); }
 

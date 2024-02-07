@@ -77,9 +77,10 @@ void PixelShader::Reload()
 PixelShaderFactory::PixelShaderFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreator = []() -> AssetData* { return new PixelShaderAssetData; };
-	ati->m_assetExt = ".neopsh";
-	ati->m_sourceExt.push_back({ { ".psh" }, true });		// compile from source
+	ati->name = "PixelShader";
+	ati->assetExt = ".neopsh";
+	ati->assetCreator = []() -> AssetData* { return new PixelShaderAssetData; };
+	ati->sourceExt.push_back({ { ".psh" }, true });		// compile from source
 	AssetManager::Instance().RegisterAssetType(AssetType_PixelShader, ati);
 }
 

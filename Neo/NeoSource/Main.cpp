@@ -72,6 +72,11 @@ int main(int argc, char* argv[])
     }
     
     gMemoryTracker.Dump();
+
+    // kill our threads first, so they aren't using memory that will be freed up by other module shutdowns
+    AssetManager::Instance().KillWorkerFarm();
+    RenderThread::Instance().StopAndWait();
+
     NeoShutdownModules();
     return EXIT_SUCCESS;
 }

@@ -106,6 +106,13 @@ ivec3 Serializer::ReadIVec3()
 	return vec;
 }
 
+ivec4 Serializer::ReadIVec4()
+{
+	ivec4 vec;
+	vec.x = ReadI32(); vec.y = ReadI32(); vec.z = ReadI32(); vec.w = ReadI32();
+	return vec;
+}
+
 quat Serializer::ReadQuat()
 {
 	quat vec;
@@ -179,6 +186,11 @@ void Serializer::WriteVec4(const vec4& value)
 void Serializer::WriteIVec3(const ivec3 &value)
 {
 	WriteI32(value.x); WriteI32(value.y); WriteI32(value.z);
+}
+
+void Serializer::WriteIVec4(const ivec4& value)
+{
+	WriteI32(value.x); WriteI32(value.y); WriteI32(value.z); WriteI32(value.w);
 }
 
 void Serializer::WriteQuat(const quat &value)

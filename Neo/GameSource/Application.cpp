@@ -31,6 +31,7 @@ Application::Application()
 	m_cameraPos = { 0, 1.5f, -1.0f };
 
 	m_particleMat.Create("particles");
+	m_font.Create("c64");
 }
 
 Application::~Application()
@@ -56,6 +57,7 @@ void Application::Update()
 	camMatrix[3] = vec4(m_cameraPos, 1.0);
 	m_view.SetCameraMatrix(camMatrix);
 
+#if 1
 	m_render.BeginFrame();
 	m_render.UseMaterial(m_particleMat);
 	m_render.StartPrimitive(PrimType_TriangleList);
@@ -63,14 +65,18 @@ void Application::Update()
 	static float time = 0.0f;
 	time += dt;
 	time = fmodf(time, 2 * PI);
-	for (int i = 0; i < 20; i++)
+	float width = sinf(time) * 0.01f + 0.0101f;
+	vec3 right = vec3(camMatrix[0] * width);
+	vec3 up = vec3(camMatrix[1] * width);
+	for (int i = 0; i < 20000; i++)
 	{
-		float x = sinf(time * 2.0f + i*0.003f) * 0.5f + cosf(time + i*0.01f) * 0.5f;
-		float y = sinf(time+i*0.001f) + cosf(time*4.0f + i*0.07f)*0.1f;
-		float z = (float)i / 5000.0f;
-		vec3 pos1{ x+0.1f, y, z };
-		vec3 pos2{ x-0.1f, y, z };
-		vec3 pos3{ x, y+0.1f, z };
+		vec3 pos;
+		pos.x = sinf(time * 2.0f + i*0.003f) * 0.5f + cosf(time + i*0.01f) * 0.5f;
+		pos.y = sinf(time+i*0.001f) + cosf(time*4.0f + i*0.07f)*0.1f;
+		pos.z = sinf(time + i * 0.0013f) * 1.0f;
+		vec3 pos1 = pos + right;
+		vec3 pos2 = pos - right;
+		vec3 pos3 = pos + up;
 		vec2 uv1{ 0,0 };
 		vec2 uv2{ 1,0 };
 		vec2 uv3{ 0.5f,1.0f };
@@ -81,6 +87,7 @@ void Application::Update()
 	}
 	m_render.EndPrimitive();
 	m_render.EndFrame();
+#endif
 }
 
 void Application::Draw()
@@ -91,7 +98,7 @@ void Application::Draw()
 
 	m_view.Apply();
 	GIL::Instance().SetModelMatrix(m_modelMatrix);
-//	GIL::Instance().RenderStaticMesh(m_vikingRoom);
+	GIL::Instance().RenderStaticMesh(m_vikingRoom);
 	m_render.Draw();
 }
 

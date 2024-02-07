@@ -39,10 +39,11 @@ void Texture::Reload()
 TextureFactory::TextureFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreator = []() -> AssetData* { return new TextureAssetData; };
-	ati->m_assetExt = ".neotex";
-	ati->m_sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
-	ati->m_sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
+	ati->name = "Texture";
+	ati->assetExt = ".neotex";
+	ati->assetCreator = []() -> AssetData* { return new TextureAssetData; };
+	ati->sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
+	ati->sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
 	AssetManager::Instance().RegisterAssetType(AssetType_Texture, ati);
 }
 

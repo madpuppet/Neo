@@ -68,9 +68,10 @@ void Material::Reload()
 MaterialFactory::MaterialFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreator = []() -> AssetData* { return new MaterialAssetData; };
-	ati->m_assetExt = ".neomat";
-	ati->m_sourceExt.push_back({ { ".material" }, true });		// on of these src image files
+	ati->name = "Material";
+	ati->assetCreator = []() -> AssetData* { return new MaterialAssetData; };
+	ati->assetExt = ".neomat";
+	ati->sourceExt.push_back({ { ".material" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_Material, ati);
 }
 

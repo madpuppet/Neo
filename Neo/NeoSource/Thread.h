@@ -248,24 +248,30 @@ public:
 
     void AddTask(GenericCallback task)
     {
-        m_threadLock.Lock();
-        if (m_threads.size() >= m_maxThreads)
+        if (!m_terminate)
         {
-            m_queuedTasks.push_back(task);
+            m_threadLock.Lock();
+            if (m_threads.size() >= m_maxThreads)
+            {
+                m_queuedTasks.push_back(task);
+            }
+            else
+            {
+                auto thread = new WorkerFarmWorker(m_guid, m_name + "Worker", task);
+                m_threads.push_back(thread);
+                thread->Start();
+            }
+            m_threadLock.Release();
         }
-        else
-        {
-            auto thread = new WorkerFarmWorker(m_guid, m_name + "Worker", task);
-            m_threads.push_back(thread);
-            thread->Start();
-        }
-        m_threadLock.Release();
     }
 
     virtual void Terminate() override
     {
         m_terminate = true;
         m_threadComplete.Signal();
+
+        for (auto thread : m_threads)
+            thread->StopAndWait();
     }
 
     virtual int Go()

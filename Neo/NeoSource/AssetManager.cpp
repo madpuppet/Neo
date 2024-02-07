@@ -11,6 +11,11 @@ AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, "AssetManag
 	m_assetTasks.Start();
 }
 
+void AssetManager::KillWorkerFarm()
+{
+	m_assetTasks.StopAndWait();
+}
+
 static int GetTime(const string name, const stringlist &extensions, u64& time)
 {
 	auto& fm = FileManager::Instance();
@@ -36,7 +41,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 
 			// get datestamp of current asset file
 			u64 assetDateStamp = 0;
-			string assetDataPath = string("data:") + name + assetTypeInfo->m_assetExt;
+			string assetDataPath = string("data:") + name + assetTypeInfo->assetExt;
 			fm.GetTime(assetDataPath, assetDateStamp);
 
 			LOG(Asset, STR(">> Request Asset: {} [{}]", name, assetType));
@@ -47,7 +52,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			int idx = 0;
 			u64 earliestSourceDateStamp = 0;
 
-			for (auto& srcExt : assetTypeInfo->m_sourceExt)
+			for (auto& srcExt : assetTypeInfo->sourceExt)
 			{
 				u64 srcDateStamp;
 				int ext = GetTime(string("src:") + name, srcExt.first, srcDateStamp);
@@ -73,7 +78,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			}
 
 			// if asset is newer than source files, just load and createFromData
-			AssetData* assetData = assetTypeInfo->m_assetCreator();
+			AssetData* assetData = assetTypeInfo->assetCreator();
 			if (assetDateStamp > earliestSourceDateStamp)
 			{
 				MemBlock assetBlock;
@@ -145,5 +150,11 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 			cb(assetData);
 		}
 	);
+}
+
+AssetTypeInfo* AssetManager::FindAssetTypeInfo(int type)
+{
+	auto it = m_assetTypeInfoMap.find(type);
+	return (it != m_assetTypeInfoMap.end()) ? it->second : nullptr;
 }
 

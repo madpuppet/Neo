@@ -1529,6 +1529,9 @@
     <ClInclude Include="NeoSource\PolyRenderer.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\BitmapFont.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1656,6 +1659,9 @@
     </ClCompile>
     <ClCompile Include="NeoSource\PolyRenderer.cpp">
       <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\BitmapFont.cpp">
+      <Filter>NeoSource\Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -1005,6 +1005,22 @@ void GIL::createUniformBuffers() {
     }
 }
 
+void GIL::copyMemoryToBuffer(VkDeviceMemory bufferMemory, void *memory, size_t size)
+{
+    void* mappedVertexMemory;
+    vkMapMemory(m_device, bufferMemory, 0, size, 0, &mappedVertexMemory);
+    memcpy(mappedVertexMemory, memory, size);
+
+    VkMappedMemoryRange vertexMemoryRange = {};
+    vertexMemoryRange.sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    vertexMemoryRange.memory = bufferMemory;
+    vertexMemoryRange.offset = 0;
+    vertexMemoryRange.size = size;
+    vkFlushMappedMemoryRanges(m_device, 1, &vertexMemoryRange);
+
+    vkUnmapMemory(m_device, bufferMemory);
+}
+
 void GIL::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {
     VkBufferCreateInfo bufferInfo{};
@@ -1416,42 +1432,20 @@ float GIL::GetJoystickAxis(int idx)
     return joyval;
 }
 
-NeoGeometryBuffer* GIL::CreateGeometryBuffer(void* vertData, u32 vertDataSize, void* indiceData, u32 indiceDataSize)
+NeoGeometryBuffer* GIL::CreateGeometryBuffer(void* vertData, u32 vertDataSize, void* indexData, u32 indexDataSize)
 {
     auto buffer = new NeoGeometryBuffer;
 
-    VkBuffer vertStagingBuffer;
-    VkDeviceMemory vertStagingBufferMemory;
-    createBuffer(vertDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, vertStagingBuffer, vertStagingBufferMemory);
+    createBuffer(vertDataSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        buffer->vertexBuffer, buffer->vertexBufferMemory);
 
-    void* data;
-    vkMapMemory(m_device, vertStagingBufferMemory, 0, vertDataSize, 0, &data);
-    memcpy(data, vertData, (size_t)vertDataSize);
-    vkUnmapMemory(m_device, vertStagingBufferMemory);
+    copyMemoryToBuffer(buffer->vertexBufferMemory, vertData, vertDataSize);
 
-    createBuffer(vertDataSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer->vertexBuffer, buffer->vertexBufferMemory);
-    copyBuffer(vertStagingBuffer, buffer->vertexBuffer, vertDataSize);
+    createBuffer(indexDataSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+        buffer->indexBuffer, buffer->indexBufferMemory);
 
-    vkDestroyBuffer(m_device, vertStagingBuffer, nullptr);
-    vkFreeMemory(m_device, vertStagingBufferMemory, nullptr);
+    copyMemoryToBuffer(buffer->indexBufferMemory, indexData, indexDataSize);
 
-    if (indiceDataSize)
-    {
-        VkBuffer indiceStagingBuffer;
-        VkDeviceMemory indiceStagingBufferMemory;
-        createBuffer(indiceDataSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, indiceStagingBuffer, indiceStagingBufferMemory);
-    
-        void* data;
-        vkMapMemory(m_device, indiceStagingBufferMemory, 0, indiceDataSize, 0, &data);
-        memcpy(data, indiceData, (size_t)indiceDataSize);
-        vkUnmapMemory(m_device, indiceStagingBufferMemory);
-
-        createBuffer(indiceDataSize, VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, buffer->indexBuffer, buffer->indexBufferMemory);
-        copyBuffer(indiceStagingBuffer, buffer->indexBuffer, indiceDataSize);
-
-        vkDestroyBuffer(m_device, indiceStagingBuffer, nullptr);
-        vkFreeMemory(m_device, indiceStagingBufferMemory, nullptr);
-    }
     return buffer;
 }
 void GIL::DestroyGeometryBuffer(NeoGeometryBuffer* buffer)

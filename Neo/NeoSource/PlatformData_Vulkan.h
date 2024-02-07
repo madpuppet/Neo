@@ -41,3 +41,9 @@ struct StaticMeshPlatformData
 };
 StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData* assetData);
 void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData);
+
+struct BitmapFontPlatformData
+{
+};
+BitmapFontPlatformData* BitmapFontPlatformData_Create(struct BitmapFontAssetData* assetData);
+void BitmapFontPlatformData_Destroy(BitmapFontPlatformData* platformData);

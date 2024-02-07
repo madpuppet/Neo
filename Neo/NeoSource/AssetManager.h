@@ -14,18 +14,10 @@ enum AssetType
 	AssetType_StaticMesh,
 	AssetType_Animation,
 	AssetType_Database,
-	AssetType_Material
-};
+	AssetType_Material,
+	AssetType_BitmapFont,
 
-template <>
-struct std::formatter<AssetType> : std::formatter<int> {
-	constexpr auto parse(std::format_parse_context& ctx) {
-		return ctx.begin();
-	}
-	auto format(const AssetType& obj, std::format_context& ctx) const {
-		const char* enumNames[] = { "Texture", "VertexShader", "PixelShader", "ComputeShader", "Model", "Animation", "Database", "Material" };
-		return std::format_to(ctx.out(), "{}", enumNames[(int)obj]);
-	}
+	AssetType_Extended = 0x100		// game can use asset type values after this point to create their own asset types
 };
 
 struct AssetData
@@ -33,7 +25,7 @@ struct AssetData
 	AssetData() = default;
 	virtual ~AssetData() = default;
 
-	AssetType type;
+	u32 type;		// AssetType (or custom asset type)
 	string name;	// for debug purposes
 	u16 version;	// increment the version to force a rebuild of assets
 
@@ -52,18 +44,20 @@ public:
 };
 
 // asset type info creates all the functions and data needed to create this asset type
-class AssetTypeInfo
+struct AssetTypeInfo
 {
-public:
-	// function that creates an empty asset of this type
-	std::function<AssetData*(void)> m_assetCreator;
+	// name of this type - for Log output
+	string name;
 
 	// extension for asset file
-	string m_assetExt;
+	string assetExt;
+
+	// function that creates an empty asset of this type
+	std::function<AssetData*(void)> assetCreator;
 
 	// list of extensions for source files
 	// some source files could be one of many extensions (ie.  png, tga, jpg)
-	vector<std::pair<stringlist,bool>> m_sourceExt;
+	vector<std::pair<stringlist,bool>> sourceExt;
 };
 
 // callback when resource data has been finally loaded
@@ -75,15 +69,35 @@ class AssetManager : public Module<AssetManager>
 	WorkerFarm m_assetTasks;
 
 	// map of asset type creators
-	map<int, AssetTypeInfo*> m_assetTypeInfoMap;
+	hashtable<int, AssetTypeInfo*> m_assetTypeInfoMap;
 
 public:
 	AssetManager();
+
+	// kill the worker farm
+	void KillWorkerFarm();
 
 	// register an asset type that can be delivered
 	void RegisterAssetType(int assetType, AssetTypeInfo* assetCreator) { m_assetTypeInfoMap.insert(std::pair<int, AssetTypeInfo*>(assetType, assetCreator)); }
 
 	// gather all data from file systems
 	void DeliverAssetDataAsync(AssetType type, const string &name, AssetCreateParams* params, const DeliverAssetDataCB& cb);
+
+	// get registered asset type info for a specified type
+	AssetTypeInfo *FindAssetTypeInfo(int type);
 };
 
+// C++20 formatter lets us convert AssetType to string for Log(STR("{}", (AssetType)type));
+template <>
+struct std::formatter<AssetType> : std::formatter<int> {
+	constexpr auto parse(std::format_parse_context& ctx) {
+		return ctx.begin();
+	}
+	auto format(const AssetType& obj, std::format_context& ctx) const {
+		auto typeInfo = AssetManager::Instance().FindAssetTypeInfo((int)obj);
+		if (typeInfo)
+			return std::format_to(ctx.out(), "{}", typeInfo->name);
+		else
+			return std::format_to(ctx.out(), "??assetType_{}", (int)obj);
+	}
+};

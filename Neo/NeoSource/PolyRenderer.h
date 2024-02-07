@@ -20,8 +20,8 @@ class PolyRenderer
 		u32 indexStart = 0;
 		u32 indexCount = 0;
 	};
-	vector<Vertex> m_verts;
-	vector<u32> m_indices;
+	vector<Vertex> m_verts[2];
+	vector<u32> m_indices[2];
 	vector<MaterialRef> m_materials[2];
 	vector<Cmd> m_cmds[2];
 	struct NeoGeometryBuffer* m_geomBuffer[4]{};
@@ -30,7 +30,6 @@ class PolyRenderer
 	u32 m_vertStart = 0;
 	u32 m_indexStart = 0;
 	int m_currentFrame = 0;
-	int m_currentGeomBuffer = 0;
 
 public:
 	// these functions used drawing the draw frame

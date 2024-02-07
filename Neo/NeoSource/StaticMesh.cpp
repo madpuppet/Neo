@@ -45,9 +45,10 @@ void StaticMesh::Reload()
 StaticMeshFactory::StaticMeshFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreator = []() -> AssetData* { return new StaticMeshAssetData; };
-	ati->m_assetExt = ".neomdl";
-	ati->m_sourceExt.push_back({ { ".obj" }, true });		// on of these src image files
+	ati->name = "StaticMesh";
+	ati->assetExt = ".neomdl";
+	ati->assetCreator = []() -> AssetData* { return new StaticMeshAssetData; };
+	ati->sourceExt.push_back({ { ".obj" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_StaticMesh, ati);
 }
 
@@ -110,8 +111,6 @@ bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreat
 {
 	Assert(srcFiles.size() == 1, STR("Expected 1 src file for StaticMesh"));
 
-#if 1
-
 	// Create a MemoryStream object using the memory block and its size
 	MemoryStream memoryStream(srcFiles[0].Mem(), srcFiles[0].Size());
 
@@ -160,37 +159,6 @@ bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreat
 
 	Assert(materials.size() == 1, "Only support single material objs atm");
 	materialName = materials[0].name;
-#else
-
-	verts.push_back({ { -1,-1,0 }, { 1,0,0 }, { 0,1 } });
-	verts.push_back({ { 1,-1,0 }, { 1,0,0 }, { 1,1 } });
-	verts.push_back({ { -1,1,0 }, { 1,0,0 }, { 0,0 } });
-	verts.push_back({ { 1,1,0 }, { 1,0,0 }, { 1,0 } });
-
-	verts.push_back({ { -1,-1,1 }, { 0,1,0 }, { 0,1 } });
-	verts.push_back({ { 1,-1,1 }, { 0,1,0 }, { 1,1 } });
-	verts.push_back({ { -1,1,1 }, { 0,1,0 }, { 0,0 } });
-	verts.push_back({ { 1,1,1 }, { 0,1,0 }, { 1,0 } });
-
-	indices.push_back(0);
-	indices.push_back(2);
-	indices.push_back(1);
-
-	indices.push_back(1);
-	indices.push_back(2);
-	indices.push_back(3);
-
-	indices.push_back(4);
-	indices.push_back(6);
-	indices.push_back(5);
-
-	indices.push_back(5);
-	indices.push_back(6);
-	indices.push_back(7);
-
-
-	materialName = "viking_room";
-#endif
 	return true;
 }
 

@@ -4,6 +4,7 @@
 #include "StaticMesh.h"
 #include "View.h"
 #include "PolyRenderer.h"
+#include "BitmapFont.h"
 
 class Application : public Module<Application>
 {
@@ -22,5 +23,6 @@ protected:
 	vec3 m_cameraPos = { 0,0,0 };
 	PolyRenderer m_render;
 	MaterialRef m_particleMat;
+	BitmapFontRef m_font;
 };
 

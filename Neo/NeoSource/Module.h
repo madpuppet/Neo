@@ -14,6 +14,7 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_ComputeShaderFactory,
 	NeoModuleInitPri_MaterialFactory,
 	NeoModuleInitPri_StaticMeshFactory,
+	NeoModuleInitPri_BitmapFontFactory,
 	NeoModuleInitPri_GIL,
 	NeoModuleInitPri_RenderThread,
 

@@ -77,9 +77,10 @@ void VertexShader::Reload()
 VertexShaderFactory::VertexShaderFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->m_assetCreator = []() -> AssetData* { return new VertexShaderAssetData; };
-	ati->m_assetExt = ".neovsh";
-	ati->m_sourceExt.push_back({ { ".vsh" }, true });		// compile from source
+	ati->name = "VertexShader";
+	ati->assetCreator = []() -> AssetData* { return new VertexShaderAssetData; };
+	ati->assetExt = ".neovsh";
+	ati->sourceExt.push_back({ { ".vsh" }, true });		// compile from source
 	AssetManager::Instance().RegisterAssetType(AssetType_VertexShader, ati);
 }
 

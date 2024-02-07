@@ -3,7 +3,7 @@
 #include "Module.h"
 #include "Thread.h"
 
-class RenderThread : public Module<RenderThread>, Thread
+class RenderThread : public Module<RenderThread>, public Thread
 {
 	// semaphores to sync with update thread
 	Semaphore m_updateDone;

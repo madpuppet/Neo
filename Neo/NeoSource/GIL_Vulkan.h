@@ -248,7 +248,6 @@ protected:
 	void createCommandPool();
 	void createDepthResources();
 	void createFramebuffers();
-	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 	void createTextureSampler();
 	void createUniformBuffers();
 	VkCommandBuffer beginSingleTimeCommands();
@@ -268,10 +267,13 @@ public:
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
 	std::vector<VkBuffer>& UniformBuffers() { return m_uniformBuffers; }
 	VkSampler TextureSampler() { return m_textureSampler; }
+	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 
 	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void copyMemoryToBuffer(VkDeviceMemory bufferMemory, void* memory, size_t size);
+
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);

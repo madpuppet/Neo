@@ -5,6 +5,7 @@
 #include "PixelShader.h"
 #include "Material.h"
 #include "StaticMesh.h"
+#include "BitmapFont.h"
 
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
@@ -216,7 +217,8 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
     std::vector<VkDynamicState> dynamicStates = {
         VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR
+        VK_DYNAMIC_STATE_SCISSOR,
+        VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY
     };
     VkPipelineDynamicStateCreateInfo dynamicState{};
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
@@ -326,6 +328,23 @@ StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData
 }
 
 void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData)
+{
+}
+
+BitmapFontPlatformData* BitmapFontPlatformData_Create(BitmapFontAssetData* assetData)
+{
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
+    LOG(Gfx, STR("PLATFORM DATA for BitmapFont: {}", assetData->name));
+
+    auto& gil = GIL::Instance();
+    auto platformData = new BitmapFontPlatformData;
+    auto device = gil.Device();
+
+    return platformData;
+}
+
+void BitmapFontPlatformData_Destroy(BitmapFontPlatformData* platformData)
 {
 }
 

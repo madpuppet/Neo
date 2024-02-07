@@ -64,13 +64,13 @@ int RenderThread::Go()
 		// wait for draw fences to come in
 		gil.FrameWait();
 
+		// signalling draw started allows the next update frame to begin
+		SignalDrawStarted();
+
 		for (auto& task : tasks)
 		{
 			task();
 		}
-
-		// signalling draw started allows the next update frame to begin
-		SignalDrawStarted();
 
 		gil.BeginFrame();
 
