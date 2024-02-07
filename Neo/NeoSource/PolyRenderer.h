@@ -24,7 +24,7 @@ class PolyRenderer
 	vector<u32> m_indices;
 	vector<MaterialRef> m_materials[2];
 	vector<Cmd> m_cmds[2];
-	struct NeoGeometryBuffer* m_geomBuffer[3]{};
+	struct NeoGeometryBuffer* m_geomBuffer[4]{};
 
 	PrimType m_primitiveType = PrimType_TriangleList;
 	u32 m_vertStart = 0;

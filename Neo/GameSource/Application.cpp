@@ -63,11 +63,11 @@ void Application::Update()
 	static float time = 0.0f;
 	time += dt;
 	time = fmodf(time, 2 * PI);
-	for (int i = 0; i < 1000; i++)
+	for (int i = 0; i < 20; i++)
 	{
-		float x = sinf(time * 2.0f) * 0.5f + cosf(time + i) * 0.5f;
-		float y = sinf(time+i*0.1f) + cosf(time*4.0f)*0.1f;
-		float z = (float)i / 500.0f;
+		float x = sinf(time * 2.0f + i*0.003f) * 0.5f + cosf(time + i*0.01f) * 0.5f;
+		float y = sinf(time+i*0.001f) + cosf(time*4.0f + i*0.07f)*0.1f;
+		float z = (float)i / 5000.0f;
 		vec3 pos1{ x+0.1f, y, z };
 		vec3 pos2{ x-0.1f, y, z };
 		vec3 pos3{ x, y+0.1f, z };
@@ -91,7 +91,7 @@ void Application::Draw()
 
 	m_view.Apply();
 	GIL::Instance().SetModelMatrix(m_modelMatrix);
-	GIL::Instance().RenderStaticMesh(m_vikingRoom);
+//	GIL::Instance().RenderStaticMesh(m_vikingRoom);
 	m_render.Draw();
 }
 

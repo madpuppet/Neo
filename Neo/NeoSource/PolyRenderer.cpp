@@ -52,7 +52,7 @@ void PolyRenderer::EndFrame()
 	(
 		[this]()
 		{
-			m_currentGeomBuffer = (m_currentGeomBuffer + 1) % 3;
+			m_currentGeomBuffer = (m_currentGeomBuffer + 1) % 2;
 			GIL::Instance().DestroyGeometryBuffer(m_geomBuffer[m_currentGeomBuffer]);
 			m_geomBuffer[m_currentGeomBuffer] = GIL::Instance().CreateGeometryBuffer(m_verts.data(), (u32)m_verts.size() * sizeof(Vertex), m_indices.data(), (u32)m_indices.size() * sizeof(u32));
 			m_currentFrame = 1 - m_currentFrame;

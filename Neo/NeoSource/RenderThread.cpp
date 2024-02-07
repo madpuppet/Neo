@@ -51,21 +51,25 @@ int RenderThread::Go()
 	m_gilInitialized = true;
 	while (!m_terminate)
 	{
-		// call all registered draw tasks
-		m_preDrawTaskLock.Lock();
-		vector<GenericCallback> tasks = std::move(m_preDrawTasks);
-		m_preDrawTaskLock.Release();
-
-		for (auto& task : tasks)
-		{
-			task();		
-		}
-
 		WaitUpdateDone();
 
 		if (m_terminate)
 			break;
 
+		// call all registered draw tasks
+		m_preDrawTaskLock.Lock();
+		vector<GenericCallback> tasks = std::move(m_preDrawTasks);
+		m_preDrawTaskLock.Release();
+
+		// wait for draw fences to come in
+		gil.FrameWait();
+
+		for (auto& task : tasks)
+		{
+			task();
+		}
+
+		// signalling draw started allows the next update frame to begin
 		SignalDrawStarted();
 
 		gil.BeginFrame();

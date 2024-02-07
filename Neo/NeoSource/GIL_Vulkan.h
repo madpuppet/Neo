@@ -97,6 +97,9 @@ public:
 	// destroy all vulkan resources
 	void Shutdown();
 
+	// wait for fences before we start new command buffer
+	void FrameWait();
+
 	// start of a rendering frame (present last frame, prepare to build this frames queue)
 	void BeginFrame();
 
@@ -247,8 +250,6 @@ protected:
 	void createFramebuffers();
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 	void createTextureSampler();
-	void createVertexBuffer();
-	void createIndexBuffer();
 	void createUniformBuffers();
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
