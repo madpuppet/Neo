@@ -5,7 +5,6 @@
 #include "PixelShader.h"
 #include "Material.h"
 #include "StaticMesh.h"
-#include "BitmapFont.h"
 
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
@@ -202,7 +201,13 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_FALSE;
+    colorBlendAttachment.blendEnable = VK_TRUE;
+    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
 
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -251,10 +256,18 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     pipelineInfo.subpass = 0;
     pipelineInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-    if (vkCreateGraphicsPipelines(gil.Device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &platformData->pipeline) != VK_SUCCESS) 
+    if (vkCreateGraphicsPipelines(gil.Device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &platformData->polygonPipeline) != VK_SUCCESS) 
     {
         Error("Failed to create Graphics Pipeline for material");
     }
+
+    inputAssembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+
+    if (vkCreateGraphicsPipelines(gil.Device(), VK_NULL_HANDLE, 1, &pipelineInfo, nullptr, &platformData->linePipeline) != VK_SUCCESS)
+    {
+        Error("Failed to create Graphics Pipeline for material");
+    }
+
 
     std::vector<VkDescriptorSetLayout> layouts(MAX_FRAMES_IN_FLIGHT, platformData->descriptorSetLayout);
     VkDescriptorSetAllocateInfo allocInfo{};
@@ -266,7 +279,7 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     platformData->descriptorSets.resize(MAX_FRAMES_IN_FLIGHT);
     if (vkAllocateDescriptorSets(gil.Device(), &allocInfo, platformData->descriptorSets.data()) != VK_SUCCESS)
     {
-        throw std::runtime_error("failed to allocate descriptor sets!");
+        Error("failed to allocate descriptor sets!");
     }
 
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
@@ -301,8 +314,6 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
         vkUpdateDescriptorSets(gil.Device(), static_cast<uint32_t>(descriptorWrites.size()), descriptorWrites.data(), 0, nullptr);
     }
-
-
     return platformData;
 }
 
@@ -330,25 +341,4 @@ StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData
 void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData)
 {
 }
-
-BitmapFontPlatformData* BitmapFontPlatformData_Create(BitmapFontAssetData* assetData)
-{
-    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
-
-    LOG(Gfx, STR("PLATFORM DATA for BitmapFont: {}", assetData->name));
-
-    auto& gil = GIL::Instance();
-    auto platformData = new BitmapFontPlatformData;
-    auto device = gil.Device();
-
-    return platformData;
-}
-
-void BitmapFontPlatformData_Destroy(BitmapFontPlatformData* platformData)
-{
-}
-
-
-
-
 

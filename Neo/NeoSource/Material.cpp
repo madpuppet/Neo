@@ -73,6 +73,8 @@ MaterialFactory::MaterialFactory()
 	ati->assetExt = ".neomat";
 	ati->sourceExt.push_back({ { ".material" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_Material, ati);
+
+	m_blank = Create("white");
 }
 
 Material* MaterialFactory::Create(const string& name)

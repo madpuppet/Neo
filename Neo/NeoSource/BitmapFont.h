@@ -3,8 +3,25 @@
 #include "Resource.h"
 #include "AssetManager.h"
 #include "ResourceRef.h"
+#include "Material.h"
 
 struct BitmapFontPlatformData;
+
+enum Alignment
+{
+	Alignment_TopLeft,
+	Alignment_TopCenter,
+	Alignment_TopRight,
+
+	Alignment_CenterLeft,
+	Alignment_Center,
+	Alignment_CenterRight,
+
+	Alignment_BottomLeft,
+	Alignment_BottomCenter,
+	Alignment_BottomCenterRight
+};
+
 
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk
@@ -41,8 +58,8 @@ public:
 
 	struct PageInfo
 	{
-		int id = 0;
 		string file;
+		MaterialRef material;
 	};
 	vector<PageInfo> pages;
 
@@ -56,13 +73,11 @@ public:
 		int page = 0;
 		int channel = 0;
 	};
-	vector<CharInfo> chars;
+	hashtable<u32, CharInfo> chars;
 
 	virtual MemBlock AssetToMemory() override;
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 	virtual bool SrcFilesToAsset(vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) override;
-
-	void Serialize(Serializer& stream);
 };
 
 // texture is the game facing class that represents any type of texture  (zbuffer, rendertarget, image)
@@ -74,14 +89,16 @@ class BitmapFont : public Resource
 	virtual AssetType GetAssetType() const override { return AssetType_BitmapFont; }
 
 	BitmapFontAssetData* m_assetData;
-	BitmapFontPlatformData* m_platformData;
+
+	MaterialRef m_white;
 
 public:
 	BitmapFont(const string& name);
 	virtual ~BitmapFont();
 
 	BitmapFontAssetData* GetAssetData() { return m_assetData; }
-	BitmapFontPlatformData* GetPlatformData() { return m_platformData; }
+
+	void RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col);
 };
 
 // texture factory keeps a map of all the currently created textures

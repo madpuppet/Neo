@@ -2,54 +2,78 @@
 #include "StringUtils.h"
 #include <random>
 
-u16 StringPopUTF8(const string& source, int& idx)
-{
-    const char* str = source.c_str();
-    u16 result = 0;
-    if (str[idx] == 0)
-        return 0;
+#include <iostream>
+#include <string>
+#include <cstdint>
 
-    if ((str[idx] & 0x80) == 0)
+vector<u32> StringToUnicode(const string& utf8_string)
+{
+    vector<u32> unicode_values;
+
+    for (size_t i = 0; i < utf8_string.length();)
     {
-        result = (u16)str[idx++];
+        uint32_t unicode_val = 0;
+        uint8_t num_bytes = 0;
+
+        if ((utf8_string[i] & 0b10000000) == 0)
+        {
+            // 1-byte character
+            unicode_val = utf8_string[i];
+            num_bytes = 1;
+        }
+        else if ((utf8_string[i] & 0b11100000) == 0b11000000)
+        {
+            // 2-byte character
+            unicode_val = utf8_string[i] & 0b00011111;
+            unicode_val <<= 6;
+            unicode_val |= utf8_string[i + 1] & 0b00111111;
+            num_bytes = 2;
+        }
+        else if ((utf8_string[i] & 0b11110000) == 0b11100000)
+        {
+            // 3-byte character
+            unicode_val = utf8_string[i] & 0b00001111;
+            unicode_val <<= 6;
+            unicode_val |= utf8_string[i + 1] & 0b00111111;
+            unicode_val <<= 6;
+            unicode_val |= utf8_string[i + 2] & 0b00111111;
+            num_bytes = 3;
+        }
+        else if ((utf8_string[i] & 0b11111000) == 0b11110000)
+        {
+            // 4-byte character
+            unicode_val = utf8_string[i] & 0b00000111;
+            unicode_val <<= 6;
+            unicode_val |= utf8_string[i + 1] & 0b00111111;
+            unicode_val <<= 6;
+            unicode_val |= utf8_string[i + 2] & 0b00111111;
+            unicode_val <<= 6;
+            unicode_val |= utf8_string[i + 3] & 0b00111111;
+            num_bytes = 4;
+        }
+        else
+        {
+            // Invalid UTF-8 sequence - just return the original string
+            unicode_values.clear();
+            for (auto ch : utf8_string)
+                unicode_values.push_back((u32)ch);
+            break;
+        }
+
+        unicode_values.push_back(unicode_val);
+        i += num_bytes;
     }
-    else if ((str[idx] & 0xe0) == 0xc0)
-    {
-        result = (((u16)(str[idx] & 0x1f)) << 6) | (str[idx + 1] & 0x3f);
-        idx += 2;
-    }
-    if ((str[idx] & 0xf0) == 0xe0)
-    {
-        result = (((u16)(str[idx] & 0xf)) << 12) | (((u16)(str[idx + 1] & 0x3f)) << 6) | ((u16)(str[idx + 2] & 0x3f));
-        idx += 3;
-    }
-    return result;
+
+    return unicode_values;
 }
 
 string StringReplace(const string& str, char oldChar, char newChar)
 {
-    char* buffer = new char[str.size()+1];
-    int inIdx = 0;
-    int idx = 0;
-    int outIdx = 0;
-    u16 val;
-    while (val = StringPopUTF8(str, idx))
-    {
-        if (val == (u16)oldChar)
-        {
-            buffer[outIdx++] = newChar;
-            inIdx = idx;
-        }
-        else
-        {
-            while (inIdx < idx)
-                buffer[outIdx++] = str[inIdx++];
-        }
-    }
-    buffer[outIdx++] = 0;
-    string result(buffer);
-    delete buffer;
-    return result;
+    string replace = str;
+    for (size_t i = 0; i < str.size(); i++)
+        if (str[i] == oldChar)
+            replace[i] = newChar;
+    return replace;
 }
 
 u64 StringHash64(const string& str)

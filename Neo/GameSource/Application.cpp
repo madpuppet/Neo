@@ -59,35 +59,43 @@ void Application::Update()
 	m_view.SetCameraMatrix(camMatrix);
 
 	auto& dr = DynamicRenderer::Instance();
-	dr.BeginFrame();
-	dr.BeginRender(0);
-	dr.UseMaterial(m_particleMat);
-	dr.StartPrimitive(PrimType_TriangleList);
-	static float time = 0.0f;
-	time += dt;
-	time = fmodf(time, 2 * PI);
-	float width = sinf(time) * 0.01f + 0.01f;
-	vec3 right = vec3(camMatrix[0] * width);
-	vec3 up = vec3(camMatrix[1] * width);
-	for (int i = 0; i < DYNREN_MAXTRIANGLES; i++)
+#if 0
+	if (m_particleMat->IsLoaded())
 	{
-		vec3 pos;
-		pos.x = sinf(time * 2.0f + i * 0.003f) * 0.5f + cosf(time + i * 0.01f) * 0.5f;
-		pos.y = sinf(time + i * 0.01f) + cosf(time * 4.0f + i * 0.011f) * 0.1f;
-		pos.z = sinf(time + i * 0.0233333f) * 1.0f;
-		vec3 pos1 = pos + right;
-		vec3 pos2 = pos - right;
-		vec3 pos3 = pos + up;
-		vec2 uv1{ 0,0 };
-		vec2 uv2{ 1,0 };
-		vec2 uv3{ 0.5f,1.0f };
-		u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
-		dr.AddVert(pos1, uv1, col);
-		dr.AddVert(pos2, uv2, col);
-		dr.AddVert(pos3, uv3, col);
+		dr.BeginRender(0);
+		dr.StartPrimitive(PrimType_TriangleList);
+		dr.UseMaterial(m_particleMat);
+		static float time = 0.0f;
+		time += dt;
+		time = fmodf(time, 2 * PI);
+		float width = sinf(time) * 0.05f + 0.05f;
+		vec3 right = vec3(camMatrix[0] * width);
+		vec3 up = vec3(camMatrix[1] * width);
+		for (int i = 0; i < 1000; i++)
+		{
+			vec3 pos;
+			pos.x = sinf(time * 2.0f + i * 0.003f) * 0.5f + cosf(time + i * 0.01f) * 0.5f;
+			pos.y = sinf(time + i * 0.01f) + cosf(time * 4.0f + i * 0.011f) * 0.1f;
+			pos.z = sinf(time + i * 0.0233333f) * 1.0f;
+			vec3 pos1 = pos + right;
+			vec3 pos2 = pos - right;
+			vec3 pos3 = pos + up;
+			vec2 uv1{ 0,0 };
+			vec2 uv2{ 1,0 };
+			vec2 uv3{ 0.5f,1.0f };
+			u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
+			dr.AddVert(pos1, uv1, col);
+			dr.AddVert(pos2, uv2, col);
+			dr.AddVert(pos3, uv3, col);
+		}
+		dr.EndPrimitive();
+		dr.EndRender();
 	}
-	dr.EndPrimitive();
-	dr.EndRender();
+#endif
+
+	if (m_font->IsLoaded())
+		m_font->RenderText("Test", rect({ 0,0 }, { 1,0.2 }), 0, Alignment_Center, { 0.01f,0.01f }, { 0,0,0,1 });
+
 	dr.EndFrame();
 }
 

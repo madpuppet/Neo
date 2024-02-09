@@ -27,7 +27,8 @@ void PixelShaderPlatformData_Destroy(PixelShaderPlatformData* platformData);
 struct MaterialPlatformData
 {
 	VkPipelineLayout pipelineLayout;
-	VkPipeline pipeline;
+	VkPipeline polygonPipeline;
+	VkPipeline linePipeline;
 	VkDescriptorSetLayout descriptorSetLayout;
 	vector<VkDescriptorSet> descriptorSets;
 };
@@ -42,8 +43,3 @@ struct StaticMeshPlatformData
 StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData* assetData);
 void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData);
 
-struct BitmapFontPlatformData
-{
-};
-BitmapFontPlatformData* BitmapFontPlatformData_Create(struct BitmapFontAssetData* assetData);
-void BitmapFontPlatformData_Destroy(BitmapFontPlatformData* platformData);

@@ -1,0 +1,14 @@
+vertexShader: standard
+pixelShader: standard
+blendmode: opaque
+cull: back
+zread: true
+zwrite: true
+uniforms
+	texture: albedo
+		image: white
+		filter: nearest, nearest
+		wrap: repeat
+	blendColor: vec4
+		default: 1,1,1,1
+

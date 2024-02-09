@@ -62,6 +62,8 @@ void DynamicRenderer::StartPrimitive(PrimType primType)
 		m_cmds[m_updateFrame].emplace_back(cmd);
 		m_primType = primType;
 	}
+	m_vertStart = m_nextVert;
+	m_indexStart = m_nextIndex;
 }
 
 void DynamicRenderer::AddVert(const vec3& pos, const vec2& uv, u32 col)
@@ -137,22 +139,24 @@ void DynamicRenderer::Render(u32 endDrawOrder)
 	auto& rb = m_renderBlocks[m_drawFrame];
 
 	mat4x4 model(1);
+	gil.BindGeometryBuffer(m_geomBuffers[m_drawFrame]);
+	gil.SetModelMatrix(model);
+
+	bool lines = false;
 	while (m_nextRenderBlock < rb.size() && rb[m_nextRenderBlock].drawOrder < endDrawOrder)
 	{
-		gil.BindGeometryBuffer(m_geomBuffers[m_drawFrame]);
-		gil.SetModelMatrix(model);
-
 		auto& block = rb[m_nextRenderBlock++];
 		for (u32 c = 0; c < block.cmdCount; c++)
 		{
-			auto& cmd = m_cmds[m_drawFrame][c];
+			auto& cmd = m_cmds[m_drawFrame][c + block.cmdStart];
 			switch (cmd.cmdType)
 			{
 				case CmdType_SetMaterial:
-					gil.BindMaterial(m_materials[m_drawFrame][cmd.cmdData]);
+					gil.BindMaterial(m_materials[m_drawFrame][cmd.cmdData], lines);
 					break;
 				case CmdType_SetPrimType:
 					gil.SetRenderPrimitiveType((PrimType)cmd.cmdData);
+					lines = (cmd.cmdData == PrimType_LineList || cmd.cmdData == PrimType_LineStrip);
 					break;
 				case CmdType_RenderPrimitive:
 					gil.RenderPrimitive(cmd.vertStart, cmd.vertCount, cmd.indexStart, cmd.indexCount);

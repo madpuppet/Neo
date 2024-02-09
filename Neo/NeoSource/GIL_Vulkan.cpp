@@ -13,6 +13,7 @@ const vector<const char*> validationLayers = {
 };
 
 const vector<const char*> deviceExtensions = {
+    VK_EXT_EXTENDED_DYNAMIC_STATE_EXTENSION_NAME,
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
@@ -1100,15 +1101,15 @@ void GIL::createDescriptorPool()
 {
     std::array<VkDescriptorPoolSize, 2> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-    poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*2);
+    poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*30);
     poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*2);
+    poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*30);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*2);
+    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*30);
 
     if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) 
     {
@@ -1336,7 +1337,7 @@ void GIL::generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth,
 }
 
 // use material
-void GIL::BindMaterial(Material* material)
+void GIL::BindMaterial(Material* material, bool lines)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
@@ -1344,7 +1345,10 @@ void GIL::BindMaterial(Material* material)
     if (materialPD)
     {
         auto commandBuffer = m_commandBuffers[m_currentFrame];
-        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipeline);
+        if (lines)
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->linePipeline);
+        else
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->polygonPipeline);
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 1, &materialPD->descriptorSets[m_currentFrame], 0, nullptr);
     }
 }
@@ -1400,7 +1404,7 @@ void GIL::RenderStaticMesh(StaticMesh *mesh)
     if (!meshPD || !meshAD || !material || !meshPD->geomBuffer)
         return;
 
-    BindMaterial(material);
+    BindMaterial(material, false);
     BindGeometryBuffer(meshPD->geomBuffer);
     SetRenderPrimitiveType(PrimType_TriangleList);
     RenderPrimitive(0, 0, 0, meshPD->indiceCount);

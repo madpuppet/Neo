@@ -2,20 +2,27 @@
 #include "CmdLineVar.h"
 #include "StringUtils.h"
 
-struct CmdLineCallbacks
-{
-	CmdLineProcessCB process;
-	GenericCallback dump;
-};
-static hashtable<string, CmdLineCallbacks> s_cmdLines;
+// during pre-startup, just add cmdlines to a static queue since we can guarantee the queue size is initialised first
+static CmdLineVarBase *s_startupQueue[256];
+static int s_startupQueueSize = 0;
 
-void NeoRegisterCommandLine(const string& name, CmdLineProcessCB process, GenericCallback dump)
+// use a hashtable for faster lookup
+static hashtable<string, CmdLineVarBase*> s_cmdLines;
+
+void NeoRegisterCommandLine(CmdLineVarBase* clvb)
 {
-	s_cmdLines[name] = { process, dump };
+	// just put them in a simple array during c startup code, coz we can't guarantee the hashtable is ready to use yet
+	s_startupQueue[s_startupQueueSize++] = clvb;
 }
 
 void NeoParseCommandLine(int argc, char* argv[])
 {
+	// initialise our hash table
+	for (int i = 0; i < s_startupQueueSize; i++)
+	{
+		s_cmdLines[s_startupQueue[i]->Name()] = s_startupQueue[i];
+	}
+
 	for (int i = 1; i < argc; i++)
 	{
 		stringlist tokenValue = StringSplit(string(argv[i]), '=');
@@ -31,7 +38,7 @@ void NeoParseCommandLine(int argc, char* argv[])
 				stringlist tokens;
 				if (tokenValue.size() == 2)
 					tokens = StringSplit(tokenValue[1], ',');
-				it->second.process(tokens);
+				it->second->ProcessToken(tokens);
 			}
 			else
 			{
@@ -46,7 +53,7 @@ void NeoDumpCmdLineVars()
 	LOG(Any, "## DUMP COMMAND LINE VARIABLES");
 	for (auto it : s_cmdLines)
 	{
-		it.second.dump();
+		it.second->Dump();
 	}
 }
 

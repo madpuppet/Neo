@@ -30,8 +30,7 @@ inline bool StringContainsAny(const string& str, const string& chars)
 // convert utf8 string to an array of u16 values
 int StringToU16(string src, u16* buffer, int bufferLength);
 
-// pop off next utf8 at index idx.  return 0 when finished string
-u16 StringPopUTF8(const string& str, int& idx);
+vector<u32> StringToUnicode(const string& str);
 
 // replace all characters of oldChar with newChar.  utf8 friendly.
 string StringReplace(const string& str, char oldChar, char newChar);

@@ -2,9 +2,13 @@
 #include "BitmapFont.h"
 #include "StringUtils.h"
 #include "RenderThread.h"
+#include "ResourceLoadedManager.h"
+#include "DynamicRenderer.h"
 #include <stb_image.h>
 
-#define BITMAPFONT_VERSION 1
+#define BITMAPFONT_VERSION 2
+
+CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", true);
 
 DECLARE_MODULE(BitmapFontFactory, NeoModuleInitPri_BitmapFontFactory, NeoModulePri_None, NeoModulePri_None);
 
@@ -23,10 +27,27 @@ void BitmapFont::OnAssetDeliver(AssetData* data)
 	{
 		Assert(data->type == AssetType_BitmapFont, "Bad Asset Type");
 		m_assetData = dynamic_cast<BitmapFontAssetData*>(data);
-		RenderThread::Instance().AddPreDrawTask([this]() { m_platformData = BitmapFontPlatformData_Create(m_assetData); OnLoadComplete(); });
+
+		// create dependant resources
+		vector<Resource*> dependantResources;
+		for (auto& page : m_assetData->pages)
+		{
+			page.material.Create(page.file);
+			dependantResources.push_back(*page.material);
+		}
+
+		m_white.Create("white");
+		dependantResources.push_back(m_white);
+		
+		LOG(Font, STR("BitmapFont {} Dependancy List: {}", data->name, dependantResources.size()));
+
+		// we need to wait for our dependant resources, like Shaders and Textures,  to load first before creating our platform data (which are pipeline states)
+		// note that if they are already loaded, this will just trigger off the callback immediately
+		ResourceLoadedManager::Instance().AddDependancyList(this, dependantResources, [this]() { OnLoadComplete(); });
 	}
 	else
 	{
+		// failed to load but we still need to make it as loaded so dependant resources can continue
 		m_failedToLoad = true;
 		OnLoadComplete();
 	}
@@ -103,7 +124,7 @@ public:
 			if (*m_mem == '"')
 				inQuotes = !inQuotes;
 			else
-				m_token[tokenIdx++] = *m_mem++;
+				m_token[tokenIdx++] = *m_mem;
 			m_mem++;
 		}
 		m_token[tokenIdx] = 0;
@@ -128,7 +149,7 @@ public:
 					if (*m_mem == '"')
 						inQuotes = !inQuotes;
 					else
-						m_value[valueIdx++] = *m_mem++;
+						m_value[valueIdx++] = *m_mem;
 					m_mem++;
 				}
 				m_value[valueIdx] = 0;
@@ -150,7 +171,7 @@ public:
 		while (m_mem < m_end && (*m_mem == ' ' || *m_mem == '\t'))
 			m_mem++;
 
-		return (*m_mem != 10 && *m_mem != 13);
+		return !token.empty();
 	}
 
 	// skip EOL  (will skip multiple including any white space)
@@ -249,9 +270,12 @@ bool BitmapFontAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 			while (parser.GrabTokenValue(token, values))
 			{
 				if (token == "id" && values.size() == 1)
-					page.id = StringToI32(values[0]);
+				{
+					int id = StringToI32(values[0]);
+					Assert(id == pages.size(), "Unexpected Page ID - expected them to be in order 0..N");
+				}
 				else if (token == "file" && values.size() == 1)
-					page.file = values[0];
+					page.file = StringGetFilenameNoExt(values[0]);
 			}
 			pages.emplace_back(page);
 		}
@@ -269,7 +293,7 @@ bool BitmapFontAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 				else if (token == "width" && values.size() == 1)
 					charInfo.size.x = StringToI32(values[0]);
 				else if (token == "height" && values.size() == 1)
-					charInfo.size.x = StringToI32(values[0]);
+					charInfo.size.y = StringToI32(values[0]);
 				else if (token == "xoffset" && values.size() == 1)
 					charInfo.offset.x = StringToI32(values[0]);
 				else if (token == "yoffset" && values.size() == 1)
@@ -281,7 +305,7 @@ bool BitmapFontAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 				else if (token == "chnl" && values.size() == 1)
 					charInfo.channel = StringToI32(values[0]);
 			}
-			chars.emplace_back(charInfo);
+			chars[charInfo.id] = charInfo;
 		}
 		else
 		{
@@ -292,44 +316,37 @@ bool BitmapFontAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 	return true;
 }
 
-void BitmapFontAssetData::Serialize(Serializer& stream)
-{
-	type = AssetType_BitmapFont;
-	u16 assetType = (u16)type;
-	stream& assetType& version& name;
-
-	stream& info.face& info.charset& info.stretchH& info.bold& info.italic& info.unicode& info.smooth
-		& info.aa& info.outline& info.packed& info.alphaChnl& info.padding& info.spacing& info.lineHeight
-		& info.base& info.scaleW& info.scaleH& info.pages& info.redChnl& info.greenChnl& info.blueChnl;
-
-	u32 size = (u32)pages.size();
-	stream& size;
-	pages.resize(size);
-	for (auto& page : pages)
-	{
-		stream& page.id& page.file;
-	}
-
-	size = (u32)chars.size();
-	stream& size;
-	chars.resize(size);
-	for (auto& ch : chars)
-	{
-		stream& ch.id& ch.pos& ch.size& ch.offset& ch.xadvance& ch.page& ch.channel;
-	}
-}
-
 MemBlock BitmapFontAssetData::AssetToMemory()
 {
 	Serializer_BinaryWriteGrow stream;
-	Serialize(stream);
+
+	stream << type << version << name;
+
+	stream << info.face << info.charset << info.stretchH << info.bold << info.italic << info.unicode << info.smooth
+		   << info.aa << info.outline << info.packed << info.alphaChnl << info.padding << info.spacing << info.lineHeight
+		   << info.base << info.scaleW << info.scaleH << info.pages << info.redChnl << info.greenChnl << info.blueChnl;
+
+	stream << (u32)pages.size();
+	for (auto& page : pages)
+	{
+		stream << page.file;
+	}
+
+	stream << (u32)chars.size();
+	for (auto &it : chars)
+	{
+		auto& ch = it.second;
+		stream << ch.id << ch.pos << ch.size << ch.offset << ch.xadvance << ch.page << ch.channel;
+	}
+
 	return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
 }
 
 bool BitmapFontAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
-	Serialize(stream);
+
+	stream >> type >> version >> name;
 
 	if (type != AssetType_BitmapFont)
 	{
@@ -342,5 +359,158 @@ bool BitmapFontAssetData::MemoryToAsset(const MemBlock& block)
 		return false;
 	}
 
+	stream >> info.face >> info.charset >> info.stretchH >> info.bold >> info.italic >> info.unicode >> info.smooth
+		>> info.aa >> info.outline >> info.packed >> info.alphaChnl >> info.padding >> info.spacing >> info.lineHeight
+		>> info.base >> info.scaleW >> info.scaleH >> info.pages >> info.redChnl >> info.greenChnl >> info.blueChnl;
+
+	u32 size = stream.ReadU32();
+	pages.clear();
+	for (u32 i = 0; i < size; i++)
+	{
+		PageInfo page;
+		stream >> page.file;
+		pages.push_back(page);
+	}
+
+	size = stream.ReadU32();
+	for (auto& it : chars)
+	{
+		auto& ch = it.second;
+		stream << ch.id << ch.pos << ch.size << ch.offset << ch.xadvance << ch.page << ch.channel;
+	}
 	return true;
 }
+
+void BitmapFont::RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col)
+{
+	auto& dr = DynamicRenderer::Instance();
+	if (CLV_ShowFontBorders.Value())
+	{
+		dr.BeginRender(500);
+		dr.StartPrimitive(PrimType_LineStrip);
+		dr.UseMaterial(m_white);
+		dr.AddVert({ area.min.x,area.min.y,z }, vec2(0, 0), 0xffffffff);
+		dr.AddVert({ area.min.x + area.size.x,area.min.y,z }, vec2(1, 0), 0xffffffff);
+		dr.AddVert({ area.min.x + area.size.x,area.min.y+area.size.y,z }, vec2(0, 1), 0xffffffff);
+		dr.AddVert({ area.min.x,area.min.y + area.size.y,z }, vec2(1, 1), 0xffffffff);
+		dr.AddVert({ area.min.x,area.min.y,z }, vec2(0, 0), 0xffffffff);
+		dr.EndPrimitive();
+		dr.EndRender();
+	}
+
+	// first decode to font char indexes
+	vector<u32> codes = StringToUnicode(text);
+
+	// generate the render boxes for characters
+	struct CharBox
+	{
+		float x1, y1, x2, y2;
+		float u1, v1, u2, v2;
+	};
+
+	vector<CharBox> boxes;
+	float x = 0.0f;
+	float y = 0.0f;
+	float miny = 10000.0f;
+	float maxy = -10000.0f;
+
+	float scaleU = 1.0f / m_assetData->info.scaleW;
+	float scaleV = 1.0f / m_assetData->info.scaleH;
+	for (auto ch : codes)
+	{
+		auto it = m_assetData->chars.find(ch);
+		if (it != m_assetData->chars.end())
+		{
+			auto& chinfo = it->second;
+			float x1 = x + chinfo.offset.x;
+			float x2 = x1 + chinfo.size.x;
+			float y1 = y;
+			float y2 = y1 + chinfo.size.y;
+			float u1 = chinfo.pos.x* scaleU;
+			float u2 = (chinfo.pos.x + chinfo.size.x)* scaleU;
+			float v2 = (chinfo.pos.y* scaleV);
+			float v1 = ((chinfo.pos.y + chinfo.size.y)* scaleV);
+			x = x + chinfo.xadvance;
+			x1 *= scale.x;
+			x2 *= scale.x;
+			y1 *= scale.y;
+			y2 *= scale.y;
+			boxes.emplace_back(x1,y1,x2,y2,u1,v1,u2,v2);
+			miny = Min(miny, y1);
+			maxy = Max(maxy, y2);
+		}
+	}
+	if (boxes.empty())
+		return;
+
+	float minx = boxes.front().x1;
+	float maxx = boxes.back().x2;
+
+	// calculate the appropriate offset to align the box to the draw area
+	float xoffset = 0.0f;
+	float yoffset = 0.0f;
+	switch (align)
+	{
+		case Alignment_TopLeft:
+			xoffset = area.min.x - minx;
+			yoffset = area.min.y + area.size.y - maxy;
+			break;
+		case Alignment_TopCenter:
+			xoffset = (area.min.x + area.size.x / 2 - (maxx - minx) / 2) - minx;
+			yoffset = area.min.y + area.size.y - maxy;
+			break;
+		case Alignment_TopRight:
+			xoffset = area.min.x + area.size.x - maxx;
+			yoffset = area.min.y + area.size.y - maxy;
+			break;
+		case Alignment_CenterLeft:
+			xoffset = area.min.x - minx;
+			yoffset = (area.min.y + area.size.y / 2 - (maxy - miny) / 2) - miny;
+			break;
+		case Alignment_Center:
+			xoffset = (area.min.x + area.size.x / 2 - (maxx - minx) / 2) - minx;
+			yoffset = (area.min.y + area.size.y / 2 - (maxy - miny) / 2) - miny;
+			break;
+		case Alignment_CenterRight:
+			xoffset = area.min.x + area.size.x - maxx;
+			yoffset = (area.min.y + area.size.y / 2 - (maxy - miny) / 2) - miny;
+			break;
+		case Alignment_BottomLeft:
+			xoffset = area.min.x - minx;
+			yoffset = area.min.y - miny;
+			break;
+		case Alignment_BottomCenter:
+			xoffset = (area.min.x + area.size.x / 2 - (maxx - minx) / 2) - minx;
+			yoffset = area.min.y - miny;
+			break;
+		case Alignment_BottomCenterRight:
+			xoffset = area.min.x + area.size.x - maxx;
+			yoffset = area.min.y - miny;
+			break;
+	};
+
+	dr.BeginRender(500);
+	dr.StartPrimitive(PrimType_TriangleList);
+	dr.UseMaterial(m_assetData->pages[0].material);
+	u32 col32 = vec4ToR8G8B8A8(col);
+	int toggleZ = 0;
+	for (auto &ch : boxes)
+	{
+		float _z = z + toggleZ * 0.001f;
+		toggleZ = 1 - toggleZ;
+
+		dr.AddVert({ ch.x1+ xoffset, ch.y1 + yoffset, _z }, { ch.u1, ch.v1 }, col32);
+		dr.AddVert({ ch.x1 + xoffset, ch.y2 + yoffset, _z }, { ch.u1, ch.v2 }, col32);
+		dr.AddVert({ ch.x2 + xoffset, ch.y1 + yoffset, _z }, { ch.u2, ch.v1 }, col32);
+
+		dr.AddVert({ ch.x2 + xoffset, ch.y2 + yoffset, _z }, { ch.u2, ch.v2 }, col32);
+		dr.AddVert({ ch.x2 + xoffset, ch.y1 + yoffset, _z }, { ch.u2, ch.v1 }, col32);
+		dr.AddVert({ ch.x1 + xoffset, ch.y2 + yoffset, _z }, { ch.u1, ch.v2 }, col32);
+	}
+	dr.EndPrimitive();
+	dr.EndRender();
+}
+
+
+
+

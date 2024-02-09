@@ -27,6 +27,7 @@
 
 #include "Application.h"  //TODO: we shouldn't know about Application - it should just itself to a generic update callback
 #include "RenderThread.h"
+#include "DynamicRenderer.h"
 
 CmdLineVar<stringlist> CLV_LogFilter("log", "select log filters to show", { "" });
 
@@ -67,7 +68,12 @@ int main(int argc, char* argv[])
 
             }
         }
+
+        auto& dr = DynamicRenderer::Instance();
+        dr.BeginFrame();
         NeoUpdateModules();
+        dr.EndFrame();
+
         RenderThread::Instance().SignalUpdateDone();
         RenderThread::Instance().WaitDrawStarted();
     }

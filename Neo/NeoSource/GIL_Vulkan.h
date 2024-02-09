@@ -121,7 +121,7 @@ public:
 	void UnmapGeometryBufferMemory(NeoGeometryBuffer* buffer);
 
 	// use material
-	void BindMaterial(class Material* material);
+	void BindMaterial(class Material* material, bool lines);
 
 	// bind geometry buffers
 	void BindGeometryBuffer(NeoGeometryBuffer* buffer);

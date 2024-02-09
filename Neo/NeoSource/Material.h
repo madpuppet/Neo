@@ -119,6 +119,7 @@ public:
 class MaterialFactory : public Module<MaterialFactory>
 {
 	map<u64, Material*> m_resources;
+	Material* m_blank;
 
 public:
 	MaterialFactory();
@@ -126,6 +127,7 @@ public:
 	Material* Create(const string& name);
 	Material* CreateInstance(const string& name, const string& original);
 	void Destroy(Material* texture);
+	Material* GetBlank() { return m_blank; }
 };
 
 class MaterialRef : public ResourceRef<Material, MaterialFactory>

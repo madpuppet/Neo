@@ -2,29 +2,42 @@
 
 typedef std::function<void(stringlist)> CmdLineProcessCB;
 
-template <typename T>
-class CmdLineVar
+class CmdLineVarBase
 {
 protected:
+	CmdLineVarBase(const string& name, const string& desc) : m_name(name), m_desc(desc) {}
+	~CmdLineVarBase() {}
+
 	string m_name;
 	string m_desc;
-	T m_defaultValue;
-
 	bool m_exists = false;
+
+public:
+	virtual void ProcessToken(stringlist values) = 0;
+	virtual void Dump() = 0;
+	bool Exists() { return m_exists; };
+	const string& Name() { return m_name; };
+	const string& Desc() { return m_desc; };
+};
+
+template <typename T>
+class CmdLineVar : public CmdLineVarBase
+{
+protected:
+	T m_defaultValue;
 	T m_value;
 
 public:
-	CmdLineVar(string name, string desc, T defaultValue) : m_name(name), m_desc(desc), m_defaultValue(defaultValue)
+	CmdLineVar(const string &name, const string &desc, T defaultValue) : m_defaultValue(defaultValue), CmdLineVarBase(name, desc)
 	{
-		NeoRegisterCommandLine(name, [this](stringlist values) {ProcessToken(values); }, [this]() {Dump();});
+		NeoRegisterCommandLine(this);
 	}
 	T Value() { return m_exists ? m_value : m_defaultValue; }
-	bool Exists() { return m_exists; }
 
-	void ProcessToken(stringlist values);
-	void Dump();
+	virtual void ProcessToken(stringlist values) override;
+	virtual void Dump() override;
 };
 
-void NeoRegisterCommandLine(const string &name, CmdLineProcessCB process, GenericCallback dump);
+void NeoRegisterCommandLine(CmdLineVarBase *clvb);
 void NeoParseCommandLine(int argc, char* argv[]);
 void NeoDumpCmdLineVars();
