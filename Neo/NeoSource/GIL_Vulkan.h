@@ -80,8 +80,11 @@ struct NeoGeometryBuffer
 {
 	VkBuffer vertexBuffer = nullptr;
 	VkDeviceMemory vertexBufferMemory = nullptr;
+	u32 vertexBufferSize = 0;
+
 	VkBuffer indexBuffer = nullptr;
 	VkDeviceMemory indexBufferMemory = nullptr;
+	u32 indexBufferSize = 0;
 };
 
 class GIL : public Module<GIL>
@@ -113,6 +116,9 @@ public:
 	// create and destroy vertex&indice buffers for use with geometry rendering
 	NeoGeometryBuffer* CreateGeometryBuffer(void* vertData, u32 bufferSize, void* indiceData, u32 indiceSize);
 	void DestroyGeometryBuffer(NeoGeometryBuffer* buffer);
+	void MapGeometryBufferMemory(NeoGeometryBuffer* buffer, void**vertexMem, void**indexMem);
+	void FlushGeometryBufferMemory(NeoGeometryBuffer* buffer, u32 vertDataSize, u32 indexDataSize);
+	void UnmapGeometryBufferMemory(NeoGeometryBuffer* buffer);
 
 	// use material
 	void BindMaterial(class Material* material);
@@ -121,7 +127,10 @@ public:
 	void BindGeometryBuffer(NeoGeometryBuffer* buffer);
 
 	// render primitive
-	void RenderPrimitive(PrimType primType, u32 vertStart, u32 vertCount, u32 indexStart, u32 indexCount);
+	void SetRenderPrimitiveType(PrimType primType);
+
+	// render primitive
+	void RenderPrimitive(u32 vertStart, u32 vertCount, u32 indexStart, u32 indexCount);
 
 	// add model to render queue
 	// must be called on render thread
@@ -135,7 +144,6 @@ public:
 	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat);
 	void SetViewport(const rect &viewport, float minDepth, float maxDepth);
 	void SetScissor(const rect &scissorRect);
-
 	ivec2 GetFrameBufferSize() { return m_frameBufferSize; }
 
 	// TODO: should do a Platform Interface Layer for misc services not graphics related
@@ -144,6 +152,7 @@ public:
 	float GetJoystickAxis(int idx);
 
 protected:
+	void WaitForMemory();
 
 #ifdef NDEBUG
 	const bool m_enableValidationLayers = false;

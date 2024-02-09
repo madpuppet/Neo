@@ -645,7 +645,7 @@
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
     <ClInclude Include="NeoSource\PixelShader.h" />
-    <ClInclude Include="NeoSource\PolyRenderer.h" />
+    <ClInclude Include="NeoSource\DynamicRenderer.h" />
     <ClInclude Include="NeoSource\StaticMesh.h" />
     <ClInclude Include="NeoSource\Module.h" />
     <ClInclude Include="NeoSource\Neo.h" />
@@ -661,7 +661,7 @@
     <ClCompile Include="NeoSource\BitmapFont.cpp" />
     <ClCompile Include="NeoSource\CmdLineVar.cpp" />
     <ClCompile Include="NeoSource\Log.cpp" />
-    <ClCompile Include="NeoSource\PolyRenderer.cpp" />
+    <ClCompile Include="NeoSource\DynamicRenderer.cpp" />
     <ClCompile Include="NeoSource\TimeManager.cpp" />
     <ClInclude Include="NeoSource\VertexShader.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />

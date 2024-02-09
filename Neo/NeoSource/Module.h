@@ -17,6 +17,7 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_BitmapFontFactory,
 	NeoModuleInitPri_GIL,
 	NeoModuleInitPri_RenderThread,
+	NeoModuleInitPri_DynamicRenderer,
 
 	NeoModuleInitPri_Application = 1000
 };

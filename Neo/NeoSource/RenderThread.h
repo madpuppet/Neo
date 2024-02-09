@@ -12,10 +12,13 @@ class RenderThread : public Module<RenderThread>, public Thread
 	// create a thread for running GIL tasks async
 	// not all things can be run on GIL thread - ie. command queue stuff must be run on render thread
 	WorkerThread m_gilTaskThread;
-//	fifo<GenericCallback> m_preDrawTasks;
 
-	vector<GenericCallback> m_preDrawTasks;
+	// these allow synchronisation for initial startup tasks which happen after all module startups but before the first module update
+	Semaphore m_doStartupTasks;
+	Semaphore m_startupTasksComplete;
+
 	Mutex m_preDrawTaskLock;
+	vector<GenericCallback> m_preDrawTasks;
 
 	// list of tasks to run during the render draw - general these add items to the render command queue
 	struct RenderTask
@@ -45,10 +48,22 @@ public:
 		m_gilTaskThread.AddTask(task);
 	}
 
+	// tasks that will execute before the main draw loop (after all previous frame work is complete)
+	// note that any pre draw tasks added during module startup will execute before the first module update
 	void AddPreDrawTask(const GenericCallback& task);
 
+	// execute startup tasks - waits until they are finished before it returns
+	// this should be called by main thread before the first Update() loop,  after module startups are finished
+	void DoStartupTasks()
+	{
+		m_doStartupTasks.Signal();
+		m_startupTasksComplete.Wait();
+	}
+
+	// internal GO
 	virtual int Go() override;
 
+	// terminate the render thread asap.
 	virtual void Terminate()
 	{
 		m_terminate = true;

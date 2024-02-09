@@ -1526,7 +1526,7 @@
     <ClInclude Include="NeoSource\CmdLineVar.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\PolyRenderer.h">
+    <ClInclude Include="NeoSource\DynamicRenderer.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\BitmapFont.h">
@@ -1657,7 +1657,7 @@
     <ClCompile Include="NeoSource\CmdLineVar.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
-    <ClCompile Include="NeoSource\PolyRenderer.cpp">
+    <ClCompile Include="NeoSource\DynamicRenderer.cpp">
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\BitmapFont.cpp">

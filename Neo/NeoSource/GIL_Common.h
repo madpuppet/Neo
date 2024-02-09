@@ -2,7 +2,8 @@
 
 enum PrimType
 {
-    PrimType_PointList,
+    PrimType_Unknown = -1,
+    PrimType_PointList = 0,
     PrimType_LineList,
     PrimType_LineStrip,
     PrimType_TriangleList,

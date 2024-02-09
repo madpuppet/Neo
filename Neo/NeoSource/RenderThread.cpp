@@ -37,7 +37,6 @@ void RenderThread::AddPreDrawTask(const GenericCallback& task)
 	}
 }
 
-
 RenderThread::~RenderThread()
 {
 	StopAndWait();
@@ -49,6 +48,19 @@ int RenderThread::Go()
 	gil.Startup();
 	m_gilTaskThread.Start();
 	m_gilInitialized = true;
+
+	// module startup tasks
+	m_doStartupTasks.Wait();
+	m_preDrawTaskLock.Lock();
+	vector<GenericCallback> tasks = std::move(m_preDrawTasks);
+	m_preDrawTaskLock.Release();
+	for (auto& task : tasks)
+	{
+		task();
+	}
+	m_startupTasksComplete.Signal();
+
+	// main draw loop - starts after the first Update() is finished
 	while (!m_terminate)
 	{
 		WaitUpdateDone();

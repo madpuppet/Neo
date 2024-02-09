@@ -39,6 +39,7 @@ int main(int argc, char* argv[])
 
     NeoDumpCmdLineVars();
     NeoStartupModules();
+    RenderThread::Instance().DoStartupTasks();
 
     bool m_quit = false;
     SDL_Event e;

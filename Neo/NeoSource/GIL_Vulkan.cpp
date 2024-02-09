@@ -211,7 +211,6 @@ void GIL::BeginFrame()
     renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-  
 }
 
 void GIL::SetModelMatrix(const mat4x4& modelMat)
@@ -1365,14 +1364,20 @@ void GIL::BindGeometryBuffer(NeoGeometryBuffer* buffer)
     }
 }
 
+void GIL::SetRenderPrimitiveType(PrimType primType)
+{
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+    auto commandBuffer = m_commandBuffers[m_currentFrame];
+    vkCmdSetPrimitiveTopology(commandBuffer, VkPrimitiveTopology(primType));
+}
+
+
 // render primitive
-void GIL::RenderPrimitive(PrimType primType, u32 vertStart, u32 vertCount, u32 indexStart, u32 indexCount)
+void GIL::RenderPrimitive(u32 vertStart, u32 vertCount, u32 indexStart, u32 indexCount)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
     auto commandBuffer = m_commandBuffers[m_currentFrame];
-    vkCmdSetPrimitiveTopology(commandBuffer, VkPrimitiveTopology(primType));
-
     if (indexCount == 0)
     {
         vkCmdDraw(commandBuffer, vertCount, 1, vertStart, 0);
@@ -1397,7 +1402,8 @@ void GIL::RenderStaticMesh(StaticMesh *mesh)
 
     BindMaterial(material);
     BindGeometryBuffer(meshPD->geomBuffer);
-    RenderPrimitive(PrimType_TriangleList, 0, 0, 0, meshPD->indiceCount);;
+    SetRenderPrimitiveType(PrimType_TriangleList);
+    RenderPrimitive(0, 0, 0, meshPD->indiceCount);
 }
 
 
@@ -1438,13 +1444,20 @@ NeoGeometryBuffer* GIL::CreateGeometryBuffer(void* vertData, u32 vertDataSize, v
 
     createBuffer(vertDataSize, VK_BUFFER_USAGE_VERTEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
         buffer->vertexBuffer, buffer->vertexBufferMemory);
+    buffer->vertexBufferSize = vertDataSize;
 
-    copyMemoryToBuffer(buffer->vertexBufferMemory, vertData, vertDataSize);
+    if (vertData)
+        copyMemoryToBuffer(buffer->vertexBufferMemory, vertData, vertDataSize);
 
-    createBuffer(indexDataSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
-        buffer->indexBuffer, buffer->indexBufferMemory);
+    if (indexDataSize)
+    {
+        createBuffer(indexDataSize, VK_BUFFER_USAGE_INDEX_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            buffer->indexBuffer, buffer->indexBufferMemory);
 
-    copyMemoryToBuffer(buffer->indexBufferMemory, indexData, indexDataSize);
+        if (indexData)
+            copyMemoryToBuffer(buffer->indexBufferMemory, indexData, indexDataSize);
+    }
+    buffer->indexBufferSize = indexDataSize;
 
     return buffer;
 }
@@ -1462,5 +1475,39 @@ void GIL::DestroyGeometryBuffer(NeoGeometryBuffer* buffer)
         delete buffer;
     }
 }
+void GIL::MapGeometryBufferMemory(NeoGeometryBuffer* buffer, void**vertexMem, void**indexMem)
+{
+    vkMapMemory(m_device, buffer->vertexBufferMemory, 0, buffer->vertexBufferSize, 0, vertexMem);
+    if (buffer->indexBufferSize)
+        vkMapMemory(m_device, buffer->indexBufferMemory, 0, buffer->indexBufferSize, 0, indexMem);
+}
+void GIL::FlushGeometryBufferMemory(NeoGeometryBuffer* buffer, u32 vertDataSize, u32 indexDataSize)
+{
+    vertDataSize = (vertDataSize + 63) & ~63;
+    indexDataSize = (indexDataSize + 63) & ~63;
 
+    int flushCount = 1;
+    VkMappedMemoryRange vertexMemoryRange[2] = {};
+    vertexMemoryRange[0].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+    vertexMemoryRange[0].memory = buffer->vertexBufferMemory;
+    vertexMemoryRange[0].offset = 0;
+    vertexMemoryRange[0].size = vertDataSize;
+
+    if (buffer->indexBufferSize && indexDataSize)
+    {
+        flushCount = 2;
+        vertexMemoryRange[1].sType = VK_STRUCTURE_TYPE_MAPPED_MEMORY_RANGE;
+        vertexMemoryRange[1].memory = buffer->indexBufferMemory;
+        vertexMemoryRange[1].offset = 0;
+        vertexMemoryRange[1].size = indexDataSize;
+    }
+    vkFlushMappedMemoryRanges(m_device, flushCount, vertexMemoryRange);
+}
+void GIL::UnmapGeometryBufferMemory(NeoGeometryBuffer* buffer)
+{
+    vkUnmapMemory(m_device, buffer->vertexBufferMemory);
+
+    if (buffer->indexBufferSize)
+        vkUnmapMemory(m_device, buffer->indexBufferMemory);
+}
 
