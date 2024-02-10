@@ -29,8 +29,8 @@ struct MaterialPlatformData
 	VkPipelineLayout pipelineLayout;
 	VkPipeline polygonPipeline;
 	VkPipeline linePipeline;
-	VkDescriptorSetLayout descriptorSetLayout;
-	vector<VkDescriptorSet> descriptorSets;
+	VkDescriptorSetLayout dsLayout[3];			// view, material, model
+	VkDescriptorSet descriptorSets[2][3];		// 2 frames in flight, 3 sets
 };
 MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);

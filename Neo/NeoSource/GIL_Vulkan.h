@@ -21,6 +21,23 @@
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
+struct UBO_View
+{
+	mat4x4 view;
+	mat4x4 proj;
+};
+
+struct UBO_Material
+{
+	vec4 blend;
+};
+
+struct UBO_Model
+{
+	mat4x4 model;
+};
+
+
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec2 texCoord;
@@ -73,6 +90,7 @@ struct UniformBufferObject {
     alignas(16) mat4x4 model;
     alignas(16) mat4x4 view;
     alignas(16) mat4x4 proj;
+	alignas(16) vec4 blend;
 };
 
 // geometry buffers hold vertex & index data for rendering sets of geometry
@@ -141,7 +159,11 @@ public:
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
 
 	void SetModelMatrix(const mat4x4& modelMat);
+
+	void SetAndBindModelMatrix(const mat4x4& modelMat);
+
 	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat);
+	void SetMaterialBlendColor(const vec4& blendColor);
 	void SetViewport(const rect &viewport, float minDepth, float maxDepth);
 	void SetScissor(const rect &scissorRect);
 	ivec2 GetFrameBufferSize() { return m_frameBufferSize; }
@@ -199,9 +221,21 @@ protected:
 	VkBuffer m_indexBuffer;
 	VkDeviceMemory m_indexBufferMemory;
 
-	std::vector<VkBuffer> m_uniformBuffers;
-	std::vector<VkDeviceMemory> m_uniformBuffersMemory;
-	std::vector<void*> m_uniformBuffersMapped;
+	std::vector<VkBuffer> m_viewUBO;
+	std::vector<VkDeviceMemory> m_viewUBOMemory;
+	std::vector<void*> m_viewUBOMapped;
+
+	std::vector<VkBuffer> m_materialUBO;
+	std::vector<VkDeviceMemory> m_materialUBOMemory;
+	std::vector<void*> m_materialUBOMapped;
+
+	std::vector<VkBuffer> m_modelUBO;
+	std::vector<VkDeviceMemory> m_modelUBOMemory;
+	std::vector<void*> m_modelUBOMapped;
+
+	Material* m_boundMaterial;
+	u32 m_currModelDynamicOffset;
+	u32 m_nextModelDynamicOffset;
 
 	VkDescriptorPool m_descriptorPool;
 	std::vector<VkCommandBuffer> m_commandBuffers;
@@ -259,6 +293,11 @@ protected:
 	void createFramebuffers();
 	void createTextureSampler();
 	void createUniformBuffers();
+
+	void createUniformBuffer(std::vector<VkBuffer>& buffers, std::vector<VkDeviceMemory>& memory, std::vector<void*>& mapped, size_t size);
+	void createDynamicUniformBuffer(std::vector<VkBuffer>& buffers, std::vector<VkDeviceMemory>& memory, std::vector<void*>& mapped, size_t size, size_t memorySize);
+
+
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 	void createDescriptorPool();
@@ -266,7 +305,6 @@ protected:
 	void createCommandBuffers();
 	void createSyncObjects();
 	void recreateSwapChain();
-	void updateUniformBuffer(uint32_t currentImage);
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 
 	// these methods are used by external functions like Texture Platform creation
@@ -274,13 +312,18 @@ public:
 	VkDevice Device() { return m_device; }
 	VkCommandPool CommandPool() { return m_commandPool; }
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
-	std::vector<VkBuffer>& UniformBuffers() { return m_uniformBuffers; }
 	VkSampler TextureSampler() { return m_textureSampler; }
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+
+	std::vector<VkBuffer>& ViewUBO() { return m_viewUBO; }
+	std::vector<VkBuffer>& MaterialUBO() { return m_materialUBO; }
+	std::vector<VkBuffer>& ModelUBO() { return m_modelUBO; }
 
 	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+	void createDynamicBuffer(VkDeviceSize bufferSize, VkDeviceSize memorySize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
+
 	void copyMemoryToBuffer(VkDeviceMemory bufferMemory, void* memory, size_t size);
 
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);

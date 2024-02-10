@@ -212,13 +212,33 @@ void GIL::BeginFrame()
     renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+    m_boundMaterial = nullptr;
+    m_currModelDynamicOffset = 0;
+    m_nextModelDynamicOffset = 0;
 }
 
 void GIL::SetModelMatrix(const mat4x4& modelMat)
 {
-    UniformBufferObject* ubo = (UniformBufferObject*)m_uniformBuffersMapped[m_currentFrame];
+    auto ubo = (UBO_Model*)m_modelUBOMapped[m_currentFrame];
     ubo->model = modelMat;
 }
+
+void GIL::SetAndBindModelMatrix(const mat4x4& modelMat)
+{
+    int size = (sizeof(UBO_Model) + 63) & ~63;
+    m_currModelDynamicOffset = m_nextModelDynamicOffset;
+    m_nextModelDynamicOffset += size;
+
+    auto ubo = (UBO_Model*)((u8*)m_modelUBOMapped[m_currentFrame] + m_currModelDynamicOffset);
+    ubo->model = modelMat;
+
+    if (m_boundMaterial)
+    {
+        vkCmdBindDescriptorSets(m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundMaterial->GetPlatformData()->pipelineLayout, 2, 1, &m_boundMaterial->GetPlatformData()->descriptorSets[m_currentFrame][2], 1, &m_currModelDynamicOffset);
+    }
+}
+
 
 mat4x4 InverseSimple(const mat4x4 & m)
 {
@@ -236,9 +256,15 @@ mat4x4 InverseSimple(const mat4x4 & m)
 
 void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat)
 {
-    UniformBufferObject* ubo = (UniformBufferObject * )m_uniformBuffersMapped[m_currentFrame];
+    auto ubo = (UBO_View*)m_viewUBOMapped[m_currentFrame];
     ubo->view = viewMat;
     ubo->proj = projMat;
+}
+
+void GIL::SetMaterialBlendColor(const vec4 &blendColor)
+{
+    auto ubo = (UBO_Material*)m_materialUBOMapped[m_currentFrame];
+    ubo->blend = blendColor;
 }
 
 void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
@@ -321,23 +347,6 @@ void GIL::EndFrame()
 
     m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
 }
-
-void GIL::updateUniformBuffer(uint32_t currentImage)
-{
-    static auto startTime = std::chrono::high_resolution_clock::now();
-
-    auto currentTime = std::chrono::high_resolution_clock::now();
-    float time = std::chrono::duration<float, std::chrono::seconds::period>(currentTime - startTime).count();
-
-    UniformBufferObject ubo{};
-    ubo.model = glm::rotate(glm::mat4(1.0f), time * glm::radians(90.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.view = glm::lookAt(glm::vec3(2.0f, 2.0f, 2.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 1.0f));
-    ubo.proj = glm::perspective(glm::radians(45.0f), m_swapChainExtent.width / (float)m_swapChainExtent.height, 0.1f, 10.0f);
-    ubo.proj[1][1] *= -1;
-
-    memcpy(m_uniformBuffersMapped[currentImage], &ubo, sizeof(ubo));
-}
-
 
 void GIL::createSurface()
 {
@@ -991,18 +1000,11 @@ void GIL::createTextureSampler()
 }
 
 void GIL::createUniformBuffers() {
-    VkDeviceSize bufferSize = sizeof(UniformBufferObject);
+    createUniformBuffer(m_viewUBO, m_viewUBOMemory, m_viewUBOMapped, sizeof(UBO_View));
+    createUniformBuffer(m_materialUBO, m_materialUBOMemory, m_materialUBOMapped, sizeof(UBO_Material));
 
-    m_uniformBuffers.resize(MAX_FRAMES_IN_FLIGHT);
-    m_uniformBuffersMemory.resize(MAX_FRAMES_IN_FLIGHT);
-    m_uniformBuffersMapped.resize(MAX_FRAMES_IN_FLIGHT);
-
-    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-    {
-        createBuffer(bufferSize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, m_uniformBuffers[i], m_uniformBuffersMemory[i]);
-
-        vkMapMemory(m_device, m_uniformBuffersMemory[i], 0, bufferSize, 0, &m_uniformBuffersMapped[i]);
-    }
+    int alignedSize = (sizeof(UBO_Model) + 63) & ~63;
+    createDynamicUniformBuffer(m_modelUBO, m_modelUBOMemory, m_modelUBOMapped, sizeof(UBO_Model), alignedSize*256);
 }
 
 void GIL::copyMemoryToBuffer(VkDeviceMemory bufferMemory, void *memory, size_t size)
@@ -1019,6 +1021,34 @@ void GIL::copyMemoryToBuffer(VkDeviceMemory bufferMemory, void *memory, size_t s
     vkFlushMappedMemoryRanges(m_device, 1, &vertexMemoryRange);
 
     vkUnmapMemory(m_device, bufferMemory);
+}
+
+void GIL::createUniformBuffer(std::vector<VkBuffer> &buffers, std::vector<VkDeviceMemory> &memory, std::vector<void*> &mapped, size_t size)
+{
+    buffers.resize(MAX_FRAMES_IN_FLIGHT);
+    memory.resize(MAX_FRAMES_IN_FLIGHT);
+    mapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        createBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffers[i], memory[i]);
+
+        vkMapMemory(m_device, memory[i], 0, size, 0, &mapped[i]);
+    }
+}
+
+void GIL::createDynamicUniformBuffer(std::vector<VkBuffer>& buffers, std::vector<VkDeviceMemory>& memory, std::vector<void*>& mapped, size_t size, size_t memorySize)
+{
+    buffers.resize(MAX_FRAMES_IN_FLIGHT);
+    memory.resize(MAX_FRAMES_IN_FLIGHT);
+    mapped.resize(MAX_FRAMES_IN_FLIGHT);
+
+    for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        createDynamicBuffer(size, memorySize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffers[i], memory[i]);
+
+        vkMapMemory(m_device, memory[i], 0, size, 0, &mapped[i]);
+    }
 }
 
 void GIL::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
@@ -1050,6 +1080,37 @@ void GIL::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryProp
 
     vkBindBufferMemory(m_device, buffer, bufferMemory, 0);
 }
+
+void GIL::createDynamicBuffer(VkDeviceSize size, VkDeviceSize memorySize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
+{
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = memorySize;
+    bufferInfo.usage = usage;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+
+    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &buffer) != VK_SUCCESS)
+    {
+        Error("failed to create buffer!");
+    }
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(m_device, buffer, &memRequirements);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memorySize;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, properties);
+
+    auto rc = vkAllocateMemory(m_device, &allocInfo, nullptr, &bufferMemory);
+    if (rc != VK_SUCCESS)
+    {
+        Error(STR("failed to allocate buffer memory! RC {}", (int)rc));
+    }
+
+    vkBindBufferMemory(m_device, buffer, bufferMemory, 0);
+}
+
 
 void GIL::copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size) 
 {
@@ -1099,17 +1160,19 @@ void GIL::endSingleTimeCommands(VkCommandBuffer commandBuffer)
 
 void GIL::createDescriptorPool() 
 {
-    std::array<VkDescriptorPoolSize, 2> poolSizes{};
+    std::array<VkDescriptorPoolSize, 3> poolSizes{};
     poolSizes[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
     poolSizes[0].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*30);
-    poolSizes[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[1].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
     poolSizes[1].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*30);
+    poolSizes[2].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+    poolSizes[2].descriptorCount = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*30);
 
     VkDescriptorPoolCreateInfo poolInfo{};
     poolInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
-    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*30);
+    poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*90);
 
     if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) 
     {
@@ -1349,7 +1412,9 @@ void GIL::BindMaterial(Material* material, bool lines)
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->linePipeline);
         else
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->polygonPipeline);
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 1, &materialPD->descriptorSets[m_currentFrame], 0, nullptr);
+
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 3, materialPD->descriptorSets[m_currentFrame], 1, &m_currModelDynamicOffset);
+        m_boundMaterial = material;
     }
 }
 

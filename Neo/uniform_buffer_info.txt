@@ -1,0 +1,81 @@
+Allocate big block of memory * 2
+
+Declare uniform buffer layout  (set,  size,  members)
+
+Push uniform (name, memory)
+-  allocates memory for uniform
+- 
+
+
+
+
+
+
+
+Bind descriptor sets
+
+
+
+
+
+Create UBOs for  scene, view, material, mesh.
+
+Scene
+{
+	view stuff
+	shadow stuff
+	ortho stuff
+	lighting
+}
+
+Material
+{ 
+   miscellaneous used for this render group
+}
+
+Mesh
+{
+   current render group
+}
+
+Push
+{
+}
+
+
+descriptorSets    SCENE,  VIEW,  MATERIAL,  MODEL
+
+
+Set
+{
+  Scene
+}
+View
+{
+  View
+}
+Material
+{
+  Material
+}
+Mesh
+{
+}
+
+=================================
+
+m_uniformBuffer,  m_uniformBufferMemory, m_uniformBufferMapped
+vkCreateBuffer(m_uniformBuffer)
+vkAllocateMemory(m_uniformBufferMemory)
+vkBindBufferMemory(m_uniformBuffer, m_uniformBufferMemory, OFFSET)		// can use one big memory buffer per frame and bind at offsets
+
+VkDescriptorBufferInfo bufferInfo
+
+
+- bindMemory (offset)
+m_uniformBuffersMapped == vkMapMemory(uniformBufferMemory)
+
+
+
+
+

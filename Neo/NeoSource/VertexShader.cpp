@@ -157,10 +157,24 @@ bool CompileShader(MemBlock srcBlock, MemBlock &spvBlock, AssetType assetType)
 	}
 
 	// compile the file
-	std::string command = "glslc " + stage + srcPath + " -o " + spvPath + " 2>" + errPath;
+	string command = "glslc " + stage + srcPath + " -o " + spvPath + " 2>" + errPath;
 	int result = std::system(command.c_str());
 	if (result != 0) 
 	{
+		// load error file for display
+		std::ifstream errFile(errPath, std::ios::ate);
+		if (errFile.is_open())
+		{
+			MemBlock errBlock;
+			std::streamsize fileSize = errFile.tellg();
+			errFile.seekg(0, std::ios::beg);
+			errBlock.Resize(fileSize);
+			errFile.read(reinterpret_cast<char*>(errBlock.Mem()), errBlock.Size());
+			errFile.close();
+			string errMsg((const char *)errBlock.Mem(), errBlock.Size());
+			LOG(Any, errMsg);
+		}
+
 		Error(STR("Failed to compile shader: {}", command));
 		return false;
 	}
