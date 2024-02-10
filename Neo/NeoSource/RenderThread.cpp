@@ -26,15 +26,8 @@ RenderThread::RenderThread() : m_gilTaskThread(ThreadGUID_GILTasks, "GILThread")
 
 void RenderThread::AddPreDrawTask(const GenericCallback& task)
 {
-	if (Thread::IsOnThread(ThreadGUID_Render))
-	{
-		m_preDrawTasks.push_back(task);
-	}
-	else
-	{
-		ScopedMutexLock lock(m_preDrawTaskLock);
-		m_preDrawTasks.push_back(task);
-	}
+	ScopedMutexLock lock(m_preDrawTaskLock);
+	m_preDrawTasks.push_back(task);
 }
 
 RenderThread::~RenderThread()
