@@ -106,8 +106,9 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     auto platformData = new MaterialPlatformData;
     auto& gil = GIL::Instance();
 
-    auto vertShaderModule = assetData->vertexShader->GetPlatformData()->shaderModule;
-    auto pixelShaderModule = assetData->pixelShader->GetPlatformData()->shaderModule;
+    auto shaderPD = assetData->shader->GetPlatformData();
+    auto vertShaderModule = shaderPD->vertShaderModule;
+    auto fragShaderModule = shaderPD->fragShaderModule;
     TexturePlatformData* texturePD = nullptr;
     for (auto uniform : assetData->uniforms)
     {
@@ -179,7 +180,7 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     VkPipelineShaderStageCreateInfo pixelShaderStageInfo{};
     pixelShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
     pixelShaderStageInfo.stage = VK_SHADER_STAGE_FRAGMENT_BIT;
-    pixelShaderStageInfo.module = pixelShaderModule;
+    pixelShaderStageInfo.module = fragShaderModule;
     pixelShaderStageInfo.pName = "main";
 
     VkPipelineShaderStageCreateInfo shaderStages[] = { vertexShaderStageInfo, pixelShaderStageInfo };
@@ -211,7 +212,18 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     rasterizer.rasterizerDiscardEnable = VK_FALSE;
     rasterizer.polygonMode = VK_POLYGON_MODE_FILL;
     rasterizer.lineWidth = 1.0f;
-    rasterizer.cullMode =  VK_CULL_MODE_BACK_BIT;
+    switch (assetData->cullMode)
+    {
+        case MaterialCullMode_None:	    			// don't cull any triangles
+            rasterizer.cullMode = VK_CULL_MODE_NONE;
+            break;
+        case MaterialCullMode_Front:				// cull front facing triangles
+            rasterizer.cullMode = VK_CULL_MODE_FRONT_BIT;
+            break;
+        case MaterialCullMode_Back: 				// cull back facing triangles
+            rasterizer.cullMode = VK_CULL_MODE_BACK_BIT;
+            break;
+    };
     rasterizer.frontFace = VK_FRONT_FACE_CLOCKWISE;
     rasterizer.depthBiasEnable = VK_FALSE;
 
@@ -222,21 +234,57 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
     VkPipelineDepthStencilStateCreateInfo depthStencil{};
     depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
-    depthStencil.depthTestEnable = VK_TRUE;
-    depthStencil.depthWriteEnable = VK_TRUE;
+    depthStencil.depthTestEnable = assetData->zread ? VK_TRUE : VK_FALSE;
+    depthStencil.depthWriteEnable = assetData->zwrite ? VK_TRUE : VK_FALSE;
     depthStencil.depthCompareOp = VK_COMPARE_OP_LESS;
     depthStencil.depthBoundsTestEnable = VK_FALSE;
     depthStencil.stencilTestEnable = VK_FALSE;
 
     VkPipelineColorBlendAttachmentState colorBlendAttachment{};
     colorBlendAttachment.colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT;
-    colorBlendAttachment.blendEnable = VK_TRUE;
-    colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
-    colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
-    colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
-    colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
-    colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
-    colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+
+    switch (assetData->blendMode)
+    {
+        case MaterialBlendMode_Opaque:			// use src color, no blending
+            colorBlendAttachment.blendEnable = VK_FALSE;
+            break;
+        case MaterialBlendMode_Blend:           // normal alpha blending
+            colorBlendAttachment.blendEnable = VK_TRUE;
+            colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
+            colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+            colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+            colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+            colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+            break;
+        case MaterialBlendMode_Alpha:			// pre-multiplied alpha (one,inv_alpha)
+            colorBlendAttachment.blendEnable = VK_TRUE;
+            colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+            colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+            colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
+            colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+            break;
+        case MaterialBlendMode_Additive:			// add src color to destination
+            colorBlendAttachment.blendEnable = VK_TRUE;
+            colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.colorBlendOp = VK_BLEND_OP_ADD;
+            colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;
+            break;
+        case MaterialBlendMode_Subtractive:		// subtract src color from destination
+            colorBlendAttachment.blendEnable = VK_TRUE;
+            colorBlendAttachment.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.dstColorBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.colorBlendOp = VK_BLEND_OP_REVERSE_SUBTRACT;
+            colorBlendAttachment.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.dstAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+            colorBlendAttachment.alphaBlendOp = VK_BLEND_OP_ADD;            
+            break;
+    }
 
     VkPipelineColorBlendStateCreateInfo colorBlending{};
     colorBlending.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
@@ -395,9 +443,14 @@ void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData)
 
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData)
 {
-    return new ShaderPlatformData;
+    ShaderPlatformData* platformData = new ShaderPlatformData;
+    platformData->vertShaderModule = CreateShader(GIL::Instance().Device(), assetData->vertSPVData);
+    platformData->fragShaderModule = CreateShader(GIL::Instance().Device(), assetData->fragSPVData);
+    return platformData;
 }
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
 {
+    auto device = GIL::Instance().Device();
+    vkDestroyShaderModule(device, platformData->vertShaderModule, nullptr);
+    vkDestroyShaderModule(device, platformData->fragShaderModule, nullptr);
 }
-

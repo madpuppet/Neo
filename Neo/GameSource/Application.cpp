@@ -65,10 +65,10 @@ void Application::Update()
 
 	for (auto& bee : m_bees)
 	{
-		bee.pos += bee.vel * dt * 0.01f;
+		bee.pos += bee.vel * dt;
 		float range = glm::length(bee.pos);
-		if (range > 4.0f)
-			bee.vel = -bee.pos + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
+		if (range > 10.0f)
+			bee.vel = -bee.pos*0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
 	}
 
 	m_cameraPYR.x += pitch;

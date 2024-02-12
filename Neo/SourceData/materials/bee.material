@@ -1,6 +1,5 @@
-vertexShader: standard
-pixelShader: standard
-blendmode: opaque
+shader: standard
+blend: blend
 cull: back
 zread: true
 zwrite: true

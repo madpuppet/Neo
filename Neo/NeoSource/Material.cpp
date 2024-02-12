@@ -4,7 +4,7 @@
 #include "SHAD.h"
 #include "ResourceLoadedManager.h"
 
-#define MATERIAL_VERSION 1
+#define MATERIAL_VERSION 2
 
 DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
 
@@ -32,10 +32,8 @@ void Material::OnAssetDeliver(AssetData* data)
 
 		// create dependant resources
 		vector<Resource*> dependantResources;
-		m_assetData->pixelShader.Create(m_assetData->pixelShaderName);
-		m_assetData->vertexShader.Create(m_assetData->vertexShaderName);
-		dependantResources.push_back(*m_assetData->pixelShader);
-		dependantResources.push_back(*m_assetData->vertexShader);
+		m_assetData->shader.Create(m_assetData->shaderName);
+		dependantResources.push_back(*m_assetData->shader);
 		for (auto uniform : m_assetData->uniforms)
 		{
 			if (uniform->type == UniformType_Texture)
@@ -126,7 +124,7 @@ void MaterialFactory::Destroy(Material* resource)
 	}
 }
 
-static vector<string> s_blendModeNames = { "opaque", "alpha", "additive", "subractive", "darken", "fade" };
+static vector<string> s_blendModeNames = { "opaque", "alpha", "blend", "additive", "subtractive" };
 static vector<string> s_cullModeNames = { "none", "front", "back" };
 static vector<string> s_samplerFilterNames = { "nearest", "linear", "nearestMipNearest", "nearestMipLinear", "linearMipNearest", "linearMipLinear"};
 static vector<string> s_samplerWrapNames = { "clamp", "repeat" };
@@ -140,13 +138,9 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 	auto rootChildren = shad->root->GetChildren();
 	for (auto fieldNode : rootChildren)
 	{
-		if (fieldNode->IsName("vertexShader"))
+		if (fieldNode->IsName("shader"))
 		{
-			vertexShaderName = fieldNode->GetString();
-		}
-		else if (fieldNode->IsName("pixelShader"))
-		{
-			pixelShaderName = fieldNode->GetString();
+			shaderName = fieldNode->GetString();
 		}
 		else if (fieldNode->IsName("blend"))
 		{
@@ -261,8 +255,7 @@ MemBlock MaterialAssetData::AssetToMemory()
 	stream.WriteU8((u8)cullMode);
 	stream.WriteBool(zread);
 	stream.WriteBool(zwrite);
-	stream.WriteString(vertexShaderName);
-	stream.WriteString(pixelShaderName);
+	stream.WriteString(shaderName);
 	stream.WriteU16((u16)uniforms.size());
 	for (auto uniform : uniforms)
 	{	
@@ -327,8 +320,7 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 	cullMode = (MaterialCullMode)stream.ReadU8();
 	zread = stream.ReadBool();
 	zwrite = stream.ReadBool();
-	vertexShaderName = stream.ReadString();
-	pixelShaderName = stream.ReadString();
+	shaderName = stream.ReadString();
 
 	u16 uniformsCount = stream.ReadU16();
 	for (u16 u = 0; u < uniformsCount; u++)

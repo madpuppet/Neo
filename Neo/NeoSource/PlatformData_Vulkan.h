@@ -25,8 +25,8 @@ void PixelShaderPlatformData_Destroy(PixelShaderPlatformData* platformData);
 
 struct ShaderPlatformData
 {
-	VkShaderModule vertexShaderModule;
-	VkShaderModule pixelShaderModule;
+	VkShaderModule vertShaderModule;
+	VkShaderModule fragShaderModule;
 };
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);

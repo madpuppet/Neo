@@ -3,17 +3,15 @@
 #include "Resource.h"
 #include "AssetManager.h"
 #include "ResourceRef.h"
-#include "VertexShader.h"
-#include "PixelShader.h"
+#include "Shader.h"
 
 enum MaterialBlendMode
 {
 	MaterialBlendMode_Opaque,			// use src color, no blending
-	MaterialBlendMode_Alpha,			// pre-multiplied alpha (one,inv_alpha)
+	MaterialBlendMode_Alpha,			// pre-multiplied alpha (one,inv_alpha)   (0.5,0.5,0.5,0.5 == white @ 50% alpha)
+	MaterialBlendMode_Blend,			// traditional alpha blending             (0.5,0.5,0.5,0.5 = grey @ 50% alpha)
 	MaterialBlendMode_Additive,			// add src color to destination
 	MaterialBlendMode_Subtractive,		// subtract src color from destination
-	MaterialBlendMode_Darken,			// darken by the src alpha
-	MaterialBlendMode_Fade				// fade dest color by src alpha
 };
 
 enum MaterialCullMode
@@ -150,16 +148,14 @@ public:
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 	virtual bool SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params);
 
-	string vertexShaderName;
-	string pixelShaderName;
+	string shaderName;
 	MaterialBlendMode blendMode = MaterialBlendMode_Opaque;
 	MaterialCullMode cullMode = MaterialCullMode_None;
 	vector<MaterialUniform*> uniforms;
 	bool zread = false;
 	bool zwrite = false;
 
-	VertexShaderRef vertexShader;
-	PixelShaderRef pixelShader;
+	ShaderRef shader;
 
 	MaterialRef m_parent;
 };
