@@ -639,13 +639,16 @@
     <ClInclude Include="NeoSource\FileSystem_RawAccess.h" />
     <ClInclude Include="NeoSource\GIL_Common.h" />
     <ClInclude Include="NeoSource\GIL_Vulkan.h" />
+    <ClInclude Include="NeoSource\ImmDynamicRenderer.h" />
     <ClInclude Include="NeoSource\Log.h" />
     <ClInclude Include="NeoSource\Material.h" />
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
     <ClInclude Include="NeoSource\PixelShader.h" />
-    <ClInclude Include="NeoSource\DynamicRenderer.h" />
+    <ClInclude Include="NeoSource\DefDynamicRenderer.h" />
+    <ClInclude Include="NeoSource\Shader.h" />
+    <ClInclude Include="NeoSource\ShaderManager.h" />
     <ClInclude Include="NeoSource\StaticMesh.h" />
     <ClInclude Include="NeoSource\Module.h" />
     <ClInclude Include="NeoSource\Neo.h" />
@@ -660,8 +663,11 @@
     <ClInclude Include="NeoSource\SHAD.h" />
     <ClCompile Include="NeoSource\BitmapFont.cpp" />
     <ClCompile Include="NeoSource\CmdLineVar.cpp" />
+    <ClCompile Include="NeoSource\ImmDynamicRenderer.cpp" />
     <ClCompile Include="NeoSource\Log.cpp" />
-    <ClCompile Include="NeoSource\DynamicRenderer.cpp" />
+    <ClCompile Include="NeoSource\DefDynamicRenderer.cpp" />
+    <ClCompile Include="NeoSource\Shader.cpp" />
+    <ClCompile Include="NeoSource\ShaderManager.cpp" />
     <ClCompile Include="NeoSource\TimeManager.cpp" />
     <ClInclude Include="NeoSource\VertexShader.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
@@ -793,6 +799,11 @@
       <FileType>Document</FileType>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
     </None>
+    <FxCompile Include="SourceData\shaders\standard.shader">
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">true</ExcludedFromBuild>
+      <FileType>Document</FileType>
+      <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
+    </FxCompile>
     <None Include="SourceData\shaders\standard.vsh">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
       <FileType>Document</FileType>

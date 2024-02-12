@@ -1,5 +1,6 @@
 #include "Neo.h"
 #include "RenderThread.h"
+#include "ImmDynamicRenderer.h"
 
 DECLARE_MODULE(RenderThread, NeoModuleInitPri_RenderThread, NeoModulePri_None, NeoModulePri_None);
 

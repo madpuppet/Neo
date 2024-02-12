@@ -27,12 +27,14 @@
 
 #include "Application.h"  //TODO: we shouldn't know about Application - it should just itself to a generic update callback
 #include "RenderThread.h"
-#include "DynamicRenderer.h"
+#include "DefDynamicRenderer.h"
 
 CmdLineVar<stringlist> CLV_LogFilter("log", "select log filters to show", { "" });
 
 int main(int argc, char* argv[])
 {
+    Thread::RegisterThread(ThreadGUID_Main, "MainThread");
+
     gMemoryTracker.EnableTracking(true);
     NeoParseCommandLine(argc, argv);
     if (CLV_LogFilter.Exists())
@@ -69,7 +71,7 @@ int main(int argc, char* argv[])
             }
         }
 
-        auto& dr = DynamicRenderer::Instance();
+        auto& dr = DefDynamicRenderer::Instance();
         dr.BeginFrame();
         NeoUpdateModules();
         dr.EndFrame();

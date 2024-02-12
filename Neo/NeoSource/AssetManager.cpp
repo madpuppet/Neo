@@ -130,9 +130,9 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 
 			// now create the AssetData from the src files
 			LOG(Asset, STR("  deliver {} [{}] from src files", name, assetType));
-			assetData->SrcFilesToAsset(srcFileMem, params);
 			assetData->name = name;
 			assetData->type = assetType;
+			assetData->SrcFilesToAsset(srcFileMem, params);
 
 			// write out the asset to then data folder
 			// write the texture asset to data

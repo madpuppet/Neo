@@ -6,9 +6,11 @@ enum NeoModuleInitPri
 {
 	NeoModuleInitPri_FileManager,
 	NeoModuleInitPri_AssetManager,
+	NeoModuleInitPri_ShaderManager,
 	NeoModuleInitPri_TimeManager,
 	NeoModuleInitPri_ResourceLoadedManager,
 	NeoModuleInitPri_TextureFactory,
+	NeoModuleInitPri_ShaderFactory,
 	NeoModuleInitPri_VertexShaderFactory,
 	NeoModuleInitPri_PixelShaderFactory,
 	NeoModuleInitPri_ComputeShaderFactory,
@@ -17,7 +19,8 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_BitmapFontFactory,
 	NeoModuleInitPri_GIL,
 	NeoModuleInitPri_RenderThread,
-	NeoModuleInitPri_DynamicRenderer,
+	NeoModuleInitPri_DefDynamicRenderer,
+	NeoModuleInitPri_ImmDynamicRenderer,
 
 	NeoModuleInitPri_Application = 1000
 };

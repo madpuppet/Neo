@@ -1,10 +1,10 @@
 #include "Neo.h"
-#include "DynamicRenderer.h"
+#include "DefDynamicRenderer.h"
 #include "RenderThread.h"
 
-DECLARE_MODULE(DynamicRenderer, NeoModuleInitPri_Application, NeoModulePri_Early, NeoModulePri_Early);
+DECLARE_MODULE(DefDynamicRenderer, NeoModuleInitPri_DefDynamicRenderer, NeoModulePri_Early, NeoModulePri_Early);
 
-DynamicRenderer::DynamicRenderer()
+DefDynamicRenderer::DefDynamicRenderer()
 {
 	// this will execute before the first module update, so our buffers should be ready
 	RenderThread::Instance().AddPreDrawTask(
@@ -19,12 +19,12 @@ DynamicRenderer::DynamicRenderer()
 	);
 }
 
-DynamicRenderer::~DynamicRenderer()
+DefDynamicRenderer::~DefDynamicRenderer()
 {
 	// destroy the buffers?  or just leak coz this is end of program..
 }
 
-void DynamicRenderer::BeginFrame()
+void DefDynamicRenderer::BeginFrame()
 {
 	m_nextVert = 0;
 	m_nextIndex = 0;
@@ -34,7 +34,7 @@ void DynamicRenderer::BeginFrame()
 	m_materials[m_updateFrame].clear();
 }
 
-void DynamicRenderer::BeginRender(u32 drawOrder)
+void DefDynamicRenderer::BeginRender(u32 drawOrder)
 {
 	// start a new render block - only one thread can add to render blocks at a time
 	m_renderLock.Lock();
@@ -43,7 +43,7 @@ void DynamicRenderer::BeginRender(u32 drawOrder)
 	m_primType = PrimType_Unknown;
 }
 
-void DynamicRenderer::UseMaterial(Material* mat)
+void DefDynamicRenderer::UseMaterial(Material* mat)
 {
 	Cmd cmd;
 	cmd.cmdType = CmdType_SetMaterial;
@@ -52,7 +52,7 @@ void DynamicRenderer::UseMaterial(Material* mat)
 	m_materials[m_updateFrame].emplace_back(MaterialRef(mat));
 }
 
-void DynamicRenderer::StartPrimitive(PrimType primType)
+void DefDynamicRenderer::StartPrimitive(PrimType primType)
 {
 	if (m_primType != primType)
 	{
@@ -66,7 +66,7 @@ void DynamicRenderer::StartPrimitive(PrimType primType)
 	m_indexStart = m_nextIndex;
 }
 
-void DynamicRenderer::AddVert(const vec3& pos, const vec2& uv, u32 col)
+void DefDynamicRenderer::AddVert(const vec3& pos, const vec2& uv, u32 col)
 {
 	if (m_nextVert < DYNREN_MAXVERTS && m_nextIndex < DYNREN_MAXINDICES)
 	{
@@ -85,7 +85,7 @@ void DynamicRenderer::AddVert(const vec3& pos, const vec2& uv, u32 col)
 	}
 }
 
-void DynamicRenderer::EndPrimitive()
+void DefDynamicRenderer::EndPrimitive()
 {
 	u32 vertCount = m_nextVert - m_vertStart;
 	u32 indexCount = m_nextIndex - m_indexStart;
@@ -102,7 +102,7 @@ void DynamicRenderer::EndPrimitive()
 	}
 }
 
-void DynamicRenderer::EndRender()
+void DefDynamicRenderer::EndRender()
 {
 	RenderBlock block;
 	block.drawOrder = m_drawOrder;
@@ -112,7 +112,7 @@ void DynamicRenderer::EndRender()
 	m_renderLock.Release();
 }
 
-void DynamicRenderer::EndFrame()
+void DefDynamicRenderer::EndFrame()
 {
 	u32 useFrame = m_updateFrame;
 	m_updateFrame = (m_updateFrame + 1) % DYNREN_FRAMES;
@@ -133,7 +133,7 @@ void DynamicRenderer::EndFrame()
 	);
 }
 
-void DynamicRenderer::Render(u32 endDrawOrder)
+void DefDynamicRenderer::Render(u32 endDrawOrder)
 {
 	auto& gil = GIL::Instance();
 	auto& rb = m_renderBlocks[m_drawFrame];

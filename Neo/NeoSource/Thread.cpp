@@ -159,7 +159,8 @@ int Thread::GetCurrentThreadGUID()
 {
     ScopedMutexLock lock(s_threadRegistryLock);
 
-    auto it = s_threadRegistry.find(Thread::CurrentThreadID());
+    auto threadID = Thread::CurrentThreadID();
+    auto it = s_threadRegistry.find(threadID);
     return (it != s_threadRegistry.end()) ? it->second.guid : -1;
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+// deferred dynamic renderer can be used via cpu Update to queue up and draw dynamic primitives (textured triangles/lines)
+
 #include "Material.h"
 
 #define DYNREN_FRAMES 3
@@ -7,7 +9,7 @@
 #define DYNREN_MAXVERTS DYNREN_MAXTRIANGLES*3
 #define DYNREN_MAXINDICES DYNREN_MAXTRIANGLES*3
 
-class DynamicRenderer : public Module<DynamicRenderer>
+class DefDynamicRenderer : public Module<DefDynamicRenderer>
 {
 	struct Vertex
 	{
@@ -65,8 +67,8 @@ class DynamicRenderer : public Module<DynamicRenderer>
 	u32 m_nextRenderBlock = 0;
 
 public:
-	DynamicRenderer();
-	~DynamicRenderer();
+	DefDynamicRenderer();
+	~DefDynamicRenderer();
 
 	void BeginFrame();
 	
@@ -81,3 +83,6 @@ public:
 
 	void Render(u32 endDrawOrder);
 };
+
+
+

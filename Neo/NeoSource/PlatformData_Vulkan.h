@@ -23,6 +23,14 @@ struct PixelShaderPlatformData
 PixelShaderPlatformData* PixelShaderPlatformData_Create(struct PixelShaderAssetData* assetData);
 void PixelShaderPlatformData_Destroy(PixelShaderPlatformData* platformData);
 
+struct ShaderPlatformData
+{
+	VkShaderModule vertexShaderModule;
+	VkShaderModule pixelShaderModule;
+};
+ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
+void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
+
 
 struct MaterialPlatformData
 {

@@ -21,22 +21,18 @@
 
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
-struct UBO_View
+struct UniformBuffer
 {
-	mat4x4 view;
-	mat4x4 proj;
-};
+	string name;
 
-struct UBO_Material
-{
-	vec4 blend;
-};
+	array<VkBuffer, 2> buffer;
+	array<VkDeviceMemory, 2> memory;
+	array<void*, 2> memoryMapped;
 
-struct UBO_Model
-{
-	mat4x4 model;
+	bool isDynamic;		// dynamic - means we are bound to the frame dynamic buffer and step through slices in that on each use
+	u32 size;			// size of buffer (adjusted to alignment size)
+	u32 memOffset;		// current memoffset into memory
 };
-
 
 struct Vertex {
 	glm::vec3 pos;

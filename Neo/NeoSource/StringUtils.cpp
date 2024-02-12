@@ -300,6 +300,52 @@ vector<string> StringSplit(const string& src, char delimiter)
     return result;
 }
 
+vector<string> StringSplitIntoTokens(const string& src)
+{
+    vector<string> result;
+    string token;
+    enum Mode
+    {
+        None,
+        Alphabetic,
+        WhiteSpace,
+        Other
+    } currMode = None;
+    for (auto ch : src)
+    {
+        Mode chMode = None;
+        if (ch == '\r')
+            continue;
+
+        if ((ch >= 'A' && ch <= 'Z') || (ch >= 'a' && ch <= 'z') || ch == '_' || (ch >= '0' && ch <= '9'))
+        {
+            chMode = Alphabetic;
+        }
+        else if (ch == ' ' || ch == '\t')
+        {
+            chMode = WhiteSpace;
+        }
+        else
+        {
+            chMode = Other;
+        }
+
+        if (currMode != None && currMode != WhiteSpace && currMode != chMode)
+        {
+            result.push_back(token);
+            token.clear();
+        }
+
+        currMode = chMode;
+        if (currMode != WhiteSpace)
+            token += ch;
+    }
+    if (currMode != WhiteSpace && currMode != None)
+        result.push_back(token);
+
+    return result;
+}
+
 string StringTrim(const string& str)
 {
     size_t first = str.find_first_not_of(" \t\n\r");

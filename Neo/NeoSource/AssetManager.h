@@ -16,6 +16,7 @@ enum AssetType
 	AssetType_Database,
 	AssetType_Material,
 	AssetType_BitmapFont,
+	AssetType_Shader,
 
 	AssetType_Extended = 0x100		// game can use asset type values after this point to create their own asset types
 };

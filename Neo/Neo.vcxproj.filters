@@ -1526,11 +1526,20 @@
     <ClInclude Include="NeoSource\CmdLineVar.h">
       <Filter>NeoSource</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\DynamicRenderer.h">
+    <ClInclude Include="NeoSource\DefDynamicRenderer.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
     <ClInclude Include="NeoSource\BitmapFont.h">
       <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ImmDynamicRenderer.h">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Shader.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\ShaderManager.h">
+      <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1657,14 +1666,28 @@
     <ClCompile Include="NeoSource\CmdLineVar.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
-    <ClCompile Include="NeoSource\DynamicRenderer.cpp">
+    <ClCompile Include="NeoSource\DefDynamicRenderer.cpp">
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\BitmapFont.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
+    <ClCompile Include="NeoSource\ImmDynamicRenderer.cpp">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Shader.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\ShaderManager.cpp">
+      <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <Natvis Include="NatvisFile.natvis" />
+  </ItemGroup>
+  <ItemGroup>
+    <FxCompile Include="SourceData\shaders\standard.shader">
+      <Filter>Shaders</Filter>
+    </FxCompile>
   </ItemGroup>
 </Project>

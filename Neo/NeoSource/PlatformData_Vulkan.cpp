@@ -5,6 +5,7 @@
 #include "PixelShader.h"
 #include "Material.h"
 #include "StaticMesh.h"
+#include "ShaderManager.h"
 
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
@@ -389,6 +390,14 @@ StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData
 }
 
 void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData)
+{
+}
+
+ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData)
+{
+    return new ShaderPlatformData;
+}
+void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
 {
 }
 

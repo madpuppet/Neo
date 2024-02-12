@@ -1,43 +1,34 @@
-UBO 0, 0 View : VS,PS
-{
-    mat4 view;
-    mat4 proj;
-    mat4 shadow;
-}
+// standard perspective shader
 
-UBO 1, 0 Material : PS
-{
-    vec4 blend;
-}
+UBO View(0,0) : V
+UBO Material(1,0) : F
+SAMPLER Albedo(1, 1) : F
+UBOD Model(2,0) : V
 
-UBO 2, 0 Model : VS
-{
-    mat4 model;
-}
+VS_IN vec3 inPosition
+VS_IN vec2 inTexCoord
+VS_IN vec4 inColor : R8G8B8A8_UNORM
 
-SAMPLER 1, 1, Albedo
+VS_TO_FS vec4 fragColor
+VS_TO_FS vec2 fragTexCoord
 
-VS_IN  0, vec3, inPosition
-VS_IN  1, vec2, inTexCoord
-VS_IN  2, vec4, inColor
+PS_OUT vec4 outColor
 
-PS_IN  0, vec4, fragColor
-PS_IN  1, vec2, fragTexCoord
+COMMON_CODE ======================================
 
-PS_OUT 0,outColor
 
-## VERTEX SHADER ##
+VERTEX_SHADER_CODE ===============================
 
 void main()
 {
-    gl_Position = ubo.proj * ubo.view * ubo.model * vec4(inPosition, 1.0);
+    gl_Position = View.proj * View.view * Model.model * vec4(inPosition, 1.0);
     fragColor = inColor;
     fragTexCoord = inTexCoord;
 }
 
-## PIXEL SHADER ##
+FRAGMENT_SHADER_CODE =============================
 
 void main() {
-    outColor = texture(texSampler, fragTexCoord) * fragColor * ubo.blend;
+    outColor = texture(Albedo, fragTexCoord) * fragColor * Material.blend;
 }
 

@@ -3,6 +3,15 @@
 #include "Module.h"
 #include "Thread.h"
 
+// use these when deciding when to draw something
+enum DrawTaskPri
+{
+	DrawTaskPri_StartFrame = 0,
+	DrawTaskPri_BasePixel = 500,
+	DrawTaskPri_EndFrame = 1000
+};
+
+
 class RenderThread : public Module<RenderThread>, public Thread
 {
 	// semaphores to sync with update thread

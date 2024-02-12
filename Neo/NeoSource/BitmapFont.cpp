@@ -3,7 +3,7 @@
 #include "StringUtils.h"
 #include "RenderThread.h"
 #include "ResourceLoadedManager.h"
-#include "DynamicRenderer.h"
+#include "ImmDynamicRenderer.h"
 #include <stb_image.h>
 
 #define BITMAPFONT_VERSION 2
@@ -383,10 +383,12 @@ bool BitmapFontAssetData::MemoryToAsset(const MemBlock& block)
 
 void BitmapFont::RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col)
 {
-	auto& dr = DynamicRenderer::Instance();
+	Assert(Thread::IsOnThread(ThreadGUID_Render), "Must be called on Render Thread");
+
+	auto& dr = ImmDynamicRenderer::Instance();
 	if (CLV_ShowFontBorders.Value())
 	{
-		dr.BeginRender(500);
+		dr.BeginRender();
 		dr.StartPrimitive(PrimType_LineStrip);
 		dr.UseMaterial(m_white);
 		dr.AddVert({ area.min.x,area.min.y,z }, vec2(0, 0), 0xffffffff);
@@ -489,7 +491,7 @@ void BitmapFont::RenderText(const string& text, const rect& area, float z, Align
 			break;
 	};
 
-	dr.BeginRender(500);
+	dr.BeginRender();
 	dr.StartPrimitive(PrimType_TriangleList);
 	dr.UseMaterial(m_assetData->pages[0].material);
 	u32 col32 = vec4ToR8G8B8A8(col);

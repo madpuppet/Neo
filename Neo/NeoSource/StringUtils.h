@@ -52,7 +52,10 @@ bool StringSplit(const string& input, string& left, string& right, char delimite
 void StringSplitIntoFSAndPath(const string& str, string& fs, string& path);
 
 // split string into parts
-vector<string> StringSplit(const string& src, char delimiter);
+stringlist StringSplit(const string& src, char delimiter);
+
+// split string into parts
+stringlist StringSplitIntoTokens(const string& src);
 
 // trim white space off the string
 string StringTrim(const string& str);

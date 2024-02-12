@@ -3,6 +3,7 @@
 #include "Texture.h"
 #include "Material.h"
 #include "StaticMesh.h"
+#include "ShaderManager.h"
 
 DECLARE_MODULE(GIL, NeoModuleInitPri_GIL, NeoModulePri_None, NeoModulePri_None);
 
@@ -999,7 +1000,8 @@ void GIL::createTextureSampler()
     }
 }
 
-void GIL::createUniformBuffers() {
+void GIL::createUniformBuffers()
+{
     createUniformBuffer(m_viewUBO, m_viewUBOMemory, m_viewUBOMapped, sizeof(UBO_View));
     createUniformBuffer(m_materialUBO, m_materialUBOMemory, m_materialUBOMapped, sizeof(UBO_Material));
 
