@@ -971,30 +971,30 @@ uint32_t GIL::findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties)
     return 0;
 }
 
-void GIL::createTextureSampler() 
+bool GIL::createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressing, VkCompareOp compareOp, VkSampler &sampler)
 {
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
 
     VkSamplerCreateInfo samplerInfo{};
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
-    samplerInfo.magFilter = VK_FILTER_LINEAR;
-    samplerInfo.minFilter = VK_FILTER_LINEAR;
-    samplerInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
-    samplerInfo.addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+    samplerInfo.magFilter = maxFilter;
+    samplerInfo.minFilter = minFilter;
+    samplerInfo.addressModeU = addressing;
+    samplerInfo.addressModeV = addressing;
+    samplerInfo.addressModeW = addressing;
     samplerInfo.anisotropyEnable = VK_TRUE;
     samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
     samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
     samplerInfo.unnormalizedCoordinates = VK_FALSE;
-    samplerInfo.compareEnable = VK_FALSE;
-    samplerInfo.compareOp = VK_COMPARE_OP_ALWAYS;
-    samplerInfo.mipmapMode = VK_SAMPLER_MIPMAP_MODE_LINEAR;
+    samplerInfo.compareEnable = (compareOp == VK_COMPARE_OP_ALWAYS) ? VK_FALSE : VK_TRUE;
+    samplerInfo.compareOp = compareOp;
+    samplerInfo.mipmapMode = mipMapFilter;
     samplerInfo.minLod = 0.0f;
     samplerInfo.maxLod = VK_LOD_CLAMP_NONE;
     samplerInfo.mipLodBias = 0.0f;
 
-    if (vkCreateSampler(m_device, &samplerInfo, nullptr, &m_textureSampler) != VK_SUCCESS) 
+    if (vkCreateSampler(m_device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
     {
         Error("failed to create texture sampler!");
     }
@@ -1025,12 +1025,9 @@ void GIL::copyMemoryToBuffer(VkDeviceMemory bufferMemory, void *memory, size_t s
     vkUnmapMemory(m_device, bufferMemory);
 }
 
-void GIL::createUniformBuffer(std::vector<VkBuffer> &buffers, std::vector<VkDeviceMemory> &memory, std::vector<void*> &mapped, size_t size)
+void GIL::createUniformBuffer(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT>& memory,
+    array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
 {
-    buffers.resize(MAX_FRAMES_IN_FLIGHT);
-    memory.resize(MAX_FRAMES_IN_FLIGHT);
-    mapped.resize(MAX_FRAMES_IN_FLIGHT);
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         createBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffers[i], memory[i]);
@@ -1038,13 +1035,8 @@ void GIL::createUniformBuffer(std::vector<VkBuffer> &buffers, std::vector<VkDevi
         vkMapMemory(m_device, memory[i], 0, size, 0, &mapped[i]);
     }
 }
-
-void GIL::createDynamicUniformBuffer(std::vector<VkBuffer>& buffers, std::vector<VkDeviceMemory>& memory, std::vector<void*>& mapped, size_t size, size_t memorySize)
+void GIL::createDynamicUniformBuffer(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
 {
-    buffers.resize(MAX_FRAMES_IN_FLIGHT);
-    memory.resize(MAX_FRAMES_IN_FLIGHT);
-    mapped.resize(MAX_FRAMES_IN_FLIGHT);
-
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         createDynamicBuffer(size, memorySize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffers[i], memory[i]);
@@ -1052,6 +1044,49 @@ void GIL::createDynamicUniformBuffer(std::vector<VkBuffer>& buffers, std::vector
         vkMapMemory(m_device, memory[i], 0, size, 0, &mapped[i]);
     }
 }
+
+u32 GIL::AllocateDynamicUniformBufferMemory(u32 size)
+{
+    u32 retval = m_dynamicUniformBufferMemoryUsed;
+    m_dynamicUniformBufferMemoryUsed += ((size + 63) & ~63);
+    Assert(m_dynamicUniformBufferMemoryUsed < MaxDynamicUniformBufferMemory, "Out of uniform buffer dynamic memory!");
+    return retval;
+}
+
+void GIL::createUniformBufferDynamicMemory()
+{
+    VkDeviceSize size = (VkDeviceSize)MaxDynamicUniformBufferMemory;
+
+    VkBufferCreateInfo bufferInfo{};
+    bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+    bufferInfo.size = size;
+    bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+    bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+    VkBuffer tempBuffer;
+    if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &tempBuffer) != VK_SUCCESS)
+        Error("failed to create buffer!");
+
+    VkMemoryRequirements memRequirements;
+    vkGetBufferMemoryRequirements(m_device, tempBuffer, &memRequirements);
+    vkDestroyBuffer(m_device, tempBuffer, nullptr);
+
+    VkMemoryAllocateInfo allocInfo{};
+    allocInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+    allocInfo.allocationSize = memRequirements.size;
+    allocInfo.memoryTypeIndex = findMemoryType(memRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT);
+
+    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+    {
+        auto rc = vkAllocateMemory(m_device, &allocInfo, nullptr, &m_dynamicUniformBufferMemory[i]);
+        if (rc != VK_SUCCESS)
+        {
+            Error(STR("failed to allocate buffer memory! RC {}", (int)rc));
+        }
+    }
+}
+
+
+
 
 void GIL::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory)
 {

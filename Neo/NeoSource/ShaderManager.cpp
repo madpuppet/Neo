@@ -8,15 +8,15 @@ ShaderManager::ShaderManager()
 	UBOMemberInfo mi_view{ "view", UBOMemberType_Matrix, offsetof(UBO_View, view), 1 };
 	UBOMemberInfo mi_proj{ "proj", UBOMemberType_Matrix, offsetof(UBO_View, proj), 1 };
 	UBOMemberInfo mi_ortho{ "ortho", UBOMemberType_Matrix, offsetof(UBO_View, ortho), 1 };
-	UBOInfo i_View{ "View", "UBO_View", sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
+	UBOInfo i_View{ "View", "UBO_View", false, (u32)sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
 	RegisterUBO(i_View);
 
 	UBOMemberInfo mi_blend{ "blend", UBOMemberType_Vector, offsetof(UBO_Material, blend), 1 };
-	UBOInfo i_Material{ "Material", "UBO_Material", sizeof(UBO_Material), {mi_blend} };
+	UBOInfo i_Material{ "Material", "UBO_Material", false, (u32)sizeof(UBO_Material), {mi_blend} };
 	RegisterUBO(i_Material);
 
 	UBOMemberInfo mi_model{ "model", UBOMemberType_Matrix, offsetof(UBO_Model, model), 1 };
-	UBOInfo i_Model{ "Model", "UBO_Model", sizeof(UBO_Model), {mi_model} };
+	UBOInfo i_Model{ "Model", "UBO_Model", false, (u32)sizeof(UBO_Model), {mi_model} };
 	RegisterUBO(i_Model);
 }
 
@@ -44,6 +44,15 @@ string ShaderManager::UBOContentsToString(const UBOInfo &uboInfo)
 		}
 	}
 	return outStr;
+}
+
+void ShaderManager::CreateUBOPlatformData()
+{
+	for (auto it : m_ubos)
+	{
+		auto& ubo = it.second;
+		ubo.platformData = UniformBufferPlatformData_Create(ubo);
+	}
 }
 
 

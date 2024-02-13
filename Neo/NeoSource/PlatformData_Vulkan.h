@@ -1,5 +1,7 @@
 #pragma once
 
+const int MAX_FRAMES_IN_FLIGHT = 2;
+
 struct TexturePlatformData
 {
 	VkImage textureImage;
@@ -31,14 +33,16 @@ struct ShaderPlatformData
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
 
-
 struct MaterialPlatformData
 {
+	static const int MaxSets = 4;
+
 	VkPipelineLayout pipelineLayout;
 	VkPipeline polygonPipeline;
 	VkPipeline linePipeline;
-	VkDescriptorSetLayout dsLayout[3];			// view, material, model
-	VkDescriptorSet descriptorSets[2][3];		// 2 frames in flight, 3 sets
+	vector<VkDescriptorSet> descriptorSets[MAX_FRAMES_IN_FLIGHT];
+	vector<VkDescriptorSetLayout> dsSetLayouts;
+	u32 setToIndex[MaxSets]{};
 };
 MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);
@@ -50,4 +54,17 @@ struct StaticMeshPlatformData
 };
 StaticMeshPlatformData* StaticMeshPlatformData_Create(struct StaticMeshAssetData* assetData);
 void StaticMeshPlatformData_Destroy(StaticMeshPlatformData* platformData);
+
+struct UniformBufferPlatformData
+{
+	array<VkBuffer, MAX_FRAMES_IN_FLIGHT> buffer;
+	array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT> memory;
+	array<void*, MAX_FRAMES_IN_FLIGHT> memoryMapped;
+
+	bool isDynamic;		// dynamic - means we are bound to the frame dynamic buffer and step through slices in that on each use
+	u32 size;			// size of buffer (adjusted to alignment size)
+	u32 memOffset;		// current memoffset into memory
+};
+UniformBufferPlatformData* UniformBufferPlatformData_Create(const struct UBOInfo &uboInfo);
+void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData);
 

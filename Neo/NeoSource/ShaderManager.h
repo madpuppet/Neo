@@ -28,17 +28,20 @@ enum UBOMemberType
 struct UBOMemberInfo
 {
 	string name;
-	UBOMemberType type;	// mat4x4, vec4, ivec4
-	u32 offset;
-	u32 members;
+	UBOMemberType type = UBOMemberType_Vector;	// mat4x4, vec4, ivec4
+	u32 offset = 0;
+	u32 members = 1;
 };
 
 struct UBOInfo
 {
 	string name;
 	string structName;
-	u32 size;
+	bool isDynamic = false;
+	u32 size = 0;
 	vector<UBOMemberInfo> members;
+
+	UniformBufferPlatformData* platformData = nullptr;
 };
 
 class ShaderManager : public Module<ShaderManager>
@@ -50,6 +53,7 @@ public:
 	~ShaderManager();
 
 	void RegisterUBO(const UBOInfo &uboInfo);
+	void CreateUBOPlatformData();
 	string UBOContentsToString(const UBOInfo& uboInfo);
 
 	UBOInfo* FindUBO(const string& name)

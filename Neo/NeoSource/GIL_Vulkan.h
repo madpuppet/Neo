@@ -19,21 +19,6 @@
 #include "Texture.h"
 #include "MathUtils.h"
 
-const int MAX_FRAMES_IN_FLIGHT = 2;
-
-struct UniformBuffer
-{
-	string name;
-
-	array<VkBuffer, 2> buffer;
-	array<VkDeviceMemory, 2> memory;
-	array<void*, 2> memoryMapped;
-
-	bool isDynamic;		// dynamic - means we are bound to the frame dynamic buffer and step through slices in that on each use
-	u32 size;			// size of buffer (adjusted to alignment size)
-	u32 memOffset;		// current memoffset into memory
-};
-
 struct Vertex {
 	glm::vec3 pos;
 	glm::vec2 texCoord;
@@ -209,9 +194,6 @@ protected:
 	VkDeviceMemory m_depthImageMemory;
 	VkImageView m_depthImageView;
 
-	VkSampler m_textureSampler;
-	VkImageView m_textureImageView;
-
 	VkBuffer m_vertexBuffer;
 	VkDeviceMemory m_vertexBufferMemory;
 	VkBuffer m_indexBuffer;
@@ -241,6 +223,17 @@ protected:
 	std::vector<VkFence> m_inFlightFences;
 	u32 m_currentFrame = 0;
 	bool m_framebufferResized = false;
+
+	static const int MaxDynamicUniformBufferMemory = 1024 * 1024;
+	// shared memory used for all dynamic uniform buffers each frame
+	VkDeviceMemory m_dynamicUniformBufferMemory[MAX_FRAMES_IN_FLIGHT];
+	// how much has been allocated this frame
+	u32 m_dynamicUniformBufferMemoryUsed = 0;
+	// intialize the dynamic memory
+	void createUniformBufferDynamicMemory();
+	// allocate a 64byte aligned block of uniform buffer memory from the shared pool for the current frame
+	u32 AllocateDynamicUniformBufferMemory(u32 size);
+
 
 	struct QueueFamilyIndices
 	{
@@ -290,9 +283,6 @@ protected:
 	void createTextureSampler();
 	void createUniformBuffers();
 
-	void createUniformBuffer(std::vector<VkBuffer>& buffers, std::vector<VkDeviceMemory>& memory, std::vector<void*>& mapped, size_t size);
-	void createDynamicUniformBuffer(std::vector<VkBuffer>& buffers, std::vector<VkDeviceMemory>& memory, std::vector<void*>& mapped, size_t size, size_t memorySize);
-
 
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
@@ -308,12 +298,11 @@ public:
 	VkDevice Device() { return m_device; }
 	VkCommandPool CommandPool() { return m_commandPool; }
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
-	VkSampler TextureSampler() { return m_textureSampler; }
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
-
-	std::vector<VkBuffer>& ViewUBO() { return m_viewUBO; }
-	std::vector<VkBuffer>& MaterialUBO() { return m_materialUBO; }
-	std::vector<VkBuffer>& ModelUBO() { return m_modelUBO; }
+	void createUniformBuffer(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT>& memory,
+		array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
+	void createUniformBufferDynamic(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
+	bool createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressing, VkCompareOp compareOp, VkSampler& sampler);
 
 	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
