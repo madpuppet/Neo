@@ -158,7 +158,7 @@ public:
 
 	void SetAndBindModelMatrix(const mat4x4& modelMat);
 
-	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat);
+	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat, const mat4x4& orthoMat);
 	void SetMaterialBlendColor(const vec4& blendColor);
 	void SetViewport(const rect &viewport, float minDepth, float maxDepth);
 	void SetScissor(const rect &scissorRect);
@@ -181,7 +181,7 @@ protected:
 	SDL_Window* m_window;
 	SDL_Joystick* m_joystick;
 	Semaphore m_vulkanInitialised;
-	ivec2 m_frameBufferSize{ 800,600 };
+	ivec2 m_frameBufferSize{ 1280,720 };
 
 	VkInstance m_instance;
 	VkDebugUtilsMessengerEXT m_debugMessenger;

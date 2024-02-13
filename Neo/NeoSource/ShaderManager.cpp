@@ -7,7 +7,8 @@ ShaderManager::ShaderManager()
 {
 	UBOMemberInfo mi_view{ "view", UBOMemberType_Matrix, offsetof(UBO_View, view), 1 };
 	UBOMemberInfo mi_proj{ "proj", UBOMemberType_Matrix, offsetof(UBO_View, proj), 1 };
-	UBOInfo i_View{ "View", "UBO_View", sizeof(UBO_View), {mi_view,mi_proj}};
+	UBOMemberInfo mi_ortho{ "ortho", UBOMemberType_Matrix, offsetof(UBO_View, ortho), 1 };
+	UBOInfo i_View{ "View", "UBO_View", sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
 	RegisterUBO(i_View);
 
 	UBOMemberInfo mi_blend{ "blend", UBOMemberType_Vector, offsetof(UBO_Material, blend), 1 };

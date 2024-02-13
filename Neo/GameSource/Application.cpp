@@ -24,9 +24,9 @@ Application::Application()
 	persp.farPlane = 50.0f;
 	m_view.SetPerspective(persp);
 
-	m_view.SetViewport({ { 0,0 }, { 1, 1 } });
+	m_view.SetViewport({ 0,0,1,1 });
 	m_view.SetDepthRange(0.1f, 1.0f);
-	m_view.SetScissorRect({ { 0,0 }, { 1,1 } });
+	m_view.SetScissorRect({ 0,0,1,1 });
 
 	m_modelMatrix = mat4x4(1);
 
@@ -67,7 +67,7 @@ void Application::Update()
 	{
 		bee.pos += bee.vel * dt;
 		float range = glm::length(bee.pos);
-		if (range > 10.0f)
+		if (range > 20.0f)
 			bee.vel = -bee.pos*0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
 	}
 
@@ -82,16 +82,25 @@ void Application::Update()
 	camMatrix[3] = vec4(m_cameraPos, 1.0);
 	m_view.SetCameraMatrix(camMatrix);
 
+	View::OrthographicInfo orthoInfo;
+	orthoInfo.orthoRect = { 0.0f,0.0f,1280.0f,720.0f };
+	orthoInfo.nearPlane = 0.0f;
+	orthoInfo.farPlane = 1.0f;
+	m_view.SetOrthographic(orthoInfo);
+
+
 	// TODO: need this threadsafe
 	m_cameraMatrix = camMatrix;
+	static float time = 0.0f;
+	time += dt;
+	m_beeScale = sinf(time) * 0.1f + 0.11f;
+
 	auto& ddr = DefDynamicRenderer::Instance();
 	if (m_particleMat->IsLoaded())
 	{
 		ddr.BeginRender(0);
 		ddr.StartPrimitive(PrimType_TriangleList);
 		ddr.UseMaterial(m_particleMat);
-		static float time = 0.0f;
-		time += dt;
 		float width = sinf(time) * 0.05f + 0.05f;
 		vec3 right = vec3(camMatrix[0] * width);
 		vec3 up = vec3(camMatrix[1] * width);
@@ -145,8 +154,8 @@ void Application::Draw()
 	idr.BeginRender();
 	idr.StartPrimitive(PrimType_TriangleList);
 	idr.UseMaterial(m_beeMat);
-	vec3 right = m_cameraMatrix[0] * 0.1f;
-	vec3 up = m_cameraMatrix[1] * 0.1f;
+	vec3 right = m_cameraMatrix[0] * m_beeScale;
+	vec3 up = m_cameraMatrix[1] * m_beeScale;
 	u32 beeCol = 0xffffffff;
 	for (auto& bee : m_bees)
 	{
@@ -166,7 +175,13 @@ void Application::Draw()
 	idr.EndPrimitive();
 	idr.EndRender();
 
+	mat4x4 identity(1);
+	GIL::Instance().SetAndBindModelMatrix(identity);
 	if (m_font->IsLoaded())
-		m_font->RenderText("Test", rect({ 0,0 }, { 1,0.2 }), 0, Alignment_Center, { 0.01f,0.01f }, { 0,0,0,1 });
+	{
+		int fps = (int)(1.0f / NeoTimeDelta);
+		int ms = (int)(1000.0f * NeoTimeDelta);
+		m_font->RenderText(STR("{}ms FPS {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
+	}
 }
 

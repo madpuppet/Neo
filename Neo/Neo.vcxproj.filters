@@ -360,10 +360,7 @@
     <None Include="glm\ext\vector_ulp.inl">
       <Filter>Includes\glm</Filter>
     </None>
-    <None Include="SourceData\shaders\standard.psh">
-      <Filter>Shaders</Filter>
-    </None>
-    <None Include="SourceData\shaders\standard.vsh">
+    <None Include="SourceData\shaders\standard_ortho.shader">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -104,18 +104,23 @@ typedef std::function<void(void)> GenericCallback;		// generic callback that tak
 template <typename T>
 struct rectangle
 {
-	T min;
-	T size;
+	T x, y, w, h;
 
-	bool contains(const T& pos) const { return pos.x >= min.x && pos.y >= min.y && pos.x < min.x + size.x && pos.y < min.y + size.y; }
+	bool contains(const T& pos) const { return pos.x >= x && y >= y && x < x+w && y < y+h; }
 	bool overlaps(rectangle<T> o) const
 	{
-		return min.x < (o.min.x + o.size.x) && (min.x + size.x) >= o.min.x && min.y < (o.min.y + o.size.y) && (min.y + size.y) >= o.min.y;
+		return x < o.x2() && x2() >= o.x && y < o.y2() && y2() >= o.y;
 	}
-	void translate(const T& offset) { min.x += offset.x; min.y += offset.y; };
+	void translate(const T& offset) { x += offset.x; y += offset.y; };
+	auto x2() const { return x + w; }
+	auto y2() const { return y + h; }
+	auto centrePos() const { return { x + w / 2, y + h / 2 }; }
+	auto minPos() const { return { x,y }; }
+	auto maxPos() const { return { x+w,y+h }; }
+	auto size() const { return { w,h }; }
 };
-using rect = rectangle<vec2>;
-using irect = rectangle<ivec2>;
+using rect = rectangle<f32>;
+using irect = rectangle<i32>;
 
 template <typename T>
 struct boundingVolume

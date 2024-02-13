@@ -8,7 +8,7 @@
 
 #define BITMAPFONT_VERSION 2
 
-CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", true);
+CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", false);
 
 DECLARE_MODULE(BitmapFontFactory, NeoModuleInitPri_BitmapFontFactory, NeoModulePri_None, NeoModulePri_None);
 
@@ -36,7 +36,7 @@ void BitmapFont::OnAssetDeliver(AssetData* data)
 			dependantResources.push_back(*page.material);
 		}
 
-		m_white.Create("white");
+		m_white.Create("white_ortho");
 		dependantResources.push_back(m_white);
 		
 		LOG(Font, STR("BitmapFont {} Dependancy List: {}", data->name, dependantResources.size()));
@@ -381,7 +381,7 @@ bool BitmapFontAssetData::MemoryToAsset(const MemBlock& block)
 	return true;
 }
 
-void BitmapFont::RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col)
+void BitmapFont::RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col, float dropShadowOffset)
 {
 	Assert(Thread::IsOnThread(ThreadGUID_Render), "Must be called on Render Thread");
 
@@ -391,11 +391,11 @@ void BitmapFont::RenderText(const string& text, const rect& area, float z, Align
 		dr.BeginRender();
 		dr.StartPrimitive(PrimType_LineStrip);
 		dr.UseMaterial(m_white);
-		dr.AddVert({ area.min.x,area.min.y,z }, vec2(0, 0), 0xffffffff);
-		dr.AddVert({ area.min.x + area.size.x,area.min.y,z }, vec2(1, 0), 0xffffffff);
-		dr.AddVert({ area.min.x + area.size.x,area.min.y+area.size.y,z }, vec2(0, 1), 0xffffffff);
-		dr.AddVert({ area.min.x,area.min.y + area.size.y,z }, vec2(1, 1), 0xffffffff);
-		dr.AddVert({ area.min.x,area.min.y,z }, vec2(0, 0), 0xffffffff);
+		dr.AddVert({ area.x,area.y,z }, vec2(0, 0), 0xffffffff);
+		dr.AddVert({ area.x2(), area.y, z }, vec2(1, 0), 0xffffffff);
+		dr.AddVert({ area.x2(), area.y2(),z }, vec2(0, 1), 0xffffffff);
+		dr.AddVert({ area.x, area.y2(), z }, vec2(1, 1), 0xffffffff);
+		dr.AddVert({ area.x,area.y,z }, vec2(0, 0), 0xffffffff);
 		dr.EndPrimitive();
 		dr.EndRender();
 	}
@@ -454,46 +454,64 @@ void BitmapFont::RenderText(const string& text, const rect& area, float z, Align
 	switch (align)
 	{
 		case Alignment_TopLeft:
-			xoffset = area.min.x - minx;
-			yoffset = area.min.y + area.size.y - maxy;
+			xoffset = area.x - minx;
+			yoffset = area.y2() - maxy;
 			break;
 		case Alignment_TopCenter:
-			xoffset = (area.min.x + area.size.x / 2 - (maxx - minx) / 2) - minx;
-			yoffset = area.min.y + area.size.y - maxy;
+			xoffset = area.x + area.w / 2 - (maxx - minx) / 2 - minx;
+			yoffset = area.y2() - maxy;
 			break;
 		case Alignment_TopRight:
-			xoffset = area.min.x + area.size.x - maxx;
-			yoffset = area.min.y + area.size.y - maxy;
+			xoffset = area.x2() - maxx;
+			yoffset = area.y2() - maxy;
 			break;
 		case Alignment_CenterLeft:
-			xoffset = area.min.x - minx;
-			yoffset = (area.min.y + area.size.y / 2 - (maxy - miny) / 2) - miny;
+			xoffset = area.x - minx;
+			yoffset = area.y + area.h/2 - (maxy - miny) / 2 - miny;
 			break;
 		case Alignment_Center:
-			xoffset = (area.min.x + area.size.x / 2 - (maxx - minx) / 2) - minx;
-			yoffset = (area.min.y + area.size.y / 2 - (maxy - miny) / 2) - miny;
+			xoffset = area.x + area.w / 2 - (maxx - minx) / 2 - minx;
+			yoffset = area.y + area.h / 2 - (maxy - miny) / 2 - miny;
 			break;
 		case Alignment_CenterRight:
-			xoffset = area.min.x + area.size.x - maxx;
-			yoffset = (area.min.y + area.size.y / 2 - (maxy - miny) / 2) - miny;
+			xoffset = area.x2() - maxx;
+			yoffset = area.y + area.h / 2 - (maxy - miny) / 2 - miny;
 			break;
 		case Alignment_BottomLeft:
-			xoffset = area.min.x - minx;
-			yoffset = area.min.y - miny;
+			xoffset = area.x - minx;
+			yoffset = area.y - miny;
 			break;
 		case Alignment_BottomCenter:
-			xoffset = (area.min.x + area.size.x / 2 - (maxx - minx) / 2) - minx;
-			yoffset = area.min.y - miny;
+			xoffset = area.x + area.w / 2 - (maxx - minx) / 2 - minx;
+			yoffset = area.y - miny;
 			break;
-		case Alignment_BottomCenterRight:
-			xoffset = area.min.x + area.size.x - maxx;
-			yoffset = area.min.y - miny;
+		case Alignment_BottomRight:
+			xoffset = area.x2() - maxx;
+			yoffset = area.y - miny;
 			break;
 	};
 
 	dr.BeginRender();
 	dr.StartPrimitive(PrimType_TriangleList);
 	dr.UseMaterial(m_assetData->pages[0].material);
+
+	if (dropShadowOffset)
+	{
+		int toggleZ = 0;
+		for (auto& ch : boxes)
+		{
+			float _z = z + toggleZ * 0.001f;
+			toggleZ = 1 - toggleZ;
+			dr.AddVert({ ch.x1 + xoffset + dropShadowOffset, ch.y1 + yoffset + dropShadowOffset, _z }, { ch.u1, ch.v1 }, 0xff000000);
+			dr.AddVert({ ch.x1 + xoffset + dropShadowOffset, ch.y2 + yoffset + dropShadowOffset, _z }, { ch.u1, ch.v2 }, 0xff000000);
+			dr.AddVert({ ch.x2 + xoffset + dropShadowOffset, ch.y1 + yoffset + dropShadowOffset, _z }, { ch.u2, ch.v1 }, 0xff000000);
+
+			dr.AddVert({ ch.x2 + xoffset + dropShadowOffset, ch.y2 + yoffset + dropShadowOffset, _z }, { ch.u2, ch.v2 }, 0xff000000);
+			dr.AddVert({ ch.x2 + xoffset + dropShadowOffset, ch.y1 + yoffset + dropShadowOffset, _z }, { ch.u2, ch.v1 }, 0xff000000);
+			dr.AddVert({ ch.x1 + xoffset + dropShadowOffset, ch.y2 + yoffset + dropShadowOffset, _z }, { ch.u1, ch.v2 }, 0xff000000);
+		}
+	}
+
 	u32 col32 = vec4ToR8G8B8A8(col);
 	int toggleZ = 0;
 	for (auto &ch : boxes)
@@ -509,6 +527,7 @@ void BitmapFont::RenderText(const string& text, const rect& area, float z, Align
 		dr.AddVert({ ch.x2 + xoffset, ch.y1 + yoffset, _z }, { ch.u2, ch.v1 }, col32);
 		dr.AddVert({ ch.x1 + xoffset, ch.y2 + yoffset, _z }, { ch.u1, ch.v2 }, col32);
 	}
+
 	dr.EndPrimitive();
 	dr.EndRender();
 }

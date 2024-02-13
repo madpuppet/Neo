@@ -1,11 +1,11 @@
 shader: standard_ortho
-blend: blend
+blend: opaque
 cull: back
 zread: false
 zwrite: false
 uniforms
 	texture: albedo
-		image: c64_0
+		image: white
 		filter: nearest, nearest
 		wrap: repeat
 	blendColor: vec4

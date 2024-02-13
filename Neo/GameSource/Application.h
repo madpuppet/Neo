@@ -33,6 +33,7 @@ protected:
 	ShaderRef m_shader;
 
 	mat4x4 m_cameraMatrix;
+	float m_beeScale;
 	array<Bee, 20000> m_bees;
 };
 

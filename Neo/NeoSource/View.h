@@ -28,7 +28,7 @@ public:
 	};
 	struct OrthographicInfo
 	{
-		rect orthoRect = { { 0,0}, {1,1} };
+		rect orthoRect = { 0, 0, 1, 1 };
 		float nearPlane = 0.0f;
 		float farPlane = 1.0f;
 	};
@@ -46,7 +46,6 @@ public:
 	void Apply();
 
 protected:
-	bool m_isPerspective = true;
 	PerspectiveInfo m_perspective;
 	OrthographicInfo m_orthographic;
 

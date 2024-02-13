@@ -5,6 +5,7 @@ struct UBO_View
 {
 	mat4x4 view;
 	mat4x4 proj;
+	mat4x4 ortho;
 };
 
 struct UBO_Material

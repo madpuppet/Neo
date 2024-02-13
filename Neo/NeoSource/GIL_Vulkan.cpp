@@ -255,11 +255,12 @@ mat4x4 InverseSimple(const mat4x4 & m)
     return temp;
 }
 
-void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat)
+void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat, const mat4x4 &orthoMat)
 {
     auto ubo = (UBO_View*)m_viewUBOMapped[m_currentFrame];
     ubo->view = viewMat;
     ubo->proj = projMat;
+    ubo->ortho = orthoMat;
 }
 
 void GIL::SetMaterialBlendColor(const vec4 &blendColor)
@@ -271,10 +272,10 @@ void GIL::SetMaterialBlendColor(const vec4 &blendColor)
 void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
 {
     VkViewport vp{};
-    vp.x = viewport.min.x * m_frameBufferSize.x;
-    vp.y = viewport.min.y * m_frameBufferSize.y;
-    vp.width = viewport.size.x * m_frameBufferSize.x;
-    vp.height = viewport.size.y * m_frameBufferSize.y;
+    vp.x = viewport.x * m_frameBufferSize.x;
+    vp.y = viewport.y * m_frameBufferSize.y;
+    vp.width = viewport.w * m_frameBufferSize.x;
+    vp.height = viewport.h * m_frameBufferSize.y;
     vp.minDepth = minDepth;
     vp.maxDepth = maxDepth;
     vkCmdSetViewport(m_commandBuffers[m_currentFrame], 0, 1, &vp);
@@ -283,10 +284,10 @@ void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
 void GIL::SetScissor(const rect& scissorRect)
 {
     VkRect2D scissor{};
-    scissor.offset.x = (u32)(scissorRect.min.x * m_frameBufferSize.x);
-    scissor.offset.y = (u32)(scissorRect.min.y * m_frameBufferSize.y);
-    scissor.extent.width = (u32)(scissorRect.size.x * m_frameBufferSize.x);
-    scissor.extent.height = (u32)(scissorRect.size.y * m_frameBufferSize.y);
+    scissor.offset.x = (u32)(scissorRect.x * m_frameBufferSize.x);
+    scissor.offset.y = (u32)(scissorRect.y * m_frameBufferSize.y);
+    scissor.extent.width = (u32)(scissorRect.w * m_frameBufferSize.x);
+    scissor.extent.height = (u32)(scissorRect.h * m_frameBufferSize.y);
     vkCmdSetScissor(m_commandBuffers[m_currentFrame], 0, 1, &scissor);
 }
 
@@ -712,7 +713,6 @@ VkPresentModeKHR GIL::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>&
             return availablePresentMode;
         }
     }
-
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -724,7 +724,7 @@ VkExtent2D GIL::chooseSwapExtent(const VkSurfaceCapabilitiesKHR& capabilities)
     }
     else
     {
-        VkExtent2D actualExtent = { 640, 480 };
+        VkExtent2D actualExtent = { 1280, 720 };
         actualExtent.width = std::clamp(actualExtent.width, capabilities.minImageExtent.width, capabilities.maxImageExtent.width);
         actualExtent.height = std::clamp(actualExtent.height, capabilities.minImageExtent.height, capabilities.maxImageExtent.height);
         return actualExtent;

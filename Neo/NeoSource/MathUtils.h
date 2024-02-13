@@ -417,10 +417,10 @@ inline float Lerp(float minValue, float maxValue, float time)
 
 inline mat4x4 OrthoProj(const rect &orthoRect, float nearPlane, float farPlane)
 {
-	float left = orthoRect.min.x;
-	float right = orthoRect.min.x + orthoRect.size.x;
-	float bottom = orthoRect.min.y;
-	float top = orthoRect.min.y + orthoRect.size.y;
+	float left = orthoRect.x;
+	float right = orthoRect.x2();
+	float bottom = orthoRect.y;
+	float top = orthoRect.y2();
 
 	mat4x4 result = mat4x4(1);
 	result[0][0] = 2.0f / (right - left);

@@ -19,7 +19,7 @@ enum Alignment
 
 	Alignment_BottomLeft,
 	Alignment_BottomCenter,
-	Alignment_BottomCenterRight
+	Alignment_BottomRight
 };
 
 
@@ -98,7 +98,7 @@ public:
 
 	BitmapFontAssetData* GetAssetData() { return m_assetData; }
 
-	void RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col);
+	void RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col, float dropShadowOffset);
 };
 
 // texture factory keeps a map of all the currently created textures
