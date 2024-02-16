@@ -284,6 +284,7 @@ public:
 	vec3 GetDegVector3(int index = 0) const { return vec3(DegToRad(GetF32(index)), DegToRad(GetF32(index+1)), DegToRad(GetF32(index+2))); }
 	ivec2 GetVector2i(int index = 0) const { return ivec2(GetI32(index), GetI32(index+1)); }
 	ivec3 GetVector3i(int index = 0) const { return ivec3(GetI32(index), GetI32(index + 1), GetI32(index + 2)); }
+	ivec4 GetVector4i(int index = 0) const { return ivec4(GetI32(index), GetI32(index + 1), GetI32(index + 2), GetI32(index + 3)); }
 	color GetColour(int index = 0) const { return color(GetF32(index), GetF32(index+1), GetF32(index+2), GetF32(index+3)); }
 	color GetColour256(int index = 0) const { return color(GetF32(index)/255.0f, GetF32(index+1)/255.0f, GetF32(index+2)/255.0f, GetF32(index+3)/255.0f); }
 	int GetEnum(const stringlist fields, int index = 0) { return StringFindInList(GetString(index), fields); }

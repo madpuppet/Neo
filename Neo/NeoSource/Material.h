@@ -4,6 +4,7 @@
 #include "AssetManager.h"
 #include "ResourceRef.h"
 #include "Shader.h"
+#include "ShaderManager.h"
 
 enum MaterialBlendMode
 {
@@ -44,14 +45,6 @@ enum SamplerCompare
 	SamplerCompare_LEqual
 };
 
-enum UniformType
-{
-	UniformType_Texture,
-	UniformType_Vec4,
-	UniformType_F32,
-	UniformType_I32
-};
-
 struct MaterialUniform
 {
 	MaterialUniform(const string& _uniformName, UniformType _type) : uniformName(_uniformName), type(_type) {}
@@ -60,38 +53,54 @@ struct MaterialUniform
 	string uniformName;
 	UniformType type;
 };
-
-struct MaterialUniform_Texture : public MaterialUniform
+struct MaterialUniform_vec4 : public MaterialUniform
 {
-	MaterialUniform_Texture(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_Texture) {}
-	virtual ~MaterialUniform_Texture() {}
+	MaterialUniform_vec4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_vec4) {}
 
+	vec4 value = { 1,1,1,1 };
+};
+struct MaterialUniform_ivec4 : public MaterialUniform
+{
+	MaterialUniform_ivec4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_ivec4) {}
+
+	vec4 value = { 0,0,0,0 };
+};
+struct MaterialUniform_f32 : public MaterialUniform
+{
+	MaterialUniform_f32(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_f32) {}
+
+	f32 value = 0.0f;
+};
+struct MaterialUniform_i32 : public MaterialUniform
+{
+	MaterialUniform_i32(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_i32) {}
+
+	i32 value = 0;
+};
+
+struct MaterialUniform_mat4x4 : public MaterialUniform
+{
+	MaterialUniform_mat4x4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_mat4x4) {}
+
+	mat4x4 value = mat4x4(1);
+};
+
+struct MaterialBufferObject
+{
+	vector<MaterialUniform*> uniforms;
+	struct UBOInfoInstance* uboInstance = nullptr;
+};
+
+struct MaterialSampler
+{
+	string samplerName;
 	string textureName;
 	SamplerFilter minFilter = SamplerFilter_Linear;
 	SamplerFilter magFilter = SamplerFilter_LinearMipLinear;
 	SamplerWrap uWrap = SamplerWrap_Repeat;
 	SamplerWrap vWrap = SamplerWrap_Repeat;
 	SamplerCompare compare = SamplerCompare_None;
-
 	TextureRef texture;
-};
-struct MaterialUniform_Vec4 : public MaterialUniform
-{
-	MaterialUniform_Vec4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_Vec4) {}
-
-	vec4 value = { 1,1,1,1 };
-};
-struct MaterialUniform_F32 : public MaterialUniform
-{
-	MaterialUniform_F32(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_F32) {}
-
-	f32 value = 0.0f;
-};
-struct MaterialUniform_I32 : public MaterialUniform
-{
-	MaterialUniform_I32(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_I32) {}
-
-	i32 value = 0;
 };
 
 class Material : public Resource
@@ -151,7 +160,8 @@ public:
 	string shaderName;
 	MaterialBlendMode blendMode = MaterialBlendMode_Opaque;
 	MaterialCullMode cullMode = MaterialCullMode_None;
-	vector<MaterialUniform*> uniforms;
+	vector<MaterialBufferObject*> buffers;
+	vector<MaterialSampler*> samplers;
 	bool zread = false;
 	bool zwrite = false;
 

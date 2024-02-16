@@ -1,33 +1,32 @@
 #include "Neo.h"
 #include "ShaderManager.h"
+#include "RenderThread.h"
 
 DECLARE_MODULE(ShaderManager, NeoModuleInitPri_ShaderManager, NeoModulePri_None, NeoModulePri_None);
 
 ShaderManager::ShaderManager() 
 {
-	UBOMemberInfo mi_view{ "view", UBOMemberType_Matrix, offsetof(UBO_View, view), 1 };
-	UBOMemberInfo mi_proj{ "proj", UBOMemberType_Matrix, offsetof(UBO_View, proj), 1 };
-	UBOMemberInfo mi_ortho{ "ortho", UBOMemberType_Matrix, offsetof(UBO_View, ortho), 1 };
-	UBOInfo i_View{ "View", "UBO_View", false, (u32)sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
+	UBOMemberInfo mi_view{ "view", UniformType_mat4x4, offsetof(UBO_View, view), 1 };
+	UBOMemberInfo mi_proj{ "proj", UniformType_mat4x4, offsetof(UBO_View, proj), 1 };
+	UBOMemberInfo mi_ortho{ "ortho", UniformType_mat4x4, offsetof(UBO_View, ortho), 1 };
+	auto i_View = new UBOInfo{ "UBO_View", "View", (u32)sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
 	RegisterUBO(i_View);
 
-	UBOMemberInfo mi_blend{ "blend", UBOMemberType_Vector, offsetof(UBO_Material, blend), 1 };
-	UBOInfo i_Material{ "Material", "UBO_Material", false, (u32)sizeof(UBO_Material), {mi_blend} };
+	UBOMemberInfo mi_blend{ "blend", UniformType_vec4, offsetof(UBO_Material, blend), 1 };
+	auto i_Material = new UBOInfo{ "UBO_Material", "Material", (u32)sizeof(UBO_Material), {mi_blend} };
 	RegisterUBO(i_Material);
 
-	UBOMemberInfo mi_model{ "model", UBOMemberType_Matrix, offsetof(UBO_Model, model), 1 };
-	UBOInfo i_Model{ "Model", "UBO_Model", false, (u32)sizeof(UBO_Model), {mi_model} };
+	UBOMemberInfo mi_model{ "model", UniformType_mat4x4, offsetof(UBO_Model, model), 1 };
+	auto i_Model = new UBOInfo{ "UBO_Model", "Model", (u32)sizeof(UBO_Model), {mi_model} };
 	RegisterUBO(i_Model);
 }
 
 ShaderManager::~ShaderManager(){}
 
-void ShaderManager::RegisterUBO(const UBOInfo &uboInfo)
+void ShaderManager::RegisterUBO(UBOInfo *uboInfo)
 {
-	m_ubos[uboInfo.name] = uboInfo;
+	m_ubos[uboInfo->structName] = uboInfo;
 }
-
-const char *s_TypeToString[] = { "mat4x4", "vec4", "ivec4" };
 
 string ShaderManager::UBOContentsToString(const UBOInfo &uboInfo)
 {
@@ -36,22 +35,34 @@ string ShaderManager::UBOContentsToString(const UBOInfo &uboInfo)
 	{
 		if (member.members > 1)
 		{
-			outStr += std::format("\t{} {}[{}];\n", s_TypeToString[member.type], member.name, member.members);
+			outStr += std::format("\t{} {}[{}];\n", UniformTypeToString[member.type], member.name, member.members);
 		}
 		else
 		{
-			outStr += std::format("\t{} {};\n", s_TypeToString[member.type], member.name);
+			outStr += std::format("\t{} {};\n", UniformTypeToString[member.type], member.name);
 		}
 	}
 	return outStr;
 }
 
-void ShaderManager::CreateUBOPlatformData()
+UBOInfoInstance* ShaderManager::CreateUBOInstance(UBOInfo *uboInfo, bool dynamic)
+{
+	Assert(Thread::IsOnThread(ThreadGUID_Render), "Must be run on render thread!");
+
+	auto instance = new UBOInfoInstance;
+	instance->isDynamic = dynamic;
+	instance->ubo = uboInfo;
+	instance->platformData = UniformBufferPlatformData_Create(*uboInfo, dynamic);
+	return instance;
+}
+
+
+void ShaderManager::CreateInstances()
 {
 	for (auto it : m_ubos)
 	{
-		auto& ubo = it.second;
-		ubo.platformData = UniformBufferPlatformData_Create(ubo);
+		auto ubo = it.second;
+		ubo->dynamicInstance = CreateUBOInstance(ubo, true);
 	}
 }
 

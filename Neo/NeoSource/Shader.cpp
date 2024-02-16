@@ -81,36 +81,36 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 			continue;
 
 		// get the SRO objects... (ubo, sampler, ubod, sbo)
-		auto typeIt = SROType_Lookup.find(tokens[0]);
-		SROType type = (typeIt != SROType_Lookup.end()) ? typeIt->second : SROType_Unknown;
-		if (type != SROType_Unknown)
+		auto uboInfo = sm.FindUBO(tokens[0]);
+		bool isSampler = StringEqual(tokens[0], "Sampler");
+		if (uboInfo || isSampler)
 		{
-			if (tokens.size() > 6)
+			Assert(tokens.size() > 6, "Not enough tokens for a UBO declaration!");
+			string varName = std::move(tokens[1]);
+			int sroSet = StringToI32(tokens[3]);
+			int sroBinding = StringToI32(tokens[5]);
+			u32 stageMask = 0;
+			string stageMaskStr = (tokens.size() > 8) ? tokens[8] : "";
+			for (auto c : stageMaskStr)
 			{
-				string name = std::move(tokens[1]);
-				int sroSet = StringToI32(tokens[3]);
-				int sroBinding = StringToI32(tokens[5]);
-				string stageMaskStr = (tokens.size() > 8) ? tokens[8] : "";
-				u32 stageMask = 0;
-				for (auto c : stageMaskStr)
+				switch (c)
 				{
-					switch (c)
-					{
-						case 'F':
-							stageMask |= SROStage_Fragment;
-							break;
-						case 'V':
-							stageMask |= SROStage_Vertex;
-							break;
-						case 'G':
-							stageMask |= SROStage_Geometry;
-							break;
-					}
+					case 'F':
+						stageMask |= SROStage_Fragment;
+						break;
+					case 'V':
+						stageMask |= SROStage_Vertex;
+						break;
+					case 'G':
+						stageMask |= SROStage_Geometry;
+						break;
 				}
-				if (!stageMask)
-					stageMask = SROStage_Vertex | SROStage_Fragment;
-				SROs.emplace_back(name, type, sroSet, sroBinding, stageMask);
 			}
+			if (!stageMask)
+				stageMask = SROStage_Vertex | SROStage_Fragment;
+
+			SROType type = uboInfo ? SROType_UBO : SROType_Sampler;
+			SROs.emplace_back(name, type, sroSet, sroBinding, stageMask, uboInfo);
 		}
 
 		// VS_IN <type> <name>(<binding>)
@@ -176,16 +176,11 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 		switch (sro.type)
 		{
 			case SROType_UBO:
-			case SROType_UBOD:
-			case SROType_SBO:
 				{
-					auto uboInfo = sm.FindUBO(sro.name);
-					Assert(uboInfo, STR("No registered UBO called '{}'", name));
-					
-					auto bodyStr = sm.UBOContentsToString(*uboInfo);
+					auto bodyStr = sm.UBOContentsToString(*sro.uboInfo);
 
 					string out = std::format("layout(set = {}, binding = {}) uniform {}\n{{\n{}}} {};\n\n",
-						sro.set, sro.binding, uboInfo->structName, bodyStr, uboInfo->name);
+						sro.set, sro.binding, sro.uboInfo->structName, bodyStr, sro.uboInfo->varName);
 
 					if (sro.stageMask & SROStage_Vertex)
 						vertOutputFile << out;
@@ -342,7 +337,8 @@ bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 		LOG(Shader, STR("Rebuilding {} - old version {} - expected {}", name, version, SHADER_VERSION));
 		return false;
 	}
-
+	
+	auto& sm = ShaderManager::Instance();
 	u32 sroSize = stream.ReadU32();
 	SROs.clear();
 	for (u32 i = 0; i < sroSize; i++)
@@ -353,8 +349,11 @@ bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 		sro.set = stream.ReadU32();
 		sro.binding = stream.ReadU32();
 		sro.stageMask = stream.ReadU32();
+		sro.uboInfo = sm.FindUBO(sro.name);
 		SROs.push_back(sro);
 	}
+	auto sortFunc = [](const ShaderResourceObjectInfo& a, const ShaderResourceObjectInfo& b) { return (a.set < b.set) || (a.binding < b.binding); };
+	std::sort(SROs.begin(), SROs.end(), sortFunc);
 
 	ReadAttributes(stream, vertexAttributes);
 	ReadAttributes(stream, interpolants);
@@ -401,11 +400,6 @@ ShaderFactory::ShaderFactory()
 	ati->assetExt = ".neoshader";
 	ati->sourceExt.push_back({ { ".shader" }, true });		// compile from source
 	AssetManager::Instance().RegisterAssetType(AssetType_Shader, ati);
-
-	SROType_Lookup["UBO"] = SROType_UBO;
-	SROType_Lookup["SAMPLER"] = SROType_Sampler;
-	SROType_Lookup["UBOD"] = SROType_UBOD;
-	SROType_Lookup["SBO"] = SROType_SBO;
 
 	SROStage_Lookup["Geometry"] = SROStage_Geometry;
 	SROStage_Lookup["Vertex"] = SROStage_Vertex;
@@ -474,92 +468,3 @@ void ShaderFactory::Destroy(Shader* shader)
 	}
 }
 
-
-#if 0
-#include <filesystem>
-#include <iostream>
-#include <fstream>
-#include <cstdlib>
-
-bool CompileShader(MemBlock srcBlock, MemBlock& spvBlock, AssetType assetType)
-{
-	// Get the standard temporary file location
-	std::filesystem::path tempDir = std::filesystem::temp_directory_path();
-
-	// Create a temporary file path
-	std::filesystem::path tempFilePath = tempDir / "tempfile";
-
-	static int count = 0;
-	string srcPath = std::format("{}{}.shader", tempFilePath.string(), ++count);
-	string spvPath = std::format("{}{}.spv", tempFilePath.string(), ++count);
-	string errPath = std::format("{}{}.err", tempFilePath.string(), ++count);
-
-	// write shader file
-	std::ofstream outFile(srcPath, std::ios::binary);
-	if (outFile.is_open())
-	{
-		outFile.write(reinterpret_cast<const char*>(srcBlock.Mem()), srcBlock.Size());
-		outFile.close();
-	}
-	else
-	{
-		Error(STR("Failed to open shader temp file for writing: {}", srcPath));
-		return false;
-	}
-
-	// compile it
-	string stage;
-	switch (assetType)
-	{
-		case AssetType_Shader:
-			stage = "-fshader-stage=vertex ";
-			break;
-		case AssetType_PixelShader:
-			stage = "-fshader-stage=fragment ";
-			break;
-		default:
-			Error("Unsupported asset type for shader compile!");
-			break;
-	}
-
-	// compile the file
-	string command = "glslc " + stage + srcPath + " -o " + spvPath + " 2>" + errPath;
-	int result = std::system(command.c_str());
-	if (result != 0)
-	{
-		// load error file for display
-		std::ifstream errFile(errPath, std::ios::ate);
-		if (errFile.is_open())
-		{
-			MemBlock errBlock;
-			std::streamsize fileSize = errFile.tellg();
-			errFile.seekg(0, std::ios::beg);
-			errBlock.Resize(fileSize);
-			errFile.read(reinterpret_cast<char*>(errBlock.Mem()), errBlock.Size());
-			errFile.close();
-			string errMsg((const char*)errBlock.Mem(), errBlock.Size());
-			LOG(Any, errMsg);
-		}
-
-		Error(STR("Failed to compile shader: {}", command));
-		return false;
-	}
-
-	// load the compiled file back in
-	std::ifstream inFile(spvPath, std::ios::binary | std::ios::ate);
-	if (!inFile.is_open())
-	{
-		Error(STR("Failed to load spv: {}", spvPath));
-		return false;
-	}
-	std::streamsize fileSize = inFile.tellg();
-	inFile.seekg(0, std::ios::beg);
-	spvBlock.Resize(fileSize);
-	inFile.read(reinterpret_cast<char*>(spvBlock.Mem()), spvBlock.Size());
-	inFile.close();
-
-	// all done!
-	return true;
-}
-
-#endif

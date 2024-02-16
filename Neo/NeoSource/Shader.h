@@ -17,11 +17,8 @@ enum SROType
 	SROType_Unknown=-1,
 
 	SROType_UBO,
-	SROType_Sampler,
-	SROType_UBOD,
-	SROType_SBO,
+	SROType_Sampler
 };
-extern hashtable<string, SROType> SROType_Lookup;
 
 enum SROStage
 {
@@ -79,6 +76,8 @@ public:
 		u32 set;			// 0..4
 		u32 binding;		// 0..x
 		u32 stageMask;		// vertex/pixel
+
+		UBOInfo* uboInfo;		// resolved UBO
 	};
 	vector<ShaderResourceObjectInfo> SROs;
 

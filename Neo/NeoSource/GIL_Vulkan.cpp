@@ -87,9 +87,8 @@ void GIL::Startup()
     createCommandPool();
     createDepthResources();
     createFramebuffers();
-    createUniformBuffers();
+    createUniformBufferDynamicMemory();
     createDescriptorPool();
-    createTextureSampler();
     createCommandBuffers();
     createSyncObjects();
 
@@ -997,16 +996,10 @@ bool GIL::createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSampler
     if (vkCreateSampler(m_device, &samplerInfo, nullptr, &sampler) != VK_SUCCESS)
     {
         Error("failed to create texture sampler!");
+        return false;
     }
-}
 
-void GIL::createUniformBuffers()
-{
-    createUniformBuffer(m_viewUBO, m_viewUBOMemory, m_viewUBOMapped, sizeof(UBO_View));
-    createUniformBuffer(m_materialUBO, m_materialUBOMemory, m_materialUBOMapped, sizeof(UBO_Material));
-
-    int alignedSize = (sizeof(UBO_Model) + 63) & ~63;
-    createDynamicUniformBuffer(m_modelUBO, m_modelUBOMemory, m_modelUBOMapped, sizeof(UBO_Model), alignedSize*256);
+    return true;
 }
 
 void GIL::copyMemoryToBuffer(VkDeviceMemory bufferMemory, void *memory, size_t size)
@@ -1026,22 +1019,27 @@ void GIL::copyMemoryToBuffer(VkDeviceMemory bufferMemory, void *memory, size_t s
 }
 
 void GIL::createUniformBuffer(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT>& memory,
-    array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
+    array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size)
 {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        createBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffers[i], memory[i]);
-
+        createBuffer(size, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffer[i], memory[i]);
         vkMapMemory(m_device, memory[i], 0, size, 0, &mapped[i]);
     }
 }
-void GIL::createDynamicUniformBuffer(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
+void GIL::createUniformBufferDynamic(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped)
 {
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
-        createDynamicBuffer(size, memorySize, VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, buffers[i], memory[i]);
-
-        vkMapMemory(m_device, memory[i], 0, size, 0, &mapped[i]);
+        VkBufferCreateInfo bufferInfo{};
+        bufferInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        bufferInfo.size = MaxDynamicUniformBufferMemory;
+        bufferInfo.usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT;
+        bufferInfo.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        if (vkCreateBuffer(m_device, &bufferInfo, nullptr, &buffer[i]) != VK_SUCCESS)
+            Error("failed to create buffer!");
+        mapped[i] = m_dynamicUniformBufferMemoryMapped[i];
+        vkBindBufferMemory(m_device, buffer[i], m_dynamicUniformBufferMemory[i], 0);
     }
 }
 
@@ -1450,7 +1448,20 @@ void GIL::BindMaterial(Material* material, bool lines)
         else
             vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->polygonPipeline);
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0, 3, materialPD->descriptorSets[m_currentFrame], 1, &m_currModelDynamicOffset);
+        u32 dynamicOffsets[16]; // maximum of 16 should be enough for any shader
+        int dynamicOffsetCount = 0;
+        auto shader = material->GetAssetData()->shader;
+        auto shaderPD = shader->GetPlatformData();
+        auto shaderAD = shader->GetAssetData();
+        for (auto &sro : shaderAD->SROs)
+        {
+            if (sro.type == SROType_UBOD)
+                dynamicOffsets[dynamicOffsetCount++] = sro.uboInfo->platformData->memOffset;
+        }
+
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0,
+            (u32)materialPD->descriptorSets[m_currentFrame].size(), materialPD->descriptorSets[m_currentFrame].data(),
+            dynamicOffsetCount, dynamicOffsets);
         m_boundMaterial = material;
     }
 }

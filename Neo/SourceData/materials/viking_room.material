@@ -3,15 +3,10 @@ blend: opaque
 cull: back
 zread: true
 zwrite: true
-uniforms
-	texture: Albedo
-		image: viking_room
-		filter: nearest, nearest
-		wrap: repeat
-	texture: Overlay
-		image: viking_room_overlay
-		filter: nearest, nearest
-		wrap: repeat
-	blendColor: vec4
-		default: 1,1,1,1
+sampler: Albedo
+	image: viking_room
+	filter: nearest, nearest
+	wrap: repeat
+static_uniforms: UBO_Material
+	blendColor: 1,1,1,1
 

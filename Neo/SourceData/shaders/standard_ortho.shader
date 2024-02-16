@@ -1,9 +1,9 @@
 // standard perspective shader
 
-UBO View(0, 0) : V
-UBO Material(1, 0) : F
+UBO UBO_View View(0, 0) : V
+UBO UBO_Material Material(1, 0) : F
 SAMPLER Albedo(1, 1) : F
-UBOD Model(2, 0) : V
+UBOD UBO_Model Model(2, 0) : V
 
 VS_IN vec3 inPosition
 VS_IN vec2 inTexCoord

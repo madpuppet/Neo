@@ -29,20 +29,25 @@ struct ShaderPlatformData
 {
 	VkShaderModule vertShaderModule;
 	VkShaderModule fragShaderModule;
+
+	// we'll do the layouts per material so we can mark some materials as being static UBOs instead of dynamic UBOs
+	static const int MaxSets = 4;
+	vector<VkDescriptorSetLayout> dsSetLayouts;
+	u32 setMapping[MaxSets]{};		// maps shader 'set' to set index
 };
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
 
 struct MaterialPlatformData
 {
-	static const int MaxSets = 4;
-
 	VkPipelineLayout pipelineLayout;
 	VkPipeline polygonPipeline;
 	VkPipeline linePipeline;
+
 	vector<VkDescriptorSet> descriptorSets[MAX_FRAMES_IN_FLIGHT];
-	vector<VkDescriptorSetLayout> dsSetLayouts;
-	u32 setToIndex[MaxSets]{};
+
+//	vector<u32> dynamicOffsets[MAX_FRAMES_IN_FLIGHT];
+//	vector<u32> idxToDynamicOffset;
 };
 MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);
@@ -63,8 +68,8 @@ struct UniformBufferPlatformData
 
 	bool isDynamic;		// dynamic - means we are bound to the frame dynamic buffer and step through slices in that on each use
 	u32 size;			// size of buffer (adjusted to alignment size)
-	u32 memOffset;		// current memoffset into memory
+	u32 memOffset;		// current memoffset into shared memory
 };
-UniformBufferPlatformData* UniformBufferPlatformData_Create(const struct UBOInfo &uboInfo);
+UniformBufferPlatformData* UniformBufferPlatformData_Create(const struct UBOInfo &uboInfo, bool dynamic);
 void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData);
 

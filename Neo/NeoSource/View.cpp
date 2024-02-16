@@ -1,5 +1,24 @@
 #include "Neo.h"
 #include "View.h"
+#include "RenderThread.h"
+#include "ShaderManager.h"
+
+View::View()
+{
+	m_viewUBO = ShaderManager::Instance().FindUBO("View");
+	RenderThread::Instance().AddPreDrawTask
+	(
+		[this]()
+		{
+			m_platformData = UniformBufferPlatformData_Create(*m_viewUBO, false);
+		}
+	);
+}
+
+View::~View()
+{
+
+}
 
 void View::SetOrthographic(const OrthographicInfo& info)
 {

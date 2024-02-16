@@ -3,11 +3,10 @@ blend: blend
 cull: back
 zread: true
 zwrite: true
-uniforms
-	texture: albedo
-		image: bee
-		filter: nearest, nearest
-		wrap: repeat
-	blendColor: vec4
-		default: 1,1,1,1
+sampler: Albedo
+	image: bee
+	filter: nearest, nearest
+	wrap: repeat
+uniforms: UBO_Material static
+	blendColor: 1,1,1,1
 

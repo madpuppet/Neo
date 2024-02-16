@@ -101,7 +101,7 @@ void Error(const string& msg)
     OutputDebugStringA(errorStr.c_str());
 #endif
 
-    if (Thread::IsOnThread(ThreadGUID_Main))
+    if (Thread::IsOnThread(ThreadGUID_Main) && GIL::Exists())
     {
         if (GIL::Instance().ShowMessageBox(errorStr))
             __debugbreak();

@@ -97,11 +97,24 @@ void VertexShaderPlatformData_Destroy(VertexShaderPlatformData* platformData)
 }
 
 
-MaterialUniform_Texture* FindTextureUniform(MaterialAssetData* assetData, const string& name)
+MaterialSampler* FindSampler(MaterialAssetData* assetData, const string& name)
 {
-    auto filter = [name](MaterialUniform* uniform) -> bool { return (uniform->type == UniformType_Texture && uniform->uniformName == name); };
-    auto it = std::find(assetData->uniforms.begin(), assetData->uniforms.end(), filter);
-    return it != assetData->uniforms.end() ? (MaterialUniform_Texture*)*it : nullptr;
+    for (auto sampler : assetData->samplers)
+    {
+        if (StringEqual(sampler->samplerName, name))
+            return sampler;
+    }
+    return nullptr;
+}
+
+MaterialBufferObject* FindMBO(MaterialAssetData* assetData, const string& name)
+{
+    for (auto mbo : assetData->buffers)
+    {
+        if (StringEqual(mbo->uboInstance->ubo->structName, name))
+            return mbo;
+    }
+    return nullptr;
 }
 
 MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
@@ -115,53 +128,6 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
     auto shaderPD = assetData->shader->GetPlatformData();
     auto shaderAD = assetData->shader->GetAssetData();
-
-    // descriptor layouts for each set..
-    vector<VkDescriptorSetLayoutBinding> layoutBindings[MaterialPlatformData::MaxSets];
-    for (auto &sro : shaderAD->SROs)
-    {
-        VkDescriptorSetLayoutBinding dslBinding{};
-        dslBinding.binding = sro.binding;
-        dslBinding.descriptorCount = 1;
-        dslBinding.pImmutableSamplers = nullptr;
-        switch (sro.type)
-        {
-            case SROType_UBO:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                break;
-            case SROType_Sampler:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                break;
-            case SROType_UBOD:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-                break;
-            case SROType_SBO:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                break;
-        }
-        dslBinding.stageFlags = 0;
-        if (sro.stageMask & SROStage_Vertex)
-            dslBinding.stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
-        if (sro.stageMask & SROStage_Fragment)
-            dslBinding.stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
-        layoutBindings[sro.set].push_back(dslBinding);
-    }
-
-    for (int i = 0; i < MaterialPlatformData::MaxSets; i++)
-    {
-        if (!layoutBindings[i].empty())
-        {
-            VkDescriptorSetLayoutCreateInfo layoutInfo{};
-            layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings[i].size());
-            layoutInfo.pBindings = layoutBindings[i].data();
-            VkDescriptorSetLayout dsl;
-            if (vkCreateDescriptorSetLayout(gil.Device(), &layoutInfo, nullptr, &dsl) != VK_SUCCESS)
-                Error("failed to create descriptor set layout!");
-            platformData->dsSetLayouts.push_back(dsl);
-            platformData->setToIndex[i] = (u32)platformData->dsSetLayouts.size();
-        }
-    }
 
     VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
     vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -301,8 +267,8 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = (u32)platformData->dsSetLayouts.size();
-    pipelineLayoutInfo.pSetLayouts = platformData->dsSetLayouts.data();
+    pipelineLayoutInfo.setLayoutCount = (u32)shaderPD->dsSetLayouts.size();
+    pipelineLayoutInfo.pSetLayouts = shaderPD->dsSetLayouts.data();
 
     if (vkCreatePipelineLayout(gil.Device(), &pipelineLayoutInfo, nullptr, &platformData->pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -340,8 +306,8 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = gil.DescriptorPool();
-    allocInfo.descriptorSetCount = (u32)platformData->dsSetLayouts.size();
-    allocInfo.pSetLayouts = platformData->dsSetLayouts.data();
+    allocInfo.descriptorSetCount = (u32)shaderPD->dsSetLayouts.size();
+    allocInfo.pSetLayouts = shaderPD->dsSetLayouts.data();
     for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
         platformData->descriptorSets->resize(allocInfo.descriptorSetCount);
@@ -355,10 +321,9 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
         vector<VkWriteDescriptorSet> descriptorWrites;
         for (auto& sro : shaderAD->SROs)
         {
-            VkWriteDescriptorSet wds;
+            VkWriteDescriptorSet wds{};
             wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            int setIdx = platformData->setToIndex[sro.set];
-            wds.dstSet = platformData->descriptorSets[i][setIdx];
+            wds.dstSet = platformData->descriptorSets[i][shaderPD->setMapping[sro.set]];
             wds.dstBinding = sro.binding;
             wds.dstArrayElement = 0;
             wds.descriptorCount = 1;
@@ -366,14 +331,19 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
             switch (sro.type)
             {
                 case SROType_UBO:
-                case SROType_UBOD:
                 {
                     VkDescriptorBufferInfo bufferInfo{};
+                    auto mbo = FindMBO(assetData, sro.name);
+                    if (mbo)
+                    {
+                        bufferInfo.buffer = mbo->uboInstance->platformData->buffer[i];
+                        wds.descriptorType = mbo->uboInstance->isDynamic ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                    }
+
                     auto uboInfo = sm.FindUBO(sro.name);
                     bufferInfo.buffer = uboInfo->platformData->buffer[i];
                     bufferInfo.offset = 0;
                     bufferInfo.range = uboInfo->size;
-
                     wds.pBufferInfo = &bufferInfo;
                     wds.descriptorType = (sro.type == SROType_UBO) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
                 }
@@ -383,9 +353,9 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
                 {
                     VkDescriptorImageInfo imageInfo{};
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    auto textureUniform = FindTextureUniform(assetData, sro.name);
-                    Assert(textureUniform, STR("Cannot find texture '{}' in material '{}' referenced by the shader", sro.name, assetData->name));
-                    imageInfo.imageView = textureUniform->texture->GetPlatformData()->textureImageView;
+                    auto sampler = FindSampler(assetData, sro.name);
+                    Assert(sampler, STR("Cannot find texture '{}' in material '{}' referenced by the shader", sro.name, assetData->name));
+                    imageInfo.imageView = sampler->texture->GetPlatformData()->textureImageView;
                     VkFilter minFilter = VK_FILTER_NEAREST;
                     VkFilter maxFilter = VK_FILTER_NEAREST;
                     VkSamplerMipmapMode mipMapFilter = VK_SAMPLER_MIPMAP_MODE_NEAREST;
@@ -394,12 +364,6 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
                     gil.createTextureSampler(minFilter, maxFilter, mipMapFilter, addressMode, compareOp, imageInfo.sampler);
                     wds.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                     wds.pImageInfo = &imageInfo;
-                }
-                break;
-
-                case SROType_SBO:
-                {
-                    //TODO:
                 }
                 break;
             }
@@ -441,6 +405,54 @@ ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData)
     ShaderPlatformData* platformData = new ShaderPlatformData;
     platformData->vertShaderModule = CreateShader(GIL::Instance().Device(), assetData->vertSPVData);
     platformData->fragShaderModule = CreateShader(GIL::Instance().Device(), assetData->fragSPVData);
+
+    // descriptor layouts for each set..
+    vector<VkDescriptorSetLayoutBinding> layoutBindings[ShaderPlatformData::MaxSets];
+    for (auto& sro : assetData->SROs)
+    {
+        VkDescriptorSetLayoutBinding dslBinding{};
+        dslBinding.binding = sro.binding;
+        dslBinding.descriptorCount = 1;
+        dslBinding.pImmutableSamplers = nullptr;
+        switch (sro.type)
+        {
+            case SROType_UBO:
+                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                break;
+            case SROType_Sampler:
+                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                break;
+            case SROType_UBOD:
+                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
+                break;
+            case SROType_SBO:
+                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
+                break;
+        }
+        dslBinding.stageFlags = 0;
+        if (sro.stageMask & SROStage_Vertex)
+            dslBinding.stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
+        if (sro.stageMask & SROStage_Fragment)
+            dslBinding.stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+        layoutBindings[sro.set].push_back(dslBinding);
+    }
+
+    auto& gil = GIL::Instance();
+    for (int i = 0; i < ShaderPlatformData::MaxSets; i++)
+    {
+        if (!layoutBindings[i].empty())
+        {
+            VkDescriptorSetLayoutCreateInfo layoutInfo{};
+            layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings[i].size());
+            layoutInfo.pBindings = layoutBindings[i].data();
+            VkDescriptorSetLayout dsl;
+            if (vkCreateDescriptorSetLayout(gil.Device(), &layoutInfo, nullptr, &dsl) != VK_SUCCESS)
+                Error("failed to create descriptor set layout!");
+            platformData->setMapping[i] = (u32)platformData->dsSetLayouts.size();
+            platformData->dsSetLayouts.push_back(dsl);
+        }
+    }
     return platformData;
 }
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
@@ -450,26 +462,18 @@ void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)
     vkDestroyShaderModule(device, platformData->fragShaderModule, nullptr);
 }
 
-UniformBufferPlatformData* UniformBufferPlatformData_Create(const UBOInfo &uboInfo)
+UniformBufferPlatformData* UniformBufferPlatformData_Create(const UBOInfo &uboInfo, bool dynamic)
 {
     auto platformData = new UniformBufferPlatformData;
-    if (uboInfo.isDynamic)
+    if (dynamic)
     {
-        GIL::Instance().createUniformBuffer(m_viewUBO, m_viewUBOMemory, m_viewUBOMapped, sizeof(UBO_View));
-
+        GIL::Instance().createUniformBufferDynamic(platformData->buffer, platformData->memoryMapped);
     }
     else
     {
+        GIL::Instance().createUniformBuffer(platformData->buffer, platformData->memory, platformData->memoryMapped, uboInfo.size);
     }
-
-
-    createUniformBuffer(m_viewUBO, m_viewUBOMemory, m_viewUBOMapped, sizeof(UBO_View));
-    createUniformBuffer(m_materialUBO, m_materialUBOMemory, m_materialUBOMapped, sizeof(UBO_Material));
-
-    int alignedSize = (sizeof(UBO_Model) + 63) & ~63;
-    createDynamicUniformBuffer(m_modelUBO, m_modelUBOMemory, m_modelUBOMapped, sizeof(UBO_Model), alignedSize * 256);
-
-
+    return platformData;
 }
 void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData)
 {

@@ -3,10 +3,13 @@
 #include "StringUtils.h"
 #include "SHAD.h"
 #include "ResourceLoadedManager.h"
+#include "ShaderManager.h"
 
 #define MATERIAL_VERSION 2
 
 DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
+
+const char* UniformTypeToString[] = { "vec4", "ivec4", "mat4x4", "f32", "i32" };
 
 Material::Material(const string& name) : Resource(name)
 {
@@ -34,14 +37,10 @@ void Material::OnAssetDeliver(AssetData* data)
 		vector<Resource*> dependantResources;
 		m_assetData->shader.Create(m_assetData->shaderName);
 		dependantResources.push_back(*m_assetData->shader);
-		for (auto uniform : m_assetData->uniforms)
+		for (auto sampler : m_assetData->samplers)
 		{
-			if (uniform->type == UniformType_Texture)
-			{
-				auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
-				uniformTexture->texture.Create(uniformTexture->textureName);
-				dependantResources.push_back(*uniformTexture->texture);
-			}
+			sampler->texture.Create(sampler->textureName);
+			dependantResources.push_back(*sampler->texture);
 		}
 
 		LOG(Material, STR("Adding Dependancy List: {}", dependantResources.size()));
@@ -71,8 +70,6 @@ MaterialFactory::MaterialFactory()
 	ati->assetExt = ".neomat";
 	ati->sourceExt.push_back({ { ".material" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_Material, ati);
-
-	m_blank = Create("white");
 }
 
 Material* MaterialFactory::Create(const string& name)
@@ -130,6 +127,34 @@ static vector<string> s_samplerFilterNames = { "nearest", "linear", "nearestMipN
 static vector<string> s_samplerWrapNames = { "clamp", "repeat" };
 static vector<string> s_samplerCompareNames = { "none", "gequal", "lequal" };
 
+UBOMemberInfo* FindUniformMember(UBOInfo* ubo, const string &name)
+{
+	for (auto& member : ubo->members)
+	{
+		if (member.name == name)
+			return &member;
+	}
+	return nullptr;
+}
+
+mat4x4 MakeMatrix(const vec3& pyr, const vec3& scale, const vec3& pos)
+{
+	// Convert Euler angles to radians
+	vec3 eulerRad(glm::radians(pyr.x), glm::radians(pyr.y), glm::radians(pyr.z));
+
+	// Create the rotation matrix
+	mat4x4 rotationMatrix = glm::eulerAngleXYZ(eulerRad.x, eulerRad.y, eulerRad.z);
+
+	// Create the translation matrix
+	mat4x4 translationMatrix = glm::translate(glm::mat4(1.0f), pos);
+
+	// Create the scale matrix
+	mat4x4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
+
+	// Combine all matrices to get the final transformation matrix
+	mat4x4 transformationMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+}
+
 bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
 {
 	Assert(srcFiles.size() == 1, STR("Expected 1 src file for material"));
@@ -158,84 +183,111 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 		{
 			zwrite = fieldNode->GetBool();
 		}
+		else if (fieldNode->IsName("sampler"))
+		{
+			auto sampler = new MaterialSampler;
+			sampler->samplerName = fieldNode->GetString();
+			samplers.push_back(sampler);
+
+			auto textureNodes = fieldNode->GetChildren();
+			for (auto textureNode : textureNodes)
+			{
+				if (textureNode->IsName("image"))
+				{
+					sampler->textureName = textureNode->GetString();
+				}
+				else if (textureNode->IsName("filter"))
+				{
+					sampler->minFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 0);
+					sampler->magFilter = sampler->minFilter;
+					if (textureNode->GetValueCount() == 2)
+					{
+						sampler->magFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 1);
+					}
+				}
+				else if (textureNode->IsName("wrap"))
+				{
+					sampler->uWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 0);
+					sampler->vWrap = sampler->uWrap;
+					if (textureNode->GetValueCount() == 2)
+					{
+						sampler->vWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 1);
+					}
+				}
+				else if (textureNode->IsName("compare"))
+				{
+					sampler->compare = (SamplerCompare)textureNode->GetEnum(s_samplerCompareNames);
+				}
+			}
+		}
 		else if (fieldNode->IsName("uniforms"))
 		{
+			string uboName = fieldNode->GetString();
+			bool dynamic = (fieldNode->GetString(1) == "static") ? false : true;
+			auto ubo = ShaderManager::Instance().FindUBO(uboName);
+			Assert(ubo != nullptr, STR("Cannot find ubo {} referenced by material {}", uboName, name));
+
+			auto mbo = new MaterialBufferObject;
+			if (dynamic)
+				mbo->uboInstance = ubo->dynamicInstance;
+			else
+			{
+				mbo->uboInstance = new UBOInfoInstance;
+				mbo->uboInstance->isDynamic = false;
+			}
+
 			auto uniformNodes = fieldNode->GetChildren();
 			for (auto uniformNode : uniformNodes)
 			{
-				if (uniformNode->IsName("texture"))
+				string uniformName = uniformNode->GetName();
+
+				// find the field in our ubo
+				auto member = FindUniformMember(ubo, uniformName);
+				Assert(member != nullptr, STR("Material uniform {} does not exist in ubo {}", uniformName, uboName));
+				switch (member->type)
 				{
-					auto uniform = new MaterialUniform_Texture(uniformNode->GetString());
-					uniforms.push_back(uniform);
-					auto textureNodes = uniformNode->GetChildren();
-					for (auto textureNode : textureNodes)
+					case UniformType_vec4:
 					{
-						if (textureNode->IsName("image"))
-						{
-							uniform->textureName = textureNode->GetString();
-						}
-						else if (textureNode->IsName("filter"))
-						{
-							uniform->minFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 0);
-							uniform->magFilter = uniform->minFilter;
-							if (textureNode->GetValueCount() == 2)
-							{
-								uniform->magFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 1);
-							}
-						}
-						else if (textureNode->IsName("wrap"))
-						{
-							uniform->uWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 0);
-							uniform->vWrap = uniform->uWrap;
-							if (textureNode->GetValueCount() == 2)
-							{
-								uniform->vWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 1);
-							}
-						}
-						else if (textureNode->IsName("compare"))
-						{
-							uniform->compare = (SamplerCompare)textureNode->GetEnum(s_samplerCompareNames);
-						}
+						auto uniform = new MaterialUniform_vec4(uniformNode->GetString());
+						uniform->value = uniformNode->GetVector4();
+						mbo->uniforms.push_back(uniform);
 					}
-				}
-				else if (uniformNode->IsName("vec4"))
-				{
-					auto uniform = new MaterialUniform_Vec4(uniformNode->GetString());
-					uniforms.push_back(uniform);
-					auto uniformChildren = uniformNode->GetChildren();
-					for (auto node : uniformChildren)
+					break;
+
+					case UniformType_ivec4:
 					{
-						if (node->IsName("default"))
-						{
-							uniform->value = node->GetVector4();
-						}
+						auto uniform = new MaterialUniform_ivec4(uniformNode->GetString());
+						uniform->value = uniformNode->GetVector4i();
+						mbo->uniforms.push_back(uniform);
 					}
-				}
-				else if (uniformNode->IsName("f32"))
-				{
-					auto uniform = new MaterialUniform_F32(uniformNode->GetString());
-					uniforms.push_back(uniform);
-					auto uniformChildren = uniformNode->GetChildren();
-					for (auto node : uniformChildren)
+					break;
+
+					case UniformType_mat4x4:
 					{
-						if (node->IsName("default"))
-						{
-							uniform->value = node->GetF32();
-						}
+						auto uniform = new MaterialUniform_mat4x4(uniformNode->GetString());
+						vec3 rot = uniformNode->GetVector3();
+						vec3 scale = uniformNode->GetVector3();
+						vec3 pos = uniformNode->GetVector3();
+						uniform->value = MakeMatrix(rot, scale, pos);
+						mbo->uniforms.push_back(uniform);
 					}
-				}
-				else if (uniformNode->IsName("i32"))
-				{
-					auto uniform = new MaterialUniform_I32(uniformNode->GetString());
-					uniforms.push_back(uniform);
-					auto uniformChildren = uniformNode->GetChildren();
-					for (auto node : uniformChildren)
+					break;
+
+					case UniformType_f32:
 					{
-						if (node->IsName("default"))
-						{
-							uniform->value = node->GetI32();
-						}
+						auto uniform = new MaterialUniform_f32(uniformNode->GetString());
+						uniform->value = uniformNode->GetF32();
+						mbo->uniforms.push_back(uniform);
 					}
+					break;
+
+					case UniformType_i32:
+					{
+						auto uniform = new MaterialUniform_i32(uniformNode->GetString());
+						uniform->value = uniformNode->GetI32();
+						mbo->uniforms.push_back(uniform);
+					}
+					break;
 				}
 			}
 		}
@@ -256,6 +308,72 @@ MemBlock MaterialAssetData::AssetToMemory()
 	stream.WriteBool(zread);
 	stream.WriteBool(zwrite);
 	stream.WriteString(shaderName);
+
+	stream.WriteU8((u8)buffers.size());
+	for (auto mbo : buffers)
+	{
+		stream.WriteString(mbo->uboInstance->ubo->structName);
+		stream.WriteU16((u8)mbo->uniforms.size());
+		for (auto uniform : mbo->uniforms)
+		{
+			stream.WriteString(uniform->uniformName);
+			stream.WriteU8((u8)uniform->type);
+			switch (uniform->type)
+			{
+				case UniformType_vec4:
+				{
+					auto u = (MaterialUniform_vec4*)uniform;
+					stream.WriteF32(u->value.x);
+					stream.WriteF32(u->value.y);
+					stream.WriteF32(u->value.z);
+					stream.WriteF32(u->value.w);
+				}
+				break;
+				case UniformType_ivec4:
+				{
+					auto u = (MaterialUniform_ivec4*)uniform;
+					stream.WriteI32(u->value.x);
+					stream.WriteI32(u->value.y);
+					stream.WriteI32(u->value.z);
+					stream.WriteI32(u->value.w);
+				}
+				break;
+				case UniformType_mat4x4:
+				{
+					auto u = (MaterialUniform_mat4x4*)uniform;
+					for (int r = 0; r < 4; r++)
+					{
+						for (int c = 0; c < 4; c++)
+						{
+							stream.WriteF32(u->value[r][c]);
+						}
+					}
+				}
+				break;
+				case UniformType_f32:
+				{
+					auto u = (MaterialUniform_f32*)uniform;
+					stream.WriteF32(u->value);
+				}
+				break;
+				case UniformType_i32:
+				{
+					auto u = (MaterialUniform_i32*)uniform;
+					stream.WriteI32(u->value);
+				}
+				break;
+			}
+		}
+	}
+
+	stream.WriteU64((u16)samplers.size());
+	for (auto sampler : samplers)
+	{
+
+	}
+
+
+
 	stream.WriteU16((u16)uniforms.size());
 	for (auto uniform : uniforms)
 	{	

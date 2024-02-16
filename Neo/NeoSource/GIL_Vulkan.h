@@ -199,18 +199,6 @@ protected:
 	VkBuffer m_indexBuffer;
 	VkDeviceMemory m_indexBufferMemory;
 
-	std::vector<VkBuffer> m_viewUBO;
-	std::vector<VkDeviceMemory> m_viewUBOMemory;
-	std::vector<void*> m_viewUBOMapped;
-
-	std::vector<VkBuffer> m_materialUBO;
-	std::vector<VkDeviceMemory> m_materialUBOMemory;
-	std::vector<void*> m_materialUBOMapped;
-
-	std::vector<VkBuffer> m_modelUBO;
-	std::vector<VkDeviceMemory> m_modelUBOMemory;
-	std::vector<void*> m_modelUBOMapped;
-
 	Material* m_boundMaterial;
 	u32 m_currModelDynamicOffset;
 	u32 m_nextModelDynamicOffset;
@@ -226,7 +214,9 @@ protected:
 
 	static const int MaxDynamicUniformBufferMemory = 1024 * 1024;
 	// shared memory used for all dynamic uniform buffers each frame
-	VkDeviceMemory m_dynamicUniformBufferMemory[MAX_FRAMES_IN_FLIGHT];
+	array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT> m_dynamicUniformBufferMemory;
+	// mapped dynamic uniform buffer memory
+	array<void*, MAX_FRAMES_IN_FLIGHT> m_dynamicUniformBufferMemoryMapped;
 	// how much has been allocated this frame
 	u32 m_dynamicUniformBufferMemoryUsed = 0;
 	// intialize the dynamic memory
@@ -280,9 +270,6 @@ protected:
 	void createCommandPool();
 	void createDepthResources();
 	void createFramebuffers();
-	void createTextureSampler();
-	void createUniformBuffers();
-
 
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
@@ -292,19 +279,21 @@ protected:
 	void createSyncObjects();
 	void recreateSwapChain();
 	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
+	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 
 	// these methods are used by external functions like Texture Platform creation
 public:
 	VkDevice Device() { return m_device; }
 	VkCommandPool CommandPool() { return m_commandPool; }
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
-	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
+
 	void createUniformBuffer(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT>& memory,
 		array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
-	void createUniformBufferDynamic(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
-	bool createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressing, VkCompareOp compareOp, VkSampler& sampler);
+	void createUniformBufferDynamic(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped);
 
+	bool createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressing, VkCompareOp compareOp, VkSampler& sampler);
 	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
+
 	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void createDynamicBuffer(VkDeviceSize bufferSize, VkDeviceSize memorySize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);

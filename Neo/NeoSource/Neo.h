@@ -24,6 +24,7 @@
 #include <glm/gtx/hash.hpp>
 #include <glm/gtc/quaternion.hpp>
 #include <glm/gtx/quaternion.hpp>
+#include <glm/gtx/euler_angles.hpp>
 
 //===============================================================
 //========== WINDOWS ============================================

@@ -1,6 +1,7 @@
 #include "Neo.h"
 #include "RenderThread.h"
 #include "ImmDynamicRenderer.h"
+#include "ShaderManager.h"
 
 DECLARE_MODULE(RenderThread, NeoModuleInitPri_RenderThread, NeoModulePri_None, NeoModulePri_None);
 
@@ -45,6 +46,10 @@ int RenderThread::Go()
 
 	// module startup tasks
 	m_doStartupTasks.Wait();
+
+	// need these created before any other shader resources can create
+	ShaderManager::Instance().CreateInstances();
+
 	m_preDrawTaskLock.Lock();
 	vector<GenericCallback> tasks = std::move(m_preDrawTasks);
 	m_preDrawTaskLock.Release();
