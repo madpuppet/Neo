@@ -39,7 +39,6 @@ struct UBOMemberInfo
 struct UBOInfo
 {
 	string structName;
-	string varName;
 	u32 size = 0;
 	vector<UBOMemberInfo> members;
 

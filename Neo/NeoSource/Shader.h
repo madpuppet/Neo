@@ -72,6 +72,7 @@ public:
 	struct ShaderResourceObjectInfo
 	{
 		string name;		// name of resource
+		string varName;		// variable name of this ubo
 		SROType type;		// ubo/sampler/ubod/sbo
 		u32 set;			// 0..4
 		u32 binding;		// 0..x

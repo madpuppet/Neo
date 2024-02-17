@@ -7,6 +7,9 @@
 #include "StaticMesh.h"
 #include "ShaderManager.h"
 
+VkSamplerAddressMode NeoAddressModeToVk[] = { VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_SAMPLER_ADDRESS_MODE_REPEAT };
+VkCompareOp NeoCompareOpToVk[] = { VK_COMPARE_OP_NEVER, VK_COMPARE_OP_GREATER_OR_EQUAL, VK_COMPARE_OP_LESS_OR_EQUAL };
+
 TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
@@ -117,6 +120,18 @@ MaterialBufferObject* FindMBO(MaterialAssetData* assetData, const string& name)
     return nullptr;
 }
 
+bool IsMBODynamic(MaterialAssetData* assetData, const string& name)
+{
+    for (auto mbo : assetData->buffers)
+    {
+        if (StringEqual(mbo->uboInstance->ubo->structName, name))
+        {
+            return mbo->uboInstance->isDynamic;
+        }
+    }
+    return true;
+}
+
 MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 {
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
@@ -128,6 +143,38 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
     auto shaderPD = assetData->shader->GetPlatformData();
     auto shaderAD = assetData->shader->GetAssetData();
+
+    // create platform data for mbo's
+    for (auto mbo : assetData->buffers)
+    {
+        mbo->uboInstance->platformData = UniformBufferPlatformData_Create(*mbo->uboInstance->ubo, false);
+    }
+
+
+    // flatten out ubo instances
+    for (auto sro : shaderAD->SROs)
+    {
+        if (sro.type == SROType_UBO)
+        {
+            // check if there is a material version
+            UBOInfoInstance* uboInstance = nullptr;
+            bool dynamic = true;
+            for (auto mbo : assetData->buffers)
+            {
+                if (StringEqual(sro.name, mbo->uboInstance->ubo->structName))
+                {
+                    uboInstance = mbo->uboInstance;
+                }
+            }
+            if (!uboInstance)
+            {
+                auto ubo = ShaderManager::Instance().FindUBO(sro.name);
+                Assert(ubo, STR("Unable to find UBO {} for material {}", sro.name, assetData->name));
+                uboInstance = ubo->dynamicInstance;
+            }
+            platformData->uboInstances.push_back(uboInstance);
+        }
+    }
 
     VkPipelineShaderStageCreateInfo vertexShaderStageInfo{};
     vertexShaderStageInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
@@ -264,11 +311,52 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     dynamicState.sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO;
     dynamicState.dynamicStateCount = static_cast<uint32_t>(dynamicStates.size());
     dynamicState.pDynamicStates = dynamicStates.data();
+   
+    // descriptor layouts for each set..
+    vector<VkDescriptorSetLayoutBinding> layoutBindings[MaterialPlatformData::MaxSets];
+    for (auto& sro : shaderAD->SROs)
+    {
+        VkDescriptorSetLayoutBinding dslBinding{};
+        dslBinding.binding = sro.binding;
+        dslBinding.descriptorCount = 1;
+        dslBinding.pImmutableSamplers = nullptr;
+        switch (sro.type)
+        {
+            case SROType_UBO:
+                dslBinding.descriptorType = IsMBODynamic(assetData, sro.name) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                break;
+            case SROType_Sampler:
+                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+                break;
+        }
+        dslBinding.stageFlags = 0;
+        if (sro.stageMask & SROStage_Vertex)
+            dslBinding.stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
+        if (sro.stageMask & SROStage_Fragment)
+            dslBinding.stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
+        layoutBindings[sro.set].push_back(dslBinding);
+    }
+
+    for (int i = 0; i < MaterialPlatformData::MaxSets; i++)
+    {
+        if (!layoutBindings[i].empty())
+        {
+            VkDescriptorSetLayoutCreateInfo layoutInfo{};
+            layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+            layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings[i].size());
+            layoutInfo.pBindings = layoutBindings[i].data();
+            VkDescriptorSetLayout dsl;
+            if (vkCreateDescriptorSetLayout(gil.Device(), &layoutInfo, nullptr, &dsl) != VK_SUCCESS)
+                Error("failed to create descriptor set layout!");
+            platformData->setMapping[i] = (u32)platformData->dsSetLayouts.size();
+            platformData->dsSetLayouts.push_back(dsl);
+        }
+    }
 
     VkPipelineLayoutCreateInfo pipelineLayoutInfo{};
     pipelineLayoutInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
-    pipelineLayoutInfo.setLayoutCount = (u32)shaderPD->dsSetLayouts.size();
-    pipelineLayoutInfo.pSetLayouts = shaderPD->dsSetLayouts.data();
+    pipelineLayoutInfo.setLayoutCount = (u32)platformData->dsSetLayouts.size();
+    pipelineLayoutInfo.pSetLayouts = platformData->dsSetLayouts.data();
 
     if (vkCreatePipelineLayout(gil.Device(), &pipelineLayoutInfo, nullptr, &platformData->pipelineLayout) != VK_SUCCESS) {
         throw std::runtime_error("failed to create pipeline layout!");
@@ -306,24 +394,28 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     VkDescriptorSetAllocateInfo allocInfo{};
     allocInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
     allocInfo.descriptorPool = gil.DescriptorPool();
-    allocInfo.descriptorSetCount = (u32)shaderPD->dsSetLayouts.size();
-    allocInfo.pSetLayouts = shaderPD->dsSetLayouts.data();
-    for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
-    {
-        platformData->descriptorSets->resize(allocInfo.descriptorSetCount);
-        if (vkAllocateDescriptorSets(gil.Device(), &allocInfo, platformData->descriptorSets->data()) != VK_SUCCESS)
-            Error("failed to allocate descriptor sets!");
-    }
+    allocInfo.descriptorSetCount = (u32)platformData->dsSetLayouts.size();
+    allocInfo.pSetLayouts = platformData->dsSetLayouts.data();
+
+    // need some temp storage for buffers & samplers
+    int bufferInfoIdx = 0;
+    int imageInfoIdx = 0;
+    vector<VkDescriptorBufferInfo> bufferInfoCache(16);
+    vector<VkDescriptorImageInfo> imageInfoCache(16);
 
     auto& sm = ShaderManager::Instance();
     for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
     {
+        platformData->descriptorSets[i].resize(allocInfo.descriptorSetCount);
+        if (vkAllocateDescriptorSets(gil.Device(), &allocInfo, platformData->descriptorSets[i].data()) != VK_SUCCESS)
+            Error("failed to allocate descriptor sets!");
+
         vector<VkWriteDescriptorSet> descriptorWrites;
         for (auto& sro : shaderAD->SROs)
         {
             VkWriteDescriptorSet wds{};
             wds.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-            wds.dstSet = platformData->descriptorSets[i][shaderPD->setMapping[sro.set]];
+            wds.dstSet = platformData->descriptorSets[i][platformData->setMapping[sro.set]];
             wds.dstBinding = sro.binding;
             wds.dstArrayElement = 0;
             wds.descriptorCount = 1;
@@ -332,36 +424,44 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
             {
                 case SROType_UBO:
                 {
-                    VkDescriptorBufferInfo bufferInfo{};
+                    VkDescriptorBufferInfo& bufferInfo = bufferInfoCache[bufferInfoIdx++];
+
+                    UBOInfoInstance* uboInstance = nullptr;
                     auto mbo = FindMBO(assetData, sro.name);
                     if (mbo)
                     {
-                        bufferInfo.buffer = mbo->uboInstance->platformData->buffer[i];
-                        wds.descriptorType = mbo->uboInstance->isDynamic ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+                        uboInstance = mbo->uboInstance;
+                    }
+                    else
+                    {
+                        auto uboInfo = sm.FindUBO(sro.name);
+                        uboInstance = uboInfo->dynamicInstance;
                     }
 
-                    auto uboInfo = sm.FindUBO(sro.name);
-                    bufferInfo.buffer = uboInfo->platformData->buffer[i];
+                    bufferInfo.buffer = uboInstance->platformData->buffer[i];
+                    wds.descriptorType = uboInstance->isDynamic ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
                     bufferInfo.offset = 0;
-                    bufferInfo.range = uboInfo->size;
+                    bufferInfo.range = uboInstance->ubo->size;
                     wds.pBufferInfo = &bufferInfo;
-                    wds.descriptorType = (sro.type == SROType_UBO) ? VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER : VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
                 }
                 break;
 
                 case SROType_Sampler:
                 {
-                    VkDescriptorImageInfo imageInfo{};
+                    VkDescriptorImageInfo& imageInfo = imageInfoCache[imageInfoIdx++];
+
                     imageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
-                    auto sampler = FindSampler(assetData, sro.name);
-                    Assert(sampler, STR("Cannot find texture '{}' in material '{}' referenced by the shader", sro.name, assetData->name));
+                    auto sampler = FindSampler(assetData, sro.varName);
+                    Assert(sampler, STR("Cannot find texture '{}' in material '{}' referenced by the shader", sro.varName, assetData->name));
                     imageInfo.imageView = sampler->texture->GetPlatformData()->textureImageView;
-                    VkFilter minFilter = VK_FILTER_NEAREST;
-                    VkFilter maxFilter = VK_FILTER_NEAREST;
-                    VkSamplerMipmapMode mipMapFilter = VK_SAMPLER_MIPMAP_MODE_NEAREST;
-                    VkSamplerAddressMode addressMode = VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE;
-                    VkCompareOp compareOp = VK_COMPARE_OP_ALWAYS;
-                    gil.createTextureSampler(minFilter, maxFilter, mipMapFilter, addressMode, compareOp, imageInfo.sampler);
+
+                    VkFilter minFilter = (VkFilter)sampler->minFilter;
+                    VkFilter maxFilter = (VkFilter)sampler->magFilter;
+                    VkSamplerMipmapMode mipMapFilter = (VkSamplerMipmapMode)sampler->mipFilter;
+                    VkSamplerAddressMode addressModeU = NeoAddressModeToVk[sampler->uWrap];
+                    VkSamplerAddressMode addressModeV = NeoAddressModeToVk[sampler->vWrap];
+                    VkCompareOp compareOp = NeoCompareOpToVk[sampler->compare];
+                    gil.createTextureSampler(minFilter, maxFilter, mipMapFilter, addressModeU, addressModeV, compareOp, imageInfo.sampler);
                     wds.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
                     wds.pImageInfo = &imageInfo;
                 }
@@ -405,54 +505,6 @@ ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData)
     ShaderPlatformData* platformData = new ShaderPlatformData;
     platformData->vertShaderModule = CreateShader(GIL::Instance().Device(), assetData->vertSPVData);
     platformData->fragShaderModule = CreateShader(GIL::Instance().Device(), assetData->fragSPVData);
-
-    // descriptor layouts for each set..
-    vector<VkDescriptorSetLayoutBinding> layoutBindings[ShaderPlatformData::MaxSets];
-    for (auto& sro : assetData->SROs)
-    {
-        VkDescriptorSetLayoutBinding dslBinding{};
-        dslBinding.binding = sro.binding;
-        dslBinding.descriptorCount = 1;
-        dslBinding.pImmutableSamplers = nullptr;
-        switch (sro.type)
-        {
-            case SROType_UBO:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-                break;
-            case SROType_Sampler:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-                break;
-            case SROType_UBOD:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER_DYNAMIC;
-                break;
-            case SROType_SBO:
-                dslBinding.descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER;
-                break;
-        }
-        dslBinding.stageFlags = 0;
-        if (sro.stageMask & SROStage_Vertex)
-            dslBinding.stageFlags |= VK_SHADER_STAGE_VERTEX_BIT;
-        if (sro.stageMask & SROStage_Fragment)
-            dslBinding.stageFlags |= VK_SHADER_STAGE_FRAGMENT_BIT;
-        layoutBindings[sro.set].push_back(dslBinding);
-    }
-
-    auto& gil = GIL::Instance();
-    for (int i = 0; i < ShaderPlatformData::MaxSets; i++)
-    {
-        if (!layoutBindings[i].empty())
-        {
-            VkDescriptorSetLayoutCreateInfo layoutInfo{};
-            layoutInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
-            layoutInfo.bindingCount = static_cast<uint32_t>(layoutBindings[i].size());
-            layoutInfo.pBindings = layoutBindings[i].data();
-            VkDescriptorSetLayout dsl;
-            if (vkCreateDescriptorSetLayout(gil.Device(), &layoutInfo, nullptr, &dsl) != VK_SUCCESS)
-                Error("failed to create descriptor set layout!");
-            platformData->setMapping[i] = (u32)platformData->dsSetLayouts.size();
-            platformData->dsSetLayouts.push_back(dsl);
-        }
-    }
     return platformData;
 }
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData)

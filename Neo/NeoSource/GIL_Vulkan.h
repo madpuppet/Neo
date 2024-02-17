@@ -291,7 +291,8 @@ public:
 		array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
 	void createUniformBufferDynamic(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped);
 
-	bool createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressing, VkCompareOp compareOp, VkSampler& sampler);
+	bool createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressingU,
+		VkSamplerAddressMode addressingV, VkCompareOp compareOp, VkSampler& sampler);
 	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
 
 	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);

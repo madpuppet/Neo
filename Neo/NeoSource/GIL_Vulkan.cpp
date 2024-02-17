@@ -220,12 +220,17 @@ void GIL::BeginFrame()
 
 void GIL::SetModelMatrix(const mat4x4& modelMat)
 {
+    //TODO:
+#if 0
     auto ubo = (UBO_Model*)m_modelUBOMapped[m_currentFrame];
     ubo->model = modelMat;
+#endif
 }
 
 void GIL::SetAndBindModelMatrix(const mat4x4& modelMat)
 {
+    //TODO:
+#if 0
     int size = (sizeof(UBO_Model) + 63) & ~63;
     m_currModelDynamicOffset = m_nextModelDynamicOffset;
     m_nextModelDynamicOffset += size;
@@ -237,6 +242,7 @@ void GIL::SetAndBindModelMatrix(const mat4x4& modelMat)
     {
         vkCmdBindDescriptorSets(m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundMaterial->GetPlatformData()->pipelineLayout, 2, 1, &m_boundMaterial->GetPlatformData()->descriptorSets[m_currentFrame][2], 1, &m_currModelDynamicOffset);
     }
+#endif
 }
 
 
@@ -256,16 +262,22 @@ mat4x4 InverseSimple(const mat4x4 & m)
 
 void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat, const mat4x4 &orthoMat)
 {
+    //TODO
+#if 0
     auto ubo = (UBO_View*)m_viewUBOMapped[m_currentFrame];
     ubo->view = viewMat;
     ubo->proj = projMat;
     ubo->ortho = orthoMat;
+#endif
 }
 
 void GIL::SetMaterialBlendColor(const vec4 &blendColor)
 {
+    //TODO:
+#if 0
     auto ubo = (UBO_Material*)m_materialUBOMapped[m_currentFrame];
     ubo->blend = blendColor;
+#endif
 }
 
 void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
@@ -970,7 +982,7 @@ uint32_t GIL::findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties)
     return 0;
 }
 
-bool GIL::createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressing, VkCompareOp compareOp, VkSampler &sampler)
+bool GIL::createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressingU, VkSamplerAddressMode addressingV, VkCompareOp compareOp, VkSampler &sampler)
 {
     VkPhysicalDeviceProperties properties{};
     vkGetPhysicalDeviceProperties(m_physicalDevice, &properties);
@@ -979,9 +991,9 @@ bool GIL::createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSampler
     samplerInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
     samplerInfo.magFilter = maxFilter;
     samplerInfo.minFilter = minFilter;
-    samplerInfo.addressModeU = addressing;
-    samplerInfo.addressModeV = addressing;
-    samplerInfo.addressModeW = addressing;
+    samplerInfo.addressModeU = addressingU;
+    samplerInfo.addressModeV = addressingV;
+    samplerInfo.addressModeW = addressingU;
     samplerInfo.anisotropyEnable = VK_TRUE;
     samplerInfo.maxAnisotropy = properties.limits.maxSamplerAnisotropy;
     samplerInfo.borderColor = VK_BORDER_COLOR_INT_OPAQUE_BLACK;
@@ -1453,10 +1465,10 @@ void GIL::BindMaterial(Material* material, bool lines)
         auto shader = material->GetAssetData()->shader;
         auto shaderPD = shader->GetPlatformData();
         auto shaderAD = shader->GetAssetData();
-        for (auto &sro : shaderAD->SROs)
+        for (auto uboInstance : materialPD->uboInstances)
         {
-            if (sro.type == SROType_UBOD)
-                dynamicOffsets[dynamicOffsetCount++] = sro.uboInfo->platformData->memOffset;
+            if (uboInstance->isDynamic)
+                dynamicOffsets[dynamicOffsetCount++] = uboInstance->platformData->memOffset;
         }
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0,

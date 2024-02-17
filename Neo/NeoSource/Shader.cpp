@@ -81,8 +81,9 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 			continue;
 
 		// get the SRO objects... (ubo, sampler, ubod, sbo)
-		auto uboInfo = sm.FindUBO(tokens[0]);
-		bool isSampler = StringEqual(tokens[0], "Sampler");
+		string structName = std::move(tokens[0]);
+		auto uboInfo = sm.FindUBO(structName);
+		bool isSampler = StringEqual(structName, "Sampler");
 		if (uboInfo || isSampler)
 		{
 			Assert(tokens.size() > 6, "Not enough tokens for a UBO declaration!");
@@ -110,7 +111,7 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 				stageMask = SROStage_Vertex | SROStage_Fragment;
 
 			SROType type = uboInfo ? SROType_UBO : SROType_Sampler;
-			SROs.emplace_back(name, type, sroSet, sroBinding, stageMask, uboInfo);
+			SROs.emplace_back(structName, varName, type, sroSet, sroBinding, stageMask, uboInfo);
 		}
 
 		// VS_IN <type> <name>(<binding>)
@@ -180,7 +181,7 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 					auto bodyStr = sm.UBOContentsToString(*sro.uboInfo);
 
 					string out = std::format("layout(set = {}, binding = {}) uniform {}\n{{\n{}}} {};\n\n",
-						sro.set, sro.binding, sro.uboInfo->structName, bodyStr, sro.uboInfo->varName);
+						sro.set, sro.binding, sro.uboInfo->structName, bodyStr, sro.varName);
 
 					if (sro.stageMask & SROStage_Vertex)
 						vertOutputFile << out;
@@ -191,7 +192,7 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 
 			case SROType_Sampler:
 				{
-					string out = std::format("layout(set = {}, binding = {}) uniform sampler2D {};\n\n", sro.set, sro.binding, sro.name);
+					string out = std::format("layout(set = {}, binding = {}) uniform sampler2D {};\n\n", sro.set, sro.binding, sro.varName);
 					if (sro.stageMask & SROStage_Vertex)
 						vertOutputFile << out;
 					if (sro.stageMask & SROStage_Fragment)

@@ -1,5 +1,6 @@
 #pragma once
 
+struct UBOInfoInstance;
 const int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct TexturePlatformData
@@ -29,11 +30,6 @@ struct ShaderPlatformData
 {
 	VkShaderModule vertShaderModule;
 	VkShaderModule fragShaderModule;
-
-	// we'll do the layouts per material so we can mark some materials as being static UBOs instead of dynamic UBOs
-	static const int MaxSets = 4;
-	vector<VkDescriptorSetLayout> dsSetLayouts;
-	u32 setMapping[MaxSets]{};		// maps shader 'set' to set index
 };
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
@@ -44,7 +40,14 @@ struct MaterialPlatformData
 	VkPipeline polygonPipeline;
 	VkPipeline linePipeline;
 
+	// we'll do the layouts per material so we can mark some materials as being static UBOs instead of dynamic UBOs
+	static const int MaxSets = 4;
+	vector<VkDescriptorSetLayout> dsSetLayouts;
+	u32 setMapping[MaxSets]{};		// maps shader 'set' to set index
+
 	vector<VkDescriptorSet> descriptorSets[MAX_FRAMES_IN_FLIGHT];
+
+	vector<UBOInfoInstance*> uboInstances;		// all ubo instances flattened (shader ones, with material overrides)
 
 //	vector<u32> dynamicOffsets[MAX_FRAMES_IN_FLIGHT];
 //	vector<u32> idxToDynamicOffset;

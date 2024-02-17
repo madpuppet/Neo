@@ -63,7 +63,7 @@ struct MaterialUniform_ivec4 : public MaterialUniform
 {
 	MaterialUniform_ivec4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_ivec4) {}
 
-	vec4 value = { 0,0,0,0 };
+	ivec4 value = { 0,0,0,0 };
 };
 struct MaterialUniform_f32 : public MaterialUniform
 {
@@ -96,7 +96,8 @@ struct MaterialSampler
 	string samplerName;
 	string textureName;
 	SamplerFilter minFilter = SamplerFilter_Linear;
-	SamplerFilter magFilter = SamplerFilter_LinearMipLinear;
+	SamplerFilter magFilter = SamplerFilter_Linear;
+	SamplerFilter mipFilter = SamplerFilter_Linear;
 	SamplerWrap uWrap = SamplerWrap_Repeat;
 	SamplerWrap vWrap = SamplerWrap_Repeat;
 	SamplerCompare compare = SamplerCompare_None;

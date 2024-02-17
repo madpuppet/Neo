@@ -5,7 +5,7 @@
 
 View::View()
 {
-	m_viewUBO = ShaderManager::Instance().FindUBO("View");
+	m_viewUBO = ShaderManager::Instance().FindUBO("UBO_View");
 	RenderThread::Instance().AddPreDrawTask
 	(
 		[this]()

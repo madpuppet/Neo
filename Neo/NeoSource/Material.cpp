@@ -123,7 +123,7 @@ void MaterialFactory::Destroy(Material* resource)
 
 static vector<string> s_blendModeNames = { "opaque", "alpha", "blend", "additive", "subtractive" };
 static vector<string> s_cullModeNames = { "none", "front", "back" };
-static vector<string> s_samplerFilterNames = { "nearest", "linear", "nearestMipNearest", "nearestMipLinear", "linearMipNearest", "linearMipLinear"};
+static vector<string> s_samplerFilterNames = { "nearest", "linear" };
 static vector<string> s_samplerWrapNames = { "clamp", "repeat" };
 static vector<string> s_samplerCompareNames = { "none", "gequal", "lequal" };
 
@@ -152,7 +152,7 @@ mat4x4 MakeMatrix(const vec3& pyr, const vec3& scale, const vec3& pos)
 	mat4x4 scaleMatrix = glm::scale(glm::mat4(1.0f), scale);
 
 	// Combine all matrices to get the final transformation matrix
-	mat4x4 transformationMatrix = translationMatrix * rotationMatrix * scaleMatrix;
+	return translationMatrix * rotationMatrix * scaleMatrix;
 }
 
 bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
@@ -198,18 +198,20 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 				}
 				else if (textureNode->IsName("filter"))
 				{
-					sampler->minFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 0);
-					sampler->magFilter = sampler->minFilter;
-					if (textureNode->GetValueCount() == 2)
+					sampler->mipFilter = sampler->magFilter = sampler->minFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 0);
+					if (textureNode->GetValueCount() > 1)
 					{
 						sampler->magFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 1);
+						if (textureNode->GetValueCount() > 2)
+						{
+							sampler->mipFilter = (SamplerFilter)textureNode->GetEnum(s_samplerFilterNames, 2);
+						}
 					}
 				}
 				else if (textureNode->IsName("wrap"))
 				{
-					sampler->uWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 0);
-					sampler->vWrap = sampler->uWrap;
-					if (textureNode->GetValueCount() == 2)
+					sampler->vWrap = sampler->uWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 0);
+					if (textureNode->GetValueCount() > 1)
 					{
 						sampler->vWrap = (SamplerWrap)textureNode->GetEnum(s_samplerWrapNames, 1);
 					}
@@ -220,10 +222,10 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 				}
 			}
 		}
-		else if (fieldNode->IsName("uniforms"))
+		else if (fieldNode->IsName("static_ubo") || fieldNode->IsName("ubo"))
 		{
 			string uboName = fieldNode->GetString();
-			bool dynamic = (fieldNode->GetString(1) == "static") ? false : true;
+			bool dynamic = fieldNode->IsName("static_ubo") ? false : true;
 			auto ubo = ShaderManager::Instance().FindUBO(uboName);
 			Assert(ubo != nullptr, STR("Cannot find ubo {} referenced by material {}", uboName, name));
 
@@ -234,7 +236,9 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 			{
 				mbo->uboInstance = new UBOInfoInstance;
 				mbo->uboInstance->isDynamic = false;
+				mbo->uboInstance->ubo = ubo;
 			}
+			buffers.push_back(mbo);
 
 			auto uniformNodes = fieldNode->GetChildren();
 			for (auto uniformNode : uniformNodes)
@@ -313,7 +317,7 @@ MemBlock MaterialAssetData::AssetToMemory()
 	for (auto mbo : buffers)
 	{
 		stream.WriteString(mbo->uboInstance->ubo->structName);
-		stream.WriteU16((u8)mbo->uniforms.size());
+		stream.WriteU8((u8)mbo->uniforms.size());
 		for (auto uniform : mbo->uniforms)
 		{
 			stream.WriteString(uniform->uniformName);
@@ -366,53 +370,17 @@ MemBlock MaterialAssetData::AssetToMemory()
 		}
 	}
 
-	stream.WriteU64((u16)samplers.size());
+	stream.WriteU8((u8)samplers.size());
 	for (auto sampler : samplers)
 	{
-
+		stream.WriteString(sampler->samplerName);
+		stream.WriteString(sampler->textureName);
+		stream.WriteU8((u8)sampler->minFilter);
+		stream.WriteU8((u8)sampler->magFilter);
+		stream.WriteU8((u8)sampler->uWrap);
+		stream.WriteU8((u8)sampler->vWrap);
+		stream.WriteU8((u8)sampler->compare);
 	}
-
-
-
-	stream.WriteU16((u16)uniforms.size());
-	for (auto uniform : uniforms)
-	{	
-		stream.WriteU8(uniform->type);
-		stream.WriteString(uniform->uniformName);
-		switch (uniform->type)
-		{
-			case UniformType_Texture:
-			{
-				auto uniformTexture = dynamic_cast<MaterialUniform_Texture*>(uniform);
-				stream.WriteString(uniformTexture->textureName);
-				stream.WriteU8(uniformTexture->minFilter);
-				stream.WriteU8(uniformTexture->magFilter);
-				stream.WriteU8(uniformTexture->uWrap);
-				stream.WriteU8(uniformTexture->vWrap);
-				stream.WriteU8(uniformTexture->compare);
-			}
-			break;
-			case UniformType_Vec4:
-			{
-				auto uniformVec4 = dynamic_cast<MaterialUniform_Vec4*>(uniform);
-				stream.WriteVec4(uniformVec4->value);
-			}
-			break;
-			case UniformType_F32:
-			{
-				auto uniformF32 = dynamic_cast<MaterialUniform_F32*>(uniform);
-				stream.WriteF32(uniformF32->value);
-			}
-			break;
-			case UniformType_I32:
-			{
-				auto uniformI32 = dynamic_cast<MaterialUniform_I32*>(uniform);
-				stream.WriteI32(uniformI32->value);
-			}
-			break;
-		}
-	}
-
 	return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
 }
 
@@ -440,47 +408,84 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 	zwrite = stream.ReadBool();
 	shaderName = stream.ReadString();
 
-	u16 uniformsCount = stream.ReadU16();
-	for (u16 u = 0; u < uniformsCount; u++)
+	size_t bufferCount = stream.ReadU8();
+	for (size_t i=0; i< bufferCount; i++)
 	{
-		auto type = (UniformType)stream.ReadU8();
-		auto uniformName = stream.ReadString();
-		switch (type)
+		string structName = stream.ReadString();
+
+		auto mbo = new MaterialBufferObject;
+		buffers.push_back(mbo);
+		mbo->uboInstance = new UBOInfoInstance;
+		mbo->uboInstance->isDynamic = false;
+		mbo->uboInstance->ubo = ShaderManager::Instance().FindUBO(structName);
+		Assert(mbo->uboInstance->ubo, STR("Cannot find UBO {}", structName));
+
+		size_t uniformCount = stream.ReadU8();
+		for (size_t i=0; i<uniformCount; i++)
 		{
-			case UniformType_Texture:
+			string uniformName = stream.ReadString();
+			UniformType uniformType = (UniformType)stream.ReadU8();
+
+			switch (uniformType)
 			{
-				auto uniform = new MaterialUniform_Texture(uniformName);
-				uniform->textureName = stream.ReadString();
-				uniform->minFilter = (SamplerFilter)stream.ReadU8();
-				uniform->magFilter = (SamplerFilter)stream.ReadU8();
-				uniform->uWrap = (SamplerWrap)stream.ReadU8();
-				uniform->vWrap = (SamplerWrap)stream.ReadU8();
-				uniform->compare = (SamplerCompare)stream.ReadU8();
-				uniforms.push_back(uniform);
+				case UniformType_vec4:
+				{
+					auto uniform = new MaterialUniform_vec4(uniformName);
+					uniform->value.x = stream.ReadF32();
+					uniform->value.y = stream.ReadF32();
+					uniform->value.z = stream.ReadF32();
+					uniform->value.w = stream.ReadF32();
+				}
+				break;
+				case UniformType_ivec4:
+				{
+					auto uniform = new MaterialUniform_ivec4(uniformName);
+					uniform->value.x = stream.ReadI32();
+					uniform->value.y = stream.ReadI32();
+					uniform->value.z = stream.ReadI32();
+					uniform->value.w = stream.ReadI32();
+				}
+				break;
+				case UniformType_mat4x4:
+				{
+					auto uniform = new MaterialUniform_mat4x4(uniformName);
+					for (int r = 0; r < 4; r++)
+					{
+						for (int c = 0; c < 4; c++)
+						{
+							uniform->value[r][c] = stream.ReadF32();
+						}
+					}
+				}
+				break;
+				case UniformType_f32:
+				{
+					auto uniform = new MaterialUniform_f32(uniformName);
+					uniform->value = stream.ReadF32();
+				}
+				break;
+				case UniformType_i32:
+				{
+					auto uniform = new MaterialUniform_i32(uniformName);
+					uniform->value = stream.ReadI32();
+				}
+				break;
 			}
-			break;
-			case UniformType_Vec4:
-			{
-				auto uniform = new MaterialUniform_Vec4(uniformName);
-				uniform->value = stream.ReadVec4();
-				uniforms.push_back(uniform);
-			}
-			break;
-			case UniformType_I32:
-			{
-				auto uniform = new MaterialUniform_I32(uniformName);
-				uniform->value = stream.ReadI32();
-				uniforms.push_back(uniform);
-			}
-			break;
-			case UniformType_F32:
-			{
-				auto uniform = new MaterialUniform_F32(uniformName);
-				uniform->value = stream.ReadF32();
-				uniforms.push_back(uniform);
-			}
-			break;
 		}
+	}
+
+	size_t sampleCount = stream.ReadU8();
+	for (size_t i=0; i<sampleCount; i++)
+	{
+		auto sampler = new MaterialSampler;
+		sampler->samplerName = stream.ReadString();
+		sampler->textureName = stream.ReadString();
+		sampler->minFilter = (SamplerFilter)stream.ReadU8();
+		sampler->magFilter = (SamplerFilter)stream.ReadU8();
+		sampler->uWrap = (SamplerWrap)stream.ReadU8();
+		sampler->vWrap = (SamplerWrap)stream.ReadU8();
+		sampler->compare = (SamplerCompare)stream.ReadU8();
+		samplers.push_back(sampler);
 	}
 
 	return true;

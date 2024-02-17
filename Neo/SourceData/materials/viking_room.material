@@ -5,8 +5,8 @@ zread: true
 zwrite: true
 sampler: Albedo
 	image: viking_room
-	filter: nearest, nearest
+	filter: nearest
 	wrap: repeat
-static_uniforms: UBO_Material
+static_ubo: UBO_Material
 	blendColor: 1,1,1,1
 

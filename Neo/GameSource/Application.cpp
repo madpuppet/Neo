@@ -16,6 +16,7 @@ Application::Application()
 {
 	// mount filesystems
 	m_vikingRoom.Create("viking_room");
+#if 0
 	RenderThread::Instance().AddDrawTask([this]() {Draw(); }, DrawTaskPri_BasePixel);
 
 	View::PerspectiveInfo persp;
@@ -47,6 +48,7 @@ Application::Application()
 		bee.vel.y = (rand() & 0xffff) / 32768.0f - 1.0f;
 		bee.vel.z = (rand() & 0xffff) / 32768.0f - 1.0f;
 	}
+#endif
 }
 
 Application::~Application()
@@ -55,6 +57,7 @@ Application::~Application()
 
 void Application::Update()
 {
+#if 0
 	float dt = (float)NeoTimeDelta;
 	dt = Min(dt, 0.1f);
 
@@ -125,10 +128,12 @@ void Application::Update()
 		ddr.EndPrimitive();
 		ddr.EndRender();
 	}
+#endif
 }
 
 void Application::Draw()
 {
+#if 0
 	// wait till our resources are loaded...
 	if (!m_vikingRoom->IsLoaded())
 		return;
@@ -183,5 +188,6 @@ void Application::Draw()
 		int ms = (int)(1000.0f * NeoTimeDelta);
 		m_font->RenderText(STR("{}ms FPS {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 	}
+#endif
 }
 

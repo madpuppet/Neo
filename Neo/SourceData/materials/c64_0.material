@@ -5,7 +5,7 @@ zread: false
 zwrite: false
 sampler: Albedo
 	image: c64_0
-	filter: nearest, nearest
+	filter: nearest
 	wrap: repeat
-static_uniforms: UBO_Material
+static_ubo: UBO_Material
 	blendColor: 1,1,1,1

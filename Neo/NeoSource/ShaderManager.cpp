@@ -9,15 +9,15 @@ ShaderManager::ShaderManager()
 	UBOMemberInfo mi_view{ "view", UniformType_mat4x4, offsetof(UBO_View, view), 1 };
 	UBOMemberInfo mi_proj{ "proj", UniformType_mat4x4, offsetof(UBO_View, proj), 1 };
 	UBOMemberInfo mi_ortho{ "ortho", UniformType_mat4x4, offsetof(UBO_View, ortho), 1 };
-	auto i_View = new UBOInfo{ "UBO_View", "View", (u32)sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
+	auto i_View = new UBOInfo{ "UBO_View", (u32)sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
 	RegisterUBO(i_View);
 
-	UBOMemberInfo mi_blend{ "blend", UniformType_vec4, offsetof(UBO_Material, blend), 1 };
-	auto i_Material = new UBOInfo{ "UBO_Material", "Material", (u32)sizeof(UBO_Material), {mi_blend} };
+	UBOMemberInfo mi_blend{ "blendColor", UniformType_vec4, offsetof(UBO_Material, blend), 1 };
+	auto i_Material = new UBOInfo{ "UBO_Material", (u32)sizeof(UBO_Material), {mi_blend} };
 	RegisterUBO(i_Material);
 
 	UBOMemberInfo mi_model{ "model", UniformType_mat4x4, offsetof(UBO_Model, model), 1 };
-	auto i_Model = new UBOInfo{ "UBO_Model", "Model", (u32)sizeof(UBO_Model), {mi_model} };
+	auto i_Model = new UBOInfo{ "UBO_Model", (u32)sizeof(UBO_Model), {mi_model} };
 	RegisterUBO(i_Model);
 }
 
