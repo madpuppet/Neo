@@ -34,6 +34,7 @@ struct UBOMemberInfo
 	UniformType type = UniformType_vec4;
 	u32 offset = 0;
 	u32 members = 1;
+	u32 datasize = sizeof(vec4);
 };
 
 struct UBOInfo

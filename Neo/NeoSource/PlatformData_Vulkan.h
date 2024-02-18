@@ -69,9 +69,9 @@ struct UniformBufferPlatformData
 	array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT> memory;
 	array<void*, MAX_FRAMES_IN_FLIGHT> memoryMapped;
 
-	bool isDynamic;		// dynamic - means we are bound to the frame dynamic buffer and step through slices in that on each use
-	u32 size;			// size of buffer (adjusted to alignment size)
-	u32 memOffset;		// current memoffset into shared memory
+	bool isDynamic=true;		// dynamic - means we are bound to the frame dynamic buffer and step through slices in that on each use
+	u32 size=0;			        // size of buffer (adjusted to alignment size)
+	u32 memOffset=-1;	        // current memoffset into shared memory - set to -1 so we can see if a buffer is used before initialising
 };
 UniformBufferPlatformData* UniformBufferPlatformData_Create(const struct UBOInfo &uboInfo, bool dynamic);
 void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData);

@@ -16,7 +16,6 @@ Application::Application()
 {
 	// mount filesystems
 	m_vikingRoom.Create("viking_room");
-#if 0
 	RenderThread::Instance().AddDrawTask([this]() {Draw(); }, DrawTaskPri_BasePixel);
 
 	View::PerspectiveInfo persp;
@@ -29,10 +28,9 @@ Application::Application()
 	m_view.SetDepthRange(0.1f, 1.0f);
 	m_view.SetScissorRect({ 0,0,1,1 });
 
-	m_modelMatrix = mat4x4(1);
-
 	m_cameraPYR = { DegToRad(45.0f), 0, 0};
 	m_cameraPos = { 0, 1.5f, -1.0f };
+#if 0
 
 	m_particleMat.Create("particles");
 	m_font.Create("c64");
@@ -57,7 +55,6 @@ Application::~Application()
 
 void Application::Update()
 {
-#if 0
 	float dt = (float)NeoTimeDelta;
 	dt = Min(dt, 0.1f);
 
@@ -66,6 +63,7 @@ void Application::Update()
 	float yaw = GIL::Instance().GetJoystickAxis(2) * dt;
 	float pitch = GIL::Instance().GetJoystickAxis(3) * dt;
 
+#if 0
 	for (auto& bee : m_bees)
 	{
 		bee.pos += bee.vel * dt;
@@ -73,6 +71,7 @@ void Application::Update()
 		if (range > 20.0f)
 			bee.vel = -bee.pos*0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
 	}
+#endif
 
 	m_cameraPYR.x += pitch;
 	m_cameraPYR.y += yaw;
@@ -94,6 +93,8 @@ void Application::Update()
 
 	// TODO: need this threadsafe
 	m_cameraMatrix = camMatrix;
+
+#if 0
 	static float time = 0.0f;
 	time += dt;
 	m_beeScale = sinf(time) * 0.1f + 0.11f;
@@ -133,25 +134,31 @@ void Application::Update()
 
 void Application::Draw()
 {
-#if 0
 	// wait till our resources are loaded...
 	if (!m_vikingRoom->IsLoaded())
 		return;
 
 	m_view.Apply();
-	GIL::Instance().SetMaterialBlendColor({ 1,1,1,1 });
+//	GIL::Instance().SetMaterialBlendColor({ 1,1,1,1 });
+
+	auto& gil = GIL::Instance();
+	UBO_Model modelData;
+	auto uboPD = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance->platformData;
+	modelData.model = mat4x4(1);
+	gil.UpdateDynamicUBO(uboPD, &modelData, sizeof(modelData));
 
 	for (int x = 0; x < 10; x++)
 	{
 		for (int y = 0; y < 10; y++)
 		{
-			m_modelMatrix[3][0] = x*1.4f;
-			m_modelMatrix[3][2] = y*1.4f;
-			GIL::Instance().SetAndBindModelMatrix(m_modelMatrix);
-			GIL::Instance().RenderStaticMesh(m_vikingRoom);
+			modelData.model[3][0] = x*1.4f;
+			modelData.model[3][2] = y*1.4f;
+			gil.UpdateDynamicUBO(uboPD, &modelData, sizeof(modelData));
+//			gil.RenderStaticMesh(m_vikingRoom);
 		}
 	}
 
+#if 0
 	auto& ddr = DefDynamicRenderer::Instance();
 	ddr.Render(0xffff);
 

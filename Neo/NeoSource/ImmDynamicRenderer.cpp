@@ -38,7 +38,6 @@ void ImmDynamicRenderer::BeginRender()
 	auto& gil = GIL::Instance();
 	mat4x4 model(1);
 	gil.BindGeometryBuffer(m_geomBuffers[m_currentFrame]);
-	gil.SetModelMatrix(model);
 }
 
 void ImmDynamicRenderer::UseMaterial(Material* mat)

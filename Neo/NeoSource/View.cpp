@@ -5,14 +5,6 @@
 
 View::View()
 {
-	m_viewUBO = ShaderManager::Instance().FindUBO("UBO_View");
-	RenderThread::Instance().AddPreDrawTask
-	(
-		[this]()
-		{
-			m_platformData = UniformBufferPlatformData_Create(*m_viewUBO, false);
-		}
-	);
 }
 
 View::~View()
@@ -78,16 +70,16 @@ struct vector3
 void View::Apply()
 {
 	auto& gil = GIL::Instance();
-	mat4x4 projMat;
+	UBO_View viewData;
 	ivec2 screenSize = gil.GetFrameBufferSize();
-	projMat = glm::perspective(m_perspective.fov, (m_viewport.w * screenSize.x) / (m_viewport.h * screenSize.y), m_perspective.nearPlane, m_perspective.farPlane);
-	projMat[1][1] *= -1.0f;
+	viewData.proj = glm::perspective(m_perspective.fov, (m_viewport.w * screenSize.x) / (m_viewport.h * screenSize.y), m_perspective.nearPlane, m_perspective.farPlane);
+	viewData.proj[1][1] *= -1.0f;
+	viewData.ortho = OrthoProj(m_orthographic.orthoRect, m_orthographic.nearPlane, m_orthographic.farPlane);
+	viewData.view = glm::inverse(m_cameraMatrix);
+	
+	auto viewPD = ShaderManager::Instance().FindUBO("UBO_View")->dynamicInstance->platformData;
+	gil.UpdateDynamicUBO(viewPD, &viewData, sizeof(viewData));
 
-	mat4x4 orthoMat;
-	orthoMat = OrthoProj(m_orthographic.orthoRect, m_orthographic.nearPlane, m_orthographic.farPlane);
-
-	mat4x4 viewMat = glm::inverse(m_cameraMatrix);
-	gil.SetViewMatrices(viewMat, projMat, orthoMat);
 	gil.SetViewport(m_viewport, m_minDepth, m_maxDepth);
 	gil.SetScissor(m_scissor);
 }

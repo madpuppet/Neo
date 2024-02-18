@@ -5,7 +5,7 @@
 #include "ResourceLoadedManager.h"
 #include "ShaderManager.h"
 
-#define MATERIAL_VERSION 2
+#define MATERIAL_VERSION 3
 
 DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
 
@@ -243,53 +243,54 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 			auto uniformNodes = fieldNode->GetChildren();
 			for (auto uniformNode : uniformNodes)
 			{
-				string uniformName = uniformNode->GetName();
-
 				// find the field in our ubo
+				string uniformName = uniformNode->GetName();
 				auto member = FindUniformMember(ubo, uniformName);
 				Assert(member != nullptr, STR("Material uniform {} does not exist in ubo {}", uniformName, uboName));
+
+				void* data = new u8[member->datasize];
 				switch (member->type)
 				{
 					case UniformType_vec4:
 					{
-						auto uniform = new MaterialUniform_vec4(uniformNode->GetString());
-						uniform->value = uniformNode->GetVector4();
-						mbo->uniforms.push_back(uniform);
+						vec4 value = uniformNode->GetVector4();
+						memcpy(data, &value, member->datasize);
+						mbo->uniforms.emplace_back(member, data);
 					}
 					break;
 
 					case UniformType_ivec4:
 					{
-						auto uniform = new MaterialUniform_ivec4(uniformNode->GetString());
-						uniform->value = uniformNode->GetVector4i();
-						mbo->uniforms.push_back(uniform);
+						ivec4 value = uniformNode->GetVector4i();
+						memcpy(data, &value, member->datasize);
+						mbo->uniforms.emplace_back(member, data);
 					}
 					break;
 
 					case UniformType_mat4x4:
 					{
-						auto uniform = new MaterialUniform_mat4x4(uniformNode->GetString());
 						vec3 rot = uniformNode->GetVector3();
 						vec3 scale = uniformNode->GetVector3();
 						vec3 pos = uniformNode->GetVector3();
-						uniform->value = MakeMatrix(rot, scale, pos);
-						mbo->uniforms.push_back(uniform);
+						mat4x4 value = MakeMatrix(rot, scale, pos);
+						memcpy(data, &value, member->datasize);
+						mbo->uniforms.emplace_back(member, data);
 					}
 					break;
 
 					case UniformType_f32:
 					{
-						auto uniform = new MaterialUniform_f32(uniformNode->GetString());
-						uniform->value = uniformNode->GetF32();
-						mbo->uniforms.push_back(uniform);
+						f32 value = uniformNode->GetF32();
+						memcpy(data, &value, member->datasize);
+						mbo->uniforms.emplace_back(member, data);
 					}
 					break;
 
 					case UniformType_i32:
 					{
-						auto uniform = new MaterialUniform_i32(uniformNode->GetString());
-						uniform->value = uniformNode->GetI32();
-						mbo->uniforms.push_back(uniform);
+						i32 value = uniformNode->GetI32();
+						memcpy(data, &value, member->datasize);
+						mbo->uniforms.emplace_back(member, data);
 					}
 					break;
 				}
@@ -318,55 +319,10 @@ MemBlock MaterialAssetData::AssetToMemory()
 	{
 		stream.WriteString(mbo->uboInstance->ubo->structName);
 		stream.WriteU8((u8)mbo->uniforms.size());
-		for (auto uniform : mbo->uniforms)
+		for (auto &uniform : mbo->uniforms)
 		{
-			stream.WriteString(uniform->uniformName);
-			stream.WriteU8((u8)uniform->type);
-			switch (uniform->type)
-			{
-				case UniformType_vec4:
-				{
-					auto u = (MaterialUniform_vec4*)uniform;
-					stream.WriteF32(u->value.x);
-					stream.WriteF32(u->value.y);
-					stream.WriteF32(u->value.z);
-					stream.WriteF32(u->value.w);
-				}
-				break;
-				case UniformType_ivec4:
-				{
-					auto u = (MaterialUniform_ivec4*)uniform;
-					stream.WriteI32(u->value.x);
-					stream.WriteI32(u->value.y);
-					stream.WriteI32(u->value.z);
-					stream.WriteI32(u->value.w);
-				}
-				break;
-				case UniformType_mat4x4:
-				{
-					auto u = (MaterialUniform_mat4x4*)uniform;
-					for (int r = 0; r < 4; r++)
-					{
-						for (int c = 0; c < 4; c++)
-						{
-							stream.WriteF32(u->value[r][c]);
-						}
-					}
-				}
-				break;
-				case UniformType_f32:
-				{
-					auto u = (MaterialUniform_f32*)uniform;
-					stream.WriteF32(u->value);
-				}
-				break;
-				case UniformType_i32:
-				{
-					auto u = (MaterialUniform_i32*)uniform;
-					stream.WriteI32(u->value);
-				}
-				break;
-			}
+			stream.WriteString(uniform.uboMember->name);
+			stream.WriteMemory((u8*)uniform.data, uniform.uboMember->datasize);
 		}
 	}
 
@@ -424,53 +380,12 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 		for (size_t i=0; i<uniformCount; i++)
 		{
 			string uniformName = stream.ReadString();
-			UniformType uniformType = (UniformType)stream.ReadU8();
+			UBOMemberInfo* uboMember = FindUniformMember(mbo->uboInstance->ubo, uniformName);
+			Assert(uboMember, STR("Cannot find member {} in ubo {}", uniformName, mbo->uboInstance->ubo->structName));
 
-			switch (uniformType)
-			{
-				case UniformType_vec4:
-				{
-					auto uniform = new MaterialUniform_vec4(uniformName);
-					uniform->value.x = stream.ReadF32();
-					uniform->value.y = stream.ReadF32();
-					uniform->value.z = stream.ReadF32();
-					uniform->value.w = stream.ReadF32();
-				}
-				break;
-				case UniformType_ivec4:
-				{
-					auto uniform = new MaterialUniform_ivec4(uniformName);
-					uniform->value.x = stream.ReadI32();
-					uniform->value.y = stream.ReadI32();
-					uniform->value.z = stream.ReadI32();
-					uniform->value.w = stream.ReadI32();
-				}
-				break;
-				case UniformType_mat4x4:
-				{
-					auto uniform = new MaterialUniform_mat4x4(uniformName);
-					for (int r = 0; r < 4; r++)
-					{
-						for (int c = 0; c < 4; c++)
-						{
-							uniform->value[r][c] = stream.ReadF32();
-						}
-					}
-				}
-				break;
-				case UniformType_f32:
-				{
-					auto uniform = new MaterialUniform_f32(uniformName);
-					uniform->value = stream.ReadF32();
-				}
-				break;
-				case UniformType_i32:
-				{
-					auto uniform = new MaterialUniform_i32(uniformName);
-					uniform->value = stream.ReadI32();
-				}
-				break;
-			}
+			u8* data = new u8[uboMember->datasize];
+			stream.ReadMemory(data, uboMember->datasize);
+			mbo->uniforms.emplace_back(uboMember, data);
 		}
 	}
 

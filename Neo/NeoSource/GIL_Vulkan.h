@@ -139,9 +139,7 @@ public:
 
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
 
-	void SetModelMatrix(const mat4x4& modelMat);
-
-	void SetAndBindModelMatrix(const mat4x4& modelMat);
+	void UpdateDynamicUBO(UniformBufferPlatformData* uboPD, void* uboMem, u32 uboSize);
 
 	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat, const mat4x4& orthoMat);
 	void SetMaterialBlendColor(const vec4& blendColor);
@@ -200,8 +198,6 @@ protected:
 	VkDeviceMemory m_indexBufferMemory;
 
 	Material* m_boundMaterial;
-	u32 m_currModelDynamicOffset;
-	u32 m_nextModelDynamicOffset;
 
 	VkDescriptorPool m_descriptorPool;
 	std::vector<VkCommandBuffer> m_commandBuffers;

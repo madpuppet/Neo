@@ -18,28 +18,6 @@ const vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-// todo: replace with file system read
-#include <iostream>
-#include <fstream>
-static std::vector<char> readFile(const string& filename) {
-    std::ifstream file(filename, std::ios::ate | std::ios::binary);
-
-    if (!file.is_open())
-    {
-        Error("failed to open file!");
-    }
-
-    size_t fileSize = (size_t)file.tellg();
-    std::vector<char> buffer(fileSize);
-
-    file.seekg(0);
-    file.read(buffer.data(), fileSize);
-
-    file.close();
-
-    return buffer;
-}
-
 static std::vector<Vertex> s_vertices;
 static std::vector<uint32_t> s_indices;
 
@@ -214,37 +192,7 @@ void GIL::BeginFrame()
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     m_boundMaterial = nullptr;
-    m_currModelDynamicOffset = 0;
-    m_nextModelDynamicOffset = 0;
 }
-
-void GIL::SetModelMatrix(const mat4x4& modelMat)
-{
-    //TODO:
-#if 0
-    auto ubo = (UBO_Model*)m_modelUBOMapped[m_currentFrame];
-    ubo->model = modelMat;
-#endif
-}
-
-void GIL::SetAndBindModelMatrix(const mat4x4& modelMat)
-{
-    //TODO:
-#if 0
-    int size = (sizeof(UBO_Model) + 63) & ~63;
-    m_currModelDynamicOffset = m_nextModelDynamicOffset;
-    m_nextModelDynamicOffset += size;
-
-    auto ubo = (UBO_Model*)((u8*)m_modelUBOMapped[m_currentFrame] + m_currModelDynamicOffset);
-    ubo->model = modelMat;
-
-    if (m_boundMaterial)
-    {
-        vkCmdBindDescriptorSets(m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundMaterial->GetPlatformData()->pipelineLayout, 2, 1, &m_boundMaterial->GetPlatformData()->descriptorSets[m_currentFrame][2], 1, &m_currModelDynamicOffset);
-    }
-#endif
-}
-
 
 mat4x4 InverseSimple(const mat4x4 & m)
 {
@@ -258,6 +206,20 @@ mat4x4 InverseSimple(const mat4x4 & m)
     temp[3][2] = -(m[3][0] * m[2][0] + m[3][1] * m[2][1] + m[3][2] * m[2][2]);
     temp[3][3] = 1.0f;
     return temp;
+}
+
+void GIL::UpdateDynamicUBO(UniformBufferPlatformData* uboPD, void* uboMem, u32 uboSize)
+{
+    int size = (uboSize + 63) & ~63;
+    uboPD->memOffset = m_dynamicUniformBufferMemoryUsed;
+    memcpy((u8*)m_dynamicUniformBufferMemoryMapped[m_currentFrame] + m_dynamicUniformBufferMemoryUsed, uboMem, uboSize);
+    m_dynamicUniformBufferMemoryUsed += size;
+
+//    TODO: rebind current material - otherwise we need to change material for this to get applied...
+//    if (m_boundMaterial)
+//    {
+//        vkCmdBindDescriptorSets(m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundMaterial->GetPlatformData()->pipelineLayout, 2, 1, &m_boundMaterial->GetPlatformData()->descriptorSets[m_currentFrame][2], 1, &m_currModelDynamicOffset);
+//    }
 }
 
 void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat, const mat4x4 &orthoMat)
@@ -359,6 +321,7 @@ void GIL::EndFrame()
     }
 
     m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
+    m_dynamicUniformBufferMemoryUsed = 0;
 }
 
 void GIL::createSurface()
@@ -1092,7 +1055,9 @@ void GIL::createUniformBufferDynamicMemory()
         {
             Error(STR("failed to allocate buffer memory! RC {}", (int)rc));
         }
+        vkMapMemory(m_device, m_dynamicUniformBufferMemory[i], 0, size, 0, &m_dynamicUniformBufferMemoryMapped[i]);
     }
+
 }
 
 
@@ -1468,7 +1433,10 @@ void GIL::BindMaterial(Material* material, bool lines)
         for (auto uboInstance : materialPD->uboInstances)
         {
             if (uboInstance->isDynamic)
+            {
+                Assert(uboInstance->platformData->memOffset != (u32)-1, STR("Use of UBO {} before call to UpdateDynamicUBO", uboInstance->ubo->structName));
                 dynamicOffsets[dynamicOffsetCount++] = uboInstance->platformData->memOffset;
+            }
         }
 
         vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0,

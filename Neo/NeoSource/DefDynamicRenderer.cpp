@@ -140,7 +140,6 @@ void DefDynamicRenderer::Render(u32 endDrawOrder)
 
 	mat4x4 model(1);
 	gil.BindGeometryBuffer(m_geomBuffers[m_drawFrame]);
-	gil.SetModelMatrix(model);
 
 	bool lines = false;
 	while (m_nextRenderBlock < rb.size() && rb[m_nextRenderBlock].drawOrder < endDrawOrder)

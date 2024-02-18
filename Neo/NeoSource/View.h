@@ -52,9 +52,6 @@ protected:
 	PerspectiveInfo m_perspective;
 	OrthographicInfo m_orthographic;
 
-	UBOInfo* m_viewUBO;
-	UniformBufferPlatformData* m_platformData;
-
 	mat4x4 m_cameraMatrix = { mat4x4(1) };
 	rect m_viewport;
 	rect m_scissor;

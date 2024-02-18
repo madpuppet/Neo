@@ -147,9 +147,16 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     // create platform data for mbo's
     for (auto mbo : assetData->buffers)
     {
-        mbo->uboInstance->platformData = UniformBufferPlatformData_Create(*mbo->uboInstance->ubo, false);
+        auto pd = UniformBufferPlatformData_Create(*mbo->uboInstance->ubo, false);
+        mbo->uboInstance->platformData = pd;
+        for (auto &uniform : mbo->uniforms)
+        {
+            for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+            {
+                memcpy((u8*)pd->memoryMapped[i] + uniform.uboMember->offset, uniform.data, uniform.uboMember->datasize);
+            }
+        }
     }
-
 
     // flatten out ubo instances
     for (auto sro : shaderAD->SROs)

@@ -47,47 +47,13 @@ enum SamplerCompare
 
 struct MaterialUniform
 {
-	MaterialUniform(const string& _uniformName, UniformType _type) : uniformName(_uniformName), type(_type) {}
-	virtual ~MaterialUniform() {}
-
-	string uniformName;
-	UniformType type;
-};
-struct MaterialUniform_vec4 : public MaterialUniform
-{
-	MaterialUniform_vec4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_vec4) {}
-
-	vec4 value = { 1,1,1,1 };
-};
-struct MaterialUniform_ivec4 : public MaterialUniform
-{
-	MaterialUniform_ivec4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_ivec4) {}
-
-	ivec4 value = { 0,0,0,0 };
-};
-struct MaterialUniform_f32 : public MaterialUniform
-{
-	MaterialUniform_f32(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_f32) {}
-
-	f32 value = 0.0f;
-};
-struct MaterialUniform_i32 : public MaterialUniform
-{
-	MaterialUniform_i32(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_i32) {}
-
-	i32 value = 0;
-};
-
-struct MaterialUniform_mat4x4 : public MaterialUniform
-{
-	MaterialUniform_mat4x4(const string& _uniformName) : MaterialUniform(_uniformName, UniformType_mat4x4) {}
-
-	mat4x4 value = mat4x4(1);
+	UBOMemberInfo* uboMember;
+	void* data;
 };
 
 struct MaterialBufferObject
 {
-	vector<MaterialUniform*> uniforms;
+	vector<MaterialUniform> uniforms;
 	struct UBOInfoInstance* uboInstance = nullptr;
 };
 
@@ -114,10 +80,19 @@ class Material : public Resource
 	struct MaterialAssetData* m_assetData = nullptr;
 	struct MaterialPlatformData* m_platformData = nullptr;
 
+	// dirty mask gets set if any uniforms are updated (bit 0 is frame 0, bit 1 is frame 1)
+	u32 dirtyMask = 0xf;
+
 public:
 	Material(const string& name);
 	Material(const string& name, Material *parent);
 	virtual ~Material();
+
+	void SetUniform_vec4(const string& name, const vec4& value);
+	void SetUniform_ivec4(const string& name, const ivec4& value);
+	void SetUniform_f32(const string& name, const f32& value);
+	void SetUniform_i32(const string& name, const i32& value);
+	void SetUniform_mat4x4(const string& name, const mat4x4& value);
 
 	MaterialAssetData* GetAssetData() { return m_assetData; }
 	MaterialPlatformData* GetPlatformData() { return m_platformData; }
