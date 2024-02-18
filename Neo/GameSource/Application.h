@@ -34,5 +34,6 @@ protected:
 	mat4x4 m_cameraMatrix;
 	float m_beeScale;
 	array<Bee, 20000> m_bees;
+	mat4x4 m_roomInstances[64 * 64];
 };
 

@@ -208,18 +208,58 @@ mat4x4 InverseSimple(const mat4x4 & m)
     return temp;
 }
 
-void GIL::UpdateDynamicUBO(UniformBufferPlatformData* uboPD, void* uboMem, u32 uboSize)
+void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboSize)
 {
-    int size = (uboSize + 63) & ~63;
-    uboPD->memOffset = m_dynamicUniformBufferMemoryUsed;
-    memcpy((u8*)m_dynamicUniformBufferMemoryMapped[m_currentFrame] + m_dynamicUniformBufferMemoryUsed, uboMem, uboSize);
-    m_dynamicUniformBufferMemoryUsed += size;
+    auto uboPD = uboInstance->platformData;
+    if (uboInstance->isDynamic)
+    {
+        int size = (uboSize + 63) & ~63;
+        uboPD->memOffset = m_dynamicUniformBufferMemoryUsed;
+        memcpy((u8*)m_dynamicUniformBufferMemoryMapped[m_currentFrame] + m_dynamicUniformBufferMemoryUsed, uboMem, uboSize);
+        m_dynamicUniformBufferMemoryUsed += size;
 
-//    TODO: rebind current material - otherwise we need to change material for this to get applied...
-//    if (m_boundMaterial)
-//    {
-//        vkCmdBindDescriptorSets(m_commandBuffers[m_currentFrame], VK_PIPELINE_BIND_POINT_GRAPHICS, m_boundMaterial->GetPlatformData()->pipelineLayout, 2, 1, &m_boundMaterial->GetPlatformData()->descriptorSets[m_currentFrame][2], 1, &m_currModelDynamicOffset);
-//    }
+        if (m_boundMaterial)
+        {
+            auto materialAD = m_boundMaterial->GetAssetData();
+            auto materialPD = m_boundMaterial->GetPlatformData();
+            auto shaderAD = materialAD->shader->GetAssetData();
+            auto shaderPD = materialAD->shader->GetPlatformData();
+            auto commandBuffer = m_commandBuffers[m_currentFrame];
+
+            // check if bound material references this UBO
+            // we need to update any sets after this UBO
+            u32 dynamicOffsets[16]; // maximum of 16 should be enough for any shader
+            int idx = 0;
+            int set = -1;
+            bool started = false;
+            int startedSet = -1;
+            for (auto& it : materialPD->uboInstances)
+            {
+                if (it.first != set && !started)
+                {
+                    idx = 0;
+                    set = it.first;
+                }
+
+                if (it.second == uboInstance)
+                {
+                    started = true;
+                    startedSet = set;
+                }
+
+                Assert(it.second->platformData->memOffset != (u32)-1, STR("Use of UBO {} before call to UpdateDynamicUBO", it.second->ubo->structName));
+                dynamicOffsets[idx++] = it.second->platformData->memOffset;
+            }
+
+            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, startedSet,
+                (u32)materialPD->descriptorSets[m_currentFrame].size() - startedSet, &materialPD->descriptorSets[m_currentFrame][startedSet],
+                idx, dynamicOffsets);
+        }
+    }
+    else // just a static instance - it only updates once per frame and always points to the same memory, so no need to rebind materials, etc
+    {
+        memcpy((u8*)uboPD->memoryMapped[m_currentFrame], uboMem, uboSize);
+    }
 }
 
 void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat, const mat4x4 &orthoMat)
@@ -1430,8 +1470,9 @@ void GIL::BindMaterial(Material* material, bool lines)
         auto shader = material->GetAssetData()->shader;
         auto shaderPD = shader->GetPlatformData();
         auto shaderAD = shader->GetAssetData();
-        for (auto uboInstance : materialPD->uboInstances)
+        for (auto &it : materialPD->uboInstances)
         {
+            auto uboInstance = it.second;
             if (uboInstance->isDynamic)
             {
                 Assert(uboInstance->platformData->memOffset != (u32)-1, STR("Use of UBO {} before call to UpdateDynamicUBO", uboInstance->ubo->structName));
@@ -1501,6 +1542,29 @@ void GIL::RenderStaticMesh(StaticMesh *mesh)
     BindGeometryBuffer(meshPD->geomBuffer);
     SetRenderPrimitiveType(PrimType_TriangleList);
     RenderPrimitive(0, 0, 0, meshPD->indiceCount);
+}
+
+void GIL::RenderStaticMeshInstances(class StaticMesh* mesh, mat4x4* ltw, u32 ltwCount)
+{
+    Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
+
+    // check platform data has been created successfully
+    auto meshPD = mesh->GetPlatformData();
+    auto meshAD = mesh->GetAssetData();
+    auto material = *(meshAD->material);
+    auto uboInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
+    auto& gil = GIL::Instance();
+    if (!meshPD || !meshAD || !material || !meshPD->geomBuffer || !uboInstance)
+        return;
+
+    BindMaterial(material, false);
+    BindGeometryBuffer(meshPD->geomBuffer);
+    SetRenderPrimitiveType(PrimType_TriangleList);
+    for (u32 i = 0; i < ltwCount; i++)
+    {
+        gil.UpdateUBOInstance(uboInstance, &ltw[i], sizeof(mat4x4));
+        RenderPrimitive(0, 0, 0, meshPD->indiceCount);
+    }
 }
 
 

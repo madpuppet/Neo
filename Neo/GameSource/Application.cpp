@@ -21,7 +21,7 @@ Application::Application()
 	View::PerspectiveInfo persp;
 	persp.fov = DegToRad(70.0f);
 	persp.nearPlane = 0.25f;
-	persp.farPlane = 50.0f;
+	persp.farPlane = 100.0f;
 	m_view.SetPerspective(persp);
 
 	m_view.SetViewport({ 0,0,1,1 });
@@ -30,7 +30,17 @@ Application::Application()
 
 	m_cameraPYR = { DegToRad(45.0f), 0, 0};
 	m_cameraPos = { 0, 1.5f, -1.0f };
-#if 0
+
+	for (int x = 0; x < 64; x++)
+	{
+		for (int y = 0; y < 64; y++)
+		{
+			u32 idx = x + y * 64;
+			m_roomInstances[idx] = mat4x4(1);
+			m_roomInstances[idx][3][0] = x*1.44f;
+			m_roomInstances[idx][3][2] = y*1.44f;
+		}
+	}
 
 	m_particleMat.Create("particles");
 	m_font.Create("c64");
@@ -46,7 +56,6 @@ Application::Application()
 		bee.vel.y = (rand() & 0xffff) / 32768.0f - 1.0f;
 		bee.vel.z = (rand() & 0xffff) / 32768.0f - 1.0f;
 	}
-#endif
 }
 
 Application::~Application()
@@ -63,7 +72,6 @@ void Application::Update()
 	float yaw = GIL::Instance().GetJoystickAxis(2) * dt;
 	float pitch = GIL::Instance().GetJoystickAxis(3) * dt;
 
-#if 0
 	for (auto& bee : m_bees)
 	{
 		bee.pos += bee.vel * dt;
@@ -71,7 +79,6 @@ void Application::Update()
 		if (range > 20.0f)
 			bee.vel = -bee.pos*0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
 	}
-#endif
 
 	m_cameraPYR.x += pitch;
 	m_cameraPYR.y += yaw;
@@ -94,7 +101,6 @@ void Application::Update()
 	// TODO: need this threadsafe
 	m_cameraMatrix = camMatrix;
 
-#if 0
 	static float time = 0.0f;
 	time += dt;
 	m_beeScale = sinf(time) * 0.1f + 0.11f;
@@ -129,7 +135,6 @@ void Application::Update()
 		ddr.EndPrimitive();
 		ddr.EndRender();
 	}
-#endif
 }
 
 void Application::Draw()
@@ -143,22 +148,11 @@ void Application::Draw()
 
 	auto& gil = GIL::Instance();
 	UBO_Model modelData;
-	auto uboPD = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance->platformData;
+	auto modelUBOInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
 	modelData.model = mat4x4(1);
-	gil.UpdateDynamicUBO(uboPD, &modelData, sizeof(modelData));
+	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData));
+	gil.RenderStaticMeshInstances(m_vikingRoom, m_roomInstances, 64 * 64);
 
-	for (int x = 0; x < 10; x++)
-	{
-		for (int y = 0; y < 10; y++)
-		{
-			modelData.model[3][0] = x*1.4f;
-			modelData.model[3][2] = y*1.4f;
-			gil.UpdateDynamicUBO(uboPD, &modelData, sizeof(modelData));
-//			gil.RenderStaticMesh(m_vikingRoom);
-		}
-	}
-
-#if 0
 	auto& ddr = DefDynamicRenderer::Instance();
 	ddr.Render(0xffff);
 
@@ -187,14 +181,13 @@ void Application::Draw()
 	idr.EndPrimitive();
 	idr.EndRender();
 
-	mat4x4 identity(1);
-	GIL::Instance().SetAndBindModelMatrix(identity);
+	modelData.model = mat4x4(1);
+	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData));
 	if (m_font->IsLoaded())
 	{
 		int fps = (int)(1.0f / NeoTimeDelta);
 		int ms = (int)(1000.0f * NeoTimeDelta);
 		m_font->RenderText(STR("{}ms FPS {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 	}
-#endif
 }
 

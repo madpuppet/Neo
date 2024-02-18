@@ -77,8 +77,8 @@ void View::Apply()
 	viewData.ortho = OrthoProj(m_orthographic.orthoRect, m_orthographic.nearPlane, m_orthographic.farPlane);
 	viewData.view = glm::inverse(m_cameraMatrix);
 	
-	auto viewPD = ShaderManager::Instance().FindUBO("UBO_View")->dynamicInstance->platformData;
-	gil.UpdateDynamicUBO(viewPD, &viewData, sizeof(viewData));
+	auto viewUBOInstance = ShaderManager::Instance().FindUBO("UBO_View")->dynamicInstance;
+	gil.UpdateUBOInstance(viewUBOInstance, &viewData, sizeof(viewData));
 
 	gil.SetViewport(m_viewport, m_minDepth, m_maxDepth);
 	gil.SetScissor(m_scissor);

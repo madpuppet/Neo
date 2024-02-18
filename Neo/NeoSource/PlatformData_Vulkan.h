@@ -47,10 +47,8 @@ struct MaterialPlatformData
 
 	vector<VkDescriptorSet> descriptorSets[MAX_FRAMES_IN_FLIGHT];
 
-	vector<UBOInfoInstance*> uboInstances;		// all ubo instances flattened (shader ones, with material overrides)
-
-//	vector<u32> dynamicOffsets[MAX_FRAMES_IN_FLIGHT];
-//	vector<u32> idxToDynamicOffset;
+	// all ubo instances flattened (set, instance) pairs
+	vector<std::pair<int, UBOInfoInstance*>> uboInstances;		
 };
 MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);

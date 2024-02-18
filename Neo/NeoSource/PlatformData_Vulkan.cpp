@@ -179,7 +179,7 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
                 Assert(ubo, STR("Unable to find UBO {} for material {}", sro.name, assetData->name));
                 uboInstance = ubo->dynamicInstance;
             }
-            platformData->uboInstances.push_back(uboInstance);
+            platformData->uboInstances.push_back(std::pair<int, UBOInfoInstance*>(sro.set, uboInstance));
         }
     }
 

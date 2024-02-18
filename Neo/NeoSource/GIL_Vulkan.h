@@ -135,11 +135,13 @@ public:
 	// must be called on render thread
 	void RenderStaticMesh(class StaticMesh* mesh);
 
+	void RenderStaticMeshInstances(class StaticMesh* mesh, mat4x4 *ltw, u32 ltwCount);
+
 	void WaitTilInitialised() { m_vulkanInitialised.Wait(); }
 
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
 
-	void UpdateDynamicUBO(UniformBufferPlatformData* uboPD, void* uboMem, u32 uboSize);
+	void UpdateUBOInstance(UBOInfoInstance* uboInstance, void* uboMem, u32 uboSize);
 
 	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat, const mat4x4& orthoMat);
 	void SetMaterialBlendColor(const vec4& blendColor);
