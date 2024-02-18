@@ -83,16 +83,18 @@ class Material : public Resource
 	// dirty mask gets set if any uniforms are updated (bit 0 is frame 0, bit 1 is frame 1)
 	u32 dirtyMask = 0xf;
 
+	void SetUniform(const string& name, UniformType type, const void* data, bool flush);
+
 public:
 	Material(const string& name);
 	Material(const string& name, Material *parent);
 	virtual ~Material();
 
-	void SetUniform_vec4(const string& name, const vec4& value);
-	void SetUniform_ivec4(const string& name, const ivec4& value);
-	void SetUniform_f32(const string& name, const f32& value);
-	void SetUniform_i32(const string& name, const i32& value);
-	void SetUniform_mat4x4(const string& name, const mat4x4& value);
+	void SetUniform_vec4(const string& name, const vec4& value, bool flush) { SetUniform(name, UniformType_vec4, &value, flush); }
+	void SetUniform_ivec4(const string& name, const ivec4& value, bool flush) { SetUniform(name, UniformType_ivec4, &value, flush); }
+	void SetUniform_f32(const string& name, f32 value, bool flush) { SetUniform(name, UniformType_f32, &value, flush); }
+	void SetUniform_i32(const string& name, i32 value, bool flush) { SetUniform(name, UniformType_ivec4, &value, flush); }
+	void SetUniform_mat4x4(const string& name, const mat4x4& value, bool flush) { SetUniform(name, UniformType_mat4x4, &value, flush); }
 
 	MaterialAssetData* GetAssetData() { return m_assetData; }
 	MaterialPlatformData* GetPlatformData() { return m_platformData; }

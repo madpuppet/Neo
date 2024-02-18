@@ -78,7 +78,7 @@ void View::Apply()
 	viewData.view = glm::inverse(m_cameraMatrix);
 	
 	auto viewUBOInstance = ShaderManager::Instance().FindUBO("UBO_View")->dynamicInstance;
-	gil.UpdateUBOInstance(viewUBOInstance, &viewData, sizeof(viewData));
+	gil.UpdateUBOInstance(viewUBOInstance, &viewData, sizeof(viewData), true);
 
 	gil.SetViewport(m_viewport, m_minDepth, m_maxDepth);
 	gil.SetScissor(m_scissor);

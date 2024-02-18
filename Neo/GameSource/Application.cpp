@@ -16,6 +16,8 @@ Application::Application()
 {
 	// mount filesystems
 	m_vikingRoom.Create("viking_room");
+	m_vikingRoomMat.Create("viking_room");
+
 	RenderThread::Instance().AddDrawTask([this]() {Draw(); }, DrawTaskPri_BasePixel);
 
 	View::PerspectiveInfo persp;
@@ -97,7 +99,6 @@ void Application::Update()
 	orthoInfo.farPlane = 1.0f;
 	m_view.SetOrthographic(orthoInfo);
 
-
 	// TODO: need this threadsafe
 	m_cameraMatrix = camMatrix;
 
@@ -144,14 +145,24 @@ void Application::Draw()
 		return;
 
 	m_view.Apply();
-//	GIL::Instance().SetMaterialBlendColor({ 1,1,1,1 });
 
 	auto& gil = GIL::Instance();
 	UBO_Model modelData;
 	auto modelUBOInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
 	modelData.model = mat4x4(1);
-	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData));
-	gil.RenderStaticMeshInstances(m_vikingRoom, m_roomInstances, 64 * 64);
+	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
+
+	vec4 col1{ 1.0f, 0.0f, 0.0f, 1.0f };
+	m_vikingRoomMat->SetUniform_vec4("blendColor", col1, true);
+	gil.RenderStaticMeshInstances(m_vikingRoom, m_roomInstances, 64 * 32);
+
+	vec4 col2{ 0.0f, 0.0f, 1.0f, 1.0f };
+	m_vikingRoomMat->SetUniform_vec4("blendColor", col2, true);
+
+	gil.RenderStaticMeshInstances(m_vikingRoom, &m_roomInstances[64*32], 64 * 32);
+
+	modelData.model = mat4x4(1);
+	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
 
 	auto& ddr = DefDynamicRenderer::Instance();
 	ddr.Render(0xffff);
@@ -181,8 +192,6 @@ void Application::Draw()
 	idr.EndPrimitive();
 	idr.EndRender();
 
-	modelData.model = mat4x4(1);
-	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData));
 	if (m_font->IsLoaded())
 	{
 		int fps = (int)(1.0f / NeoTimeDelta);
@@ -190,4 +199,5 @@ void Application::Draw()
 		m_font->RenderText(STR("{}ms FPS {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 	}
 }
+
 

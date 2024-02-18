@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
     return EXIT_SUCCESS;
 }
 
-#if defined(_DEBUG)
+#if ASSERTS_ENABLED
 
 void Error(const string& msg)
 {

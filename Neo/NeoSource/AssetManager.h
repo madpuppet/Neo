@@ -75,6 +75,9 @@ class AssetManager : public Module<AssetManager>
 public:
 	AssetManager();
 
+	// start worker farm
+	void StartWork();
+
 	// kill the worker farm
 	void KillWorkerFarm();
 

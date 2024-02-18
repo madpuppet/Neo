@@ -159,7 +159,9 @@ CallbackHandle AllocUniqueCallbackHandle();
 
 #define STR(...) std::format(__VA_ARGS__)
 
-#if defined(_DEBUG)
+#define ASSERTS_ENABLED 0
+
+#if ASSERTS_ENABLED
 void Error(const string &msg);
 inline void Assert(bool cond, const string &msg) { if (!cond) Error(msg); }
 #else

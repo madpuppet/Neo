@@ -163,6 +163,10 @@ void GIL::BeginFrame()
 {
     auto &commandBuffer = m_commandBuffers[m_currentFrame];
 
+    // just increment forever. we can mark resources with this to tell if they've been accessed this frame already.
+    // the game would have to run for 250 days at 200fps to wrap this.
+    m_uniqueFrameidx++;
+
     // start command buffer
     vkResetCommandBuffer(commandBuffer, /*VkCommandBufferResetFlagBits*/ 0);
 
@@ -208,17 +212,34 @@ mat4x4 InverseSimple(const mat4x4 & m)
     return temp;
 }
 
-void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboSize)
+void GIL::UpdateUBOInstanceMember(UBOInfoInstance* uboInstance, u32 memberOffset, const void *data, u32 datasize, bool flush)
+{
+    auto pd = uboInstance->platformData;
+    if (uboInstance->isDynamic)
+    {
+        memcpy((u8*)pd->data + memberOffset, data, datasize);
+    }
+    else
+    {
+        memcpy((u8*)pd->memoryMapped[m_currentFrame] + memberOffset, data, datasize);
+    }
+
+    if (flush && uboInstance->isDynamic)
+        UpdateUBOInstance(uboInstance, uboInstance->platformData->data, uboInstance->ubo->size, true);
+}
+
+void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboSize, bool updateBoundMaterial)
 {
     auto uboPD = uboInstance->platformData;
     if (uboInstance->isDynamic)
     {
         int size = (uboSize + 63) & ~63;
         uboPD->memOffset = m_dynamicUniformBufferMemoryUsed;
+        memcpy((u8*)uboPD->data, uboMem, uboSize);
         memcpy((u8*)m_dynamicUniformBufferMemoryMapped[m_currentFrame] + m_dynamicUniformBufferMemoryUsed, uboMem, uboSize);
         m_dynamicUniformBufferMemoryUsed += size;
 
-        if (m_boundMaterial)
+        if (m_boundMaterial && updateBoundMaterial)
         {
             auto materialAD = m_boundMaterial->GetAssetData();
             auto materialPD = m_boundMaterial->GetPlatformData();
@@ -247,8 +268,17 @@ void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboS
                     startedSet = set;
                 }
 
-                Assert(it.second->platformData->memOffset != (u32)-1, STR("Use of UBO {} before call to UpdateDynamicUBO", it.second->ubo->structName));
-                dynamicOffsets[idx++] = it.second->platformData->memOffset;
+                //if this ubo hasn't had its dymamic 
+                if (it.second->isDynamic)
+                {
+                    if (it.second->platformData->memOffset == (u32)-1)
+                    {
+                        Assert(it.second != uboInstance, "internal logic error - memoffset should have been set above");
+                        UpdateUBOInstance(it.second, it.second->platformData->data, it.second->ubo->size, false);
+                        Assert(it.second->platformData->memOffset != (u32)-1, "update instance didn't work!");
+                    }
+                    dynamicOffsets[idx++] = it.second->platformData->memOffset;
+                }
             }
 
             vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, startedSet,
@@ -259,27 +289,9 @@ void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboS
     else // just a static instance - it only updates once per frame and always points to the same memory, so no need to rebind materials, etc
     {
         memcpy((u8*)uboPD->memoryMapped[m_currentFrame], uboMem, uboSize);
+        Assert(uboPD->frameID != m_uniqueFrameidx, "Should not update a static UBO twice in one frame!");
     }
-}
-
-void GIL::SetViewMatrices(const mat4x4& viewMat, const mat4x4& projMat, const mat4x4 &orthoMat)
-{
-    //TODO
-#if 0
-    auto ubo = (UBO_View*)m_viewUBOMapped[m_currentFrame];
-    ubo->view = viewMat;
-    ubo->proj = projMat;
-    ubo->ortho = orthoMat;
-#endif
-}
-
-void GIL::SetMaterialBlendColor(const vec4 &blendColor)
-{
-    //TODO:
-#if 0
-    auto ubo = (UBO_Material*)m_materialUBOMapped[m_currentFrame];
-    ubo->blend = blendColor;
-#endif
+    uboPD->frameID = m_uniqueFrameidx;
 }
 
 void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
@@ -1475,7 +1487,11 @@ void GIL::BindMaterial(Material* material, bool lines)
             auto uboInstance = it.second;
             if (uboInstance->isDynamic)
             {
-                Assert(uboInstance->platformData->memOffset != (u32)-1, STR("Use of UBO {} before call to UpdateDynamicUBO", uboInstance->ubo->structName));
+                if (uboInstance->platformData->frameID != m_uniqueFrameidx)
+                {
+                    UpdateUBOInstance(uboInstance, uboInstance->platformData->data, uboInstance->ubo->size, false);
+                }
+                Assert(uboInstance->platformData->memOffset != (u32)-1, STR("Error of UBO {} before call to UpdateDynamicUBO", uboInstance->ubo->structName));
                 dynamicOffsets[dynamicOffsetCount++] = uboInstance->platformData->memOffset;
             }
         }
@@ -1562,7 +1578,7 @@ void GIL::RenderStaticMeshInstances(class StaticMesh* mesh, mat4x4* ltw, u32 ltw
     SetRenderPrimitiveType(PrimType_TriangleList);
     for (u32 i = 0; i < ltwCount; i++)
     {
-        gil.UpdateUBOInstance(uboInstance, &ltw[i], sizeof(mat4x4));
+        gil.UpdateUBOInstance(uboInstance, &ltw[i], sizeof(mat4x4), true);
         RenderPrimitive(0, 0, 0, meshPD->indiceCount);
     }
 }

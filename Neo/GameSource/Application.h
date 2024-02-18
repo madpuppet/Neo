@@ -23,6 +23,7 @@ public:
 
 protected:
 	StaticMeshRef m_vikingRoom;
+	MaterialRef m_vikingRoomMat;
 	View m_view;
 	vec3 m_cameraPYR = { 0,0,0 };
 	vec3 m_cameraPos = { 0,0,0 };

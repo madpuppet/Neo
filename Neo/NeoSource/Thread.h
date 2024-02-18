@@ -214,11 +214,12 @@ public:
 class WorkerFarmWorker : public Thread
 {
     GenericCallback m_task;
+    GenericCallback m_taskComplete;
 
 public:
-    WorkerFarmWorker(int guid, const string& name, GenericCallback& task) : m_task(task), Thread(guid, name) {}
+    WorkerFarmWorker(int guid, const string& name, GenericCallback task, GenericCallback taskComplete) : m_task(task), m_taskComplete(taskComplete), Thread(guid, name) {}
     ~WorkerFarmWorker() { StopAndWait(); }
-    virtual int Go() { m_task(); return 0; }
+    virtual int Go() { m_task(); m_taskComplete(); return 0; }
 };
 
 class WorkerFarm : public Thread
@@ -236,6 +237,9 @@ class WorkerFarm : public Thread
     // so on each single, look for a finished thread and join it/delete it
     Semaphore m_threadComplete;
 
+    // this semaphore stalls the intial processing of tasks
+    bool m_started = false;
+
     // maximum threads to have alive at any one time
     int m_maxThreads;
 
@@ -251,13 +255,13 @@ public:
         if (!m_terminate)
         {
             m_threadLock.Lock();
-            if (m_threads.size() >= m_maxThreads)
+            if (!m_started || m_threads.size() >= m_maxThreads)
             {
                 m_queuedTasks.push_back(task);
             }
             else
             {
-                auto thread = new WorkerFarmWorker(m_guid, m_name + "Worker", task);
+                auto thread = new WorkerFarmWorker(m_guid, m_name + "Worker", task, [this]() {m_threadComplete.Signal(); });
                 m_threads.push_back(thread);
                 thread->Start();
             }
@@ -276,6 +280,20 @@ public:
 
     virtual int Go()
     {
+        m_started = true;
+        GenericCallback onComplete = [this]() {m_threadComplete.Signal(); };
+
+        m_threadLock.Lock();
+        while (!m_queuedTasks.empty() && m_threads.size() < m_maxThreads)
+        {
+            auto task = m_queuedTasks.back();
+            m_queuedTasks.pop_back();
+            auto thread = new WorkerFarmWorker(0, m_name, task, onComplete);
+            m_threads.push_back(thread);
+            thread->Start();
+        }
+        m_threadLock.Release();
+
         // wait for a thread to finish
         m_threadComplete.Wait();
         while (!m_terminate)
@@ -296,8 +314,9 @@ public:
             {
                 auto task = m_queuedTasks.back();
                 m_queuedTasks.pop_back();
-                auto thread = new WorkerFarmWorker(0, m_name, task);
+                auto thread = new WorkerFarmWorker(0, m_name, task, onComplete);
                 m_threads.push_back(thread);
+                thread->Start();
             }
             m_threadLock.Release();
 

@@ -70,6 +70,8 @@ struct UniformBufferPlatformData
 	bool isDynamic=true;		// dynamic - means we are bound to the frame dynamic buffer and step through slices in that on each use
 	u32 size=0;			        // size of buffer (adjusted to alignment size)
 	u32 memOffset=-1;	        // current memoffset into shared memory - set to -1 so we can see if a buffer is used before initialising
+	u32 frameID=-1;				// dynamic - if frameID is out of date, we need to allocate an offset and copy 'data' from below
+	void* data=nullptr;			// current state of UBO data mirrored for dynamic buffers
 };
 UniformBufferPlatformData* UniformBufferPlatformData_Create(const struct UBOInfo &uboInfo, bool dynamic);
 void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData);

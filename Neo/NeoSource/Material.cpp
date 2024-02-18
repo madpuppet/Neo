@@ -5,7 +5,7 @@
 #include "ResourceLoadedManager.h"
 #include "ShaderManager.h"
 
-#define MATERIAL_VERSION 3
+#define MATERIAL_VERSION 4
 
 DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
 
@@ -16,11 +16,24 @@ Material::Material(const string& name) : Resource(name)
 	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Material, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
 }
 
-Material::Material(const string& name, Material *parent) : Resource(name)
-{
-	
-}
+Material::Material(const string& name, Material* parent) : Resource(name) {}
 
+void Material::SetUniform(const string& name, UniformType type, const void *data, bool flush)
+{
+	for (auto mbo : m_assetData->buffers)
+	{
+		for (auto& uniform : mbo->uniforms)
+		{
+			if (StringEqual(uniform.uboMember->name, name))
+			{
+				Assert(uniform.uboMember->type == type, STR("Type mismatch setting uniform {} in material {}", name, m_name));
+				GIL::Instance().UpdateUBOInstanceMember(mbo->uboInstance, uniform.uboMember->offset, data, uniform.uboMember->datasize, flush);
+				return;
+			}
+		}
+	}
+	Error(STR("uniform {} not found in material {}", name, m_name));
+}
 
 Material::~Material()
 {
@@ -318,6 +331,7 @@ MemBlock MaterialAssetData::AssetToMemory()
 	for (auto mbo : buffers)
 	{
 		stream.WriteString(mbo->uboInstance->ubo->structName);
+		stream.WriteBool(mbo->uboInstance->isDynamic);
 		stream.WriteU8((u8)mbo->uniforms.size());
 		for (auto &uniform : mbo->uniforms)
 		{
@@ -368,11 +382,12 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 	for (size_t i=0; i< bufferCount; i++)
 	{
 		string structName = stream.ReadString();
+		bool isDynamic = stream.ReadBool();
 
 		auto mbo = new MaterialBufferObject;
 		buffers.push_back(mbo);
 		mbo->uboInstance = new UBOInfoInstance;
-		mbo->uboInstance->isDynamic = false;
+		mbo->uboInstance->isDynamic = isDynamic;
 		mbo->uboInstance->ubo = ShaderManager::Instance().FindUBO(structName);
 		Assert(mbo->uboInstance->ubo, STR("Cannot find UBO {}", structName));
 

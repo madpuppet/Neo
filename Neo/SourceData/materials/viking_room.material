@@ -9,4 +9,3 @@ sampler: Albedo
 	wrap: repeat
 static_ubo: UBO_Material
 	blendColor: 1,1,1,1
-

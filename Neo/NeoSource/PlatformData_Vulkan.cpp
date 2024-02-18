@@ -147,13 +147,26 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     // create platform data for mbo's
     for (auto mbo : assetData->buffers)
     {
-        auto pd = UniformBufferPlatformData_Create(*mbo->uboInstance->ubo, false);
+        auto pd = UniformBufferPlatformData_Create(*mbo->uboInstance->ubo, mbo->uboInstance->isDynamic);
         mbo->uboInstance->platformData = pd;
-        for (auto &uniform : mbo->uniforms)
+        if (mbo->uboInstance->isDynamic)
+        {
+            mbo->uboInstance->platformData->data = new u8[mbo->uboInstance->ubo->size];
+            memset(mbo->uboInstance->platformData->data, 0, mbo->uboInstance->ubo->size);
+            for (auto& uniform : mbo->uniforms)
+            {
+                memcpy((u8*)mbo->uboInstance->platformData->data + uniform.uboMember->offset, uniform.data, uniform.uboMember->datasize);
+            }
+        }
+        else
         {
             for (int i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
             {
-                memcpy((u8*)pd->memoryMapped[i] + uniform.uboMember->offset, uniform.data, uniform.uboMember->datasize);
+                memset(pd->memoryMapped[i], 0, mbo->uboInstance->ubo->size);
+                for (auto& uniform : mbo->uniforms)
+                {
+                    memcpy((u8*)pd->memoryMapped[i] + uniform.uboMember->offset, uniform.data, uniform.uboMember->datasize);
+                }
             }
         }
     }
@@ -527,6 +540,9 @@ UniformBufferPlatformData* UniformBufferPlatformData_Create(const UBOInfo &uboIn
     if (dynamic)
     {
         GIL::Instance().createUniformBufferDynamic(platformData->buffer, platformData->memoryMapped);
+        platformData->memOffset = -1;
+        platformData->frameID = -1;
+        platformData->data = new u8[uboInfo.size];
     }
     else
     {

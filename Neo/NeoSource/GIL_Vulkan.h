@@ -141,10 +141,9 @@ public:
 
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
 
-	void UpdateUBOInstance(UBOInfoInstance* uboInstance, void* uboMem, u32 uboSize);
+	void UpdateUBOInstance(UBOInfoInstance* uboInstance, void* uboMem, u32 uboSize, bool updateBoundMaterial);
+	void UpdateUBOInstanceMember(UBOInfoInstance* uboInstance, u32 memberOffset, const void* data, u32 datasize, bool flush);
 
-	void SetViewMatrices(const mat4x4 &viewMat, const mat4x4 &projMat, const mat4x4& orthoMat);
-	void SetMaterialBlendColor(const vec4& blendColor);
 	void SetViewport(const rect &viewport, float minDepth, float maxDepth);
 	void SetScissor(const rect &scissorRect);
 	ivec2 GetFrameBufferSize() { return m_frameBufferSize; }
@@ -207,7 +206,8 @@ protected:
 	std::vector<VkSemaphore> m_imageAvailableSemaphores;
 	std::vector<VkSemaphore> m_renderFinishedSemaphores;
 	std::vector<VkFence> m_inFlightFences;
-	u32 m_currentFrame = 0;
+	u32 m_currentFrame = 0;		// this toggles 0 <-> 1  for driving double buffered structures
+	u32 m_uniqueFrameidx = 0;	// this just increments every frame so we can tell if a resource has marked as used this frame yet
 	bool m_framebufferResized = false;
 
 	static const int MaxDynamicUniformBufferMemory = 1024 * 1024;

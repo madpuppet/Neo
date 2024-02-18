@@ -8,8 +8,13 @@ DECLARE_MODULE(AssetManager, NeoModuleInitPri_AssetManager, NeoModulePri_None, N
 
 AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, "AssetManager", 64)
 {
+}
+
+void AssetManager::StartWork()
+{
 	m_assetTasks.Start();
 }
+
 
 void AssetManager::KillWorkerFarm()
 {

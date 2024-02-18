@@ -49,6 +49,7 @@ int RenderThread::Go()
 
 	// need these created before any other shader resources can create
 	ShaderManager::Instance().CreateInstances();
+	AssetManager::Instance().StartWork();
 
 	m_preDrawTaskLock.Lock();
 	vector<GenericCallback> tasks = std::move(m_preDrawTasks);
@@ -69,7 +70,7 @@ int RenderThread::Go()
 
 		// call all registered draw tasks
 		m_preDrawTaskLock.Lock();
-		vector<GenericCallback> tasks = std::move(m_preDrawTasks);
+		vector<GenericCallback> preDrawtasks = std::move(m_preDrawTasks);
 		m_preDrawTaskLock.Release();
 
 		// wait for draw fences to come in
@@ -78,7 +79,7 @@ int RenderThread::Go()
 		// signalling draw started allows the next update frame to begin
 		SignalDrawStarted();
 
-		for (auto& task : tasks)
+		for (auto& task : preDrawtasks)
 		{
 			task();
 		}
