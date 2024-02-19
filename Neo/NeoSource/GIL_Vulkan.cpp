@@ -69,8 +69,6 @@ void GIL::Startup()
     createDescriptorPool();
     createCommandBuffers();
     createSyncObjects();
-
-    m_vulkanInitialised.Signal();
 }
 
 void GIL::createFormatMappings()
@@ -218,14 +216,13 @@ void GIL::UpdateUBOInstanceMember(UBOInfoInstance* uboInstance, u32 memberOffset
     if (uboInstance->isDynamic)
     {
         memcpy((u8*)pd->data + memberOffset, data, datasize);
+        if (flush)
+            UpdateUBOInstance(uboInstance, uboInstance->platformData->data, uboInstance->ubo->size, true);
     }
     else
     {
         memcpy((u8*)pd->memoryMapped[m_currentFrame] + memberOffset, data, datasize);
     }
-
-    if (flush && uboInstance->isDynamic)
-        UpdateUBOInstance(uboInstance, uboInstance->platformData->data, uboInstance->ubo->size, true);
 }
 
 void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboSize, bool updateBoundMaterial)

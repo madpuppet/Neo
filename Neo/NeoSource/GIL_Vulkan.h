@@ -135,17 +135,25 @@ public:
 	// must be called on render thread
 	void RenderStaticMesh(class StaticMesh* mesh);
 
+	// render an array of static mesh instances
 	void RenderStaticMeshInstances(class StaticMesh* mesh, mat4x4 *ltw, u32 ltwCount);
-
-	void WaitTilInitialised() { m_vulkanInitialised.Wait(); }
 
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
 
+	// update the entire memory for a single ubo instance
 	void UpdateUBOInstance(UBOInfoInstance* uboInstance, void* uboMem, u32 uboSize, bool updateBoundMaterial);
+
+	// update a single ubo instance member
+	// set 'flush' to apply those changes if your not doing a series of updates
 	void UpdateUBOInstanceMember(UBOInfoInstance* uboInstance, u32 memberOffset, const void* data, u32 datasize, bool flush);
 
+	// override current graphics pipeline viewport
 	void SetViewport(const rect &viewport, float minDepth, float maxDepth);
+
+	// override current graphics pipeline scissor rectangle
 	void SetScissor(const rect &scissorRect);
+
+	// query the current size of the frame buffer
 	ivec2 GetFrameBufferSize() { return m_frameBufferSize; }
 
 	// TODO: should do a Platform Interface Layer for misc services not graphics related
@@ -164,7 +172,6 @@ protected:
 
 	SDL_Window* m_window;
 	SDL_Joystick* m_joystick;
-	Semaphore m_vulkanInitialised;
 	ivec2 m_frameBufferSize{ 1280,720 };
 
 	VkInstance m_instance;
@@ -192,11 +199,6 @@ protected:
 	VkImage m_depthImage;
 	VkDeviceMemory m_depthImageMemory;
 	VkImageView m_depthImageView;
-
-	VkBuffer m_vertexBuffer;
-	VkDeviceMemory m_vertexBufferMemory;
-	VkBuffer m_indexBuffer;
-	VkDeviceMemory m_indexBufferMemory;
 
 	Material* m_boundMaterial;
 
@@ -272,11 +274,9 @@ protected:
 	VkCommandBuffer beginSingleTimeCommands();
 	void endSingleTimeCommands(VkCommandBuffer commandBuffer);
 	void createDescriptorPool();
-	void createDescriptorSets();
 	void createCommandBuffers();
 	void createSyncObjects();
 	void recreateSwapChain();
-	void recordCommandBuffer(VkCommandBuffer commandBuffer, uint32_t imageIndex);
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 
 	// these methods are used by external functions like Texture Platform creation
@@ -285,20 +285,21 @@ public:
 	VkCommandPool CommandPool() { return m_commandPool; }
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
 
+	// these used for UBO buffer creation
+	// dynamic UBOs just share shader memory over a frame and must copy over the entire UBO memory on any change,
+	//   whereas static UBOs just double buffer a block of memory and assume it stays static during a single frame
 	void createUniformBuffer(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<VkDeviceMemory, MAX_FRAMES_IN_FLIGHT>& memory,
 		array<void*, MAX_FRAMES_IN_FLIGHT>& mapped, u32 size);
 	void createUniformBufferDynamic(array<VkBuffer, MAX_FRAMES_IN_FLIGHT>& buffer, array<void*, MAX_FRAMES_IN_FLIGHT>& mapped);
 
+	// these helper functions all used for texture platform data creations
 	bool createTextureSampler(VkFilter minFilter, VkFilter maxFilter, VkSamplerMipmapMode mipMapFilter, VkSamplerAddressMode addressingU,
 		VkSamplerAddressMode addressingV, VkCompareOp compareOp, VkSampler& sampler);
 	void createImage(u32 width, u32 height, u32 mipLevels, VkFormat format, VkImageTiling tiling, VkImageUsageFlags usage, VkMemoryPropertyFlags properties, VkImage& image, VkDeviceMemory& imageMemory);
-
 	void transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels);
 	void createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
 	void createDynamicBuffer(VkDeviceSize bufferSize, VkDeviceSize memorySize, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer& buffer, VkDeviceMemory& bufferMemory);
-
 	void copyMemoryToBuffer(VkDeviceMemory bufferMemory, void* memory, size_t size);
-
 	void copyBuffer(VkBuffer srcBuffer, VkBuffer dstBuffer, VkDeviceSize size);
 	void copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height);
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
