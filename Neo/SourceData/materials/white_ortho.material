@@ -1,6 +1,6 @@
 shader: standard_ortho
 blend: opaque
-cull: back
+cull: none
 zread: false
 zwrite: false
 sampler: Albedo

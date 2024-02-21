@@ -69,6 +69,9 @@ void GIL::Startup()
     createDescriptorPool();
     createCommandBuffers();
     createSyncObjects();
+#if PROFILING_ENABLED
+    createTimeQueries();
+#endif
 }
 
 void GIL::createFormatMappings()
@@ -175,6 +178,8 @@ void GIL::BeginFrame()
     {
         Error("failed to begin recording command buffer!");
     }
+
+    vkCmdResetQueryPool(commandBuffer, m_queryPool, 0, MaxProfileTimestamps);
 
     // start render pass == TODO: this should be a specific "setup render pass" function
     VkRenderPassBeginInfo renderPassInfo{};
@@ -529,6 +534,7 @@ void GIL::createInstance() {
     createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
     createInfo.ppEnabledExtensionNames = extensions.data();
 
+    const void** nextCreate = &createInfo.pNext;
     VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo{};
     if (m_enableValidationLayers) {
         createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
@@ -536,12 +542,25 @@ void GIL::createInstance() {
 
         populateDebugMessengerCreateInfo(debugCreateInfo);
         createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT*)&debugCreateInfo;
+        nextCreate = &debugCreateInfo.pNext;
     }
     else {
         createInfo.enabledLayerCount = 0;
-
         createInfo.pNext = nullptr;
     }
+
+#if 0
+#if PROFILING_ENABLED
+    // Enable the hostQueryReset feature
+    VkPhysicalDeviceFeatures2 features2 = {};
+    features2.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_FEATURES_2;
+    VkPhysicalDeviceHostQueryResetFeaturesEXT hostQueryResetFeatures = {};
+    hostQueryResetFeatures.sType = VK_STRUCTURE_TYPE_PHYSICAL_DEVICE_HOST_QUERY_RESET_FEATURES_EXT;
+    hostQueryResetFeatures.hostQueryReset = VK_TRUE;
+    features2.pNext = &hostQueryResetFeatures;
+    *nextCreate = &features2;
+#endif
+#endif
 
     if (vkCreateInstance(&createInfo, nullptr, &m_instance) != VK_SUCCESS) 
     {
@@ -729,6 +748,7 @@ VkSurfaceFormatKHR GIL::chooseSwapSurfaceFormat(const std::vector<VkSurfaceForma
 
 VkPresentModeKHR GIL::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
 {
+#if !PROFILING_ENABLED
     for (const auto& availablePresentMode : availablePresentModes)
     {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
@@ -736,6 +756,7 @@ VkPresentModeKHR GIL::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>&
             return availablePresentMode;
         }
     }
+#endif
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 
@@ -1685,3 +1706,31 @@ void GIL::UnmapGeometryBufferMemory(NeoGeometryBuffer* buffer)
         vkUnmapMemory(m_device, buffer->indexBufferMemory);
 }
 
+#if PROFILING_ENABLED
+void GIL::createTimeQueries()
+{
+    // Create query pool2
+    VkQueryPoolCreateInfo createInfo{};
+    createInfo.sType = VK_STRUCTURE_TYPE_QUERY_POOL_CREATE_INFO;
+    createInfo.queryType = VK_QUERY_TYPE_TIMESTAMP;
+    createInfo.queryCount = MaxProfileTimestamps; // Two timestamps per query
+    vkCreateQueryPool(m_device, &createInfo, nullptr, &m_queryPool);
+}
+u32 GIL::AddGpuTimeQuery()
+{
+    auto& commandBuffer = m_commandBuffers[m_currentFrame];
+    vkCmdWriteTimestamp(commandBuffer, VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT, m_queryPool, m_queryIdx);
+    return m_queryIdx++;
+}
+
+void GIL::GetGpuTimeQueryResults(u64*& buffer, int& count)
+{
+    if (m_queryIdx > 0)
+    {
+        vkGetQueryPoolResults(m_device, m_queryPool, 0, m_queryIdx, sizeof(uint64_t) * m_queryIdx, m_queryResults, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+    }
+    buffer = m_queryResults;
+    count = m_queryIdx;
+    m_queryIdx = 0;
+}
+#endif

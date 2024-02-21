@@ -26,6 +26,8 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
+#define PROFILING_ENABLED 1
+
 //===============================================================
 //========== WINDOWS ============================================
 //===============================================================
@@ -174,5 +176,6 @@ inline void Error(const string& msg) {}
 #include "CmdLineVar.h"
 #include "Log.h"
 #include "GIL_Common.h"
+#include "Profiler.h"
 
 extern const char* GAME_NAME;

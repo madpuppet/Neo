@@ -21,6 +21,7 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_ShaderManager,
 	NeoModuleInitPri_DefDynamicRenderer,
 	NeoModuleInitPri_ImmDynamicRenderer,
+	NeoModuleInitPri_Profiler,
 
 	NeoModuleInitPri_Application = 1000
 };

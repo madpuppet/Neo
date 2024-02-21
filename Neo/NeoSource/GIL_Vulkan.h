@@ -164,6 +164,12 @@ public:
 protected:
 	void WaitForMemory();
 
+#if PROFILING_ENABLED
+	static const int MaxProfileTimestamps = 2000;
+	u32 m_profile_idx = 0;
+	u64 m_profile_timestamps[MaxProfileTimestamps];
+#endif
+
 #ifdef NDEBUG
 	const bool m_enableValidationLayers = false;
 #else
@@ -189,6 +195,13 @@ protected:
 	vector<VkImageView> m_swapChainImageViews;
 	vector<VkFramebuffer> m_swapChainFramebuffers;
 	u32 m_frameSwapImage;
+
+#if PROFILING_ENABLED
+	static const int MaxQueries = 5000;
+	VkQueryPool m_queryPool;
+	u64 m_queryResults[MaxQueries];
+	u32 m_queryIdx = 0;
+#endif
 
 	hashtable<TexturePixelFormat, VkFormat> m_neoFormatToVulkanFormat;
 
@@ -305,6 +318,12 @@ public:
 	VkImageView createImageView(VkImage image, VkFormat format, VkImageAspectFlags aspectFlags, uint32_t mipLevels);
 	VkRenderPass& GetRenderPass() { return m_renderPass; };
 	void generateMipmaps(VkImage image, VkFormat imageFormat, int32_t texWidth, int32_t texHeight, uint32_t mipLevels);
+
+#if PROFILING_ENABLED
+	void createTimeQueries();
+	u32 AddGpuTimeQuery();
+	void GetGpuTimeQueryResults(u64*& buffer, int& count);
+#endif
 };
 
 

@@ -8,7 +8,7 @@
 
 #define BITMAPFONT_VERSION 2
 
-CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", false);
+CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", true);
 
 DECLARE_MODULE(BitmapFontFactory, NeoModuleInitPri_BitmapFontFactory, NeoModulePri_None, NeoModulePri_None);
 

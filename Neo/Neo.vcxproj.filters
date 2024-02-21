@@ -34,6 +34,9 @@
     <Filter Include="NeoSource\FileSystem">
       <UniqueIdentifier>{0ec49fed-f5ea-43ad-b392-01ba523ee692}</UniqueIdentifier>
     </Filter>
+    <Filter Include="NeoSource\Debugging">
+      <UniqueIdentifier>{9a7e95be-a922-4fd8-9852-f3154ac9f740}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\SDL_config.h.cmake">
@@ -1517,12 +1520,6 @@
     <ClInclude Include="NeoSource\PixelShader.h">
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
-    <ClInclude Include="NeoSource\Log.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="NeoSource\CmdLineVar.h">
-      <Filter>NeoSource</Filter>
-    </ClInclude>
     <ClInclude Include="NeoSource\DefDynamicRenderer.h">
       <Filter>NeoSource\Rendering</Filter>
     </ClInclude>
@@ -1537,6 +1534,15 @@
     </ClInclude>
     <ClInclude Include="NeoSource\ShaderManager.h">
       <Filter>NeoSource\Rendering</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Log.h">
+      <Filter>NeoSource\Debugging</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\CmdLineVar.h">
+      <Filter>NeoSource\Debugging</Filter>
+    </ClInclude>
+    <ClInclude Include="NeoSource\Profiler.h">
+      <Filter>NeoSource\Debugging</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1657,12 +1663,6 @@
     <ClCompile Include="NeoSource\TimeManager.cpp">
       <Filter>NeoSource</Filter>
     </ClCompile>
-    <ClCompile Include="NeoSource\Log.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
-    <ClCompile Include="NeoSource\CmdLineVar.cpp">
-      <Filter>NeoSource</Filter>
-    </ClCompile>
     <ClCompile Include="NeoSource\DefDynamicRenderer.cpp">
       <Filter>NeoSource\Rendering</Filter>
     </ClCompile>
@@ -1677,6 +1677,15 @@
     </ClCompile>
     <ClCompile Include="NeoSource\ShaderManager.cpp">
       <Filter>NeoSource\Rendering</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Log.cpp">
+      <Filter>NeoSource\Debugging</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\CmdLineVar.cpp">
+      <Filter>NeoSource\Debugging</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\Profiler.cpp">
+      <Filter>NeoSource\Debugging</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -33,11 +33,11 @@ Application::Application()
 	m_cameraPYR = { DegToRad(45.0f), 0, 0};
 	m_cameraPos = { 0, 1.5f, -1.0f };
 
-	for (int x = 0; x < 64; x++)
+	for (int x = 0; x < roomGridSize; x++)
 	{
-		for (int y = 0; y < 64; y++)
+		for (int y = 0; y < roomGridSize; y++)
 		{
-			u32 idx = x + y * 64;
+			u32 idx = x + y * roomGridSize;
 			m_roomInstances[idx] = mat4x4(1);
 			m_roomInstances[idx][3][0] = x*1.44f;
 			m_roomInstances[idx][3][2] = y*1.44f;
@@ -66,6 +66,8 @@ Application::~Application()
 
 void Application::Update()
 {
+//	PROFILE_CPU("App::Update");
+
 	float dt = (float)NeoTimeDelta;
 	dt = Min(dt, 0.1f);
 
@@ -74,12 +76,15 @@ void Application::Update()
 	float yaw = GIL::Instance().GetJoystickAxis(2) * dt;
 	float pitch = GIL::Instance().GetJoystickAxis(3) * dt;
 
-	for (auto& bee : m_bees)
 	{
-		bee.pos += bee.vel * dt;
-		float range = glm::length(bee.pos);
-		if (range > 20.0f)
-			bee.vel = -bee.pos*0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
+		PROFILE_CPU("BEES");
+		for (auto& bee : m_bees)
+		{
+			bee.pos += bee.vel * dt;
+			float range = glm::length(bee.pos);
+			if (range > 20.0f)
+				bee.vel = -bee.pos * 0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
+		}
 	}
 
 	m_cameraPYR.x += pitch;
@@ -106,35 +111,38 @@ void Application::Update()
 	time += dt;
 	m_beeScale = sinf(time) * 0.1f + 0.11f;
 
-	auto& ddr = DefDynamicRenderer::Instance();
-	if (m_particleMat->IsLoaded())
 	{
-		ddr.BeginRender(0);
-		ddr.StartPrimitive(PrimType_TriangleList);
-		ddr.UseMaterial(m_particleMat);
-		float width = sinf(time) * 0.05f + 0.05f;
-		vec3 right = vec3(camMatrix[0] * width);
-		vec3 up = vec3(camMatrix[1] * width);
-		for (int i = 0; i < 20000; i++)
+		PROFILE_CPU("PARTICLES");
+		auto& ddr = DefDynamicRenderer::Instance();
+		if (m_particleMat->IsLoaded())
 		{
-			float rnd = (rand() & 0xff) / 2550.0f;
-			vec3 pos;
-			pos.x = sinf(time * 0.1f + i * 0.111f) + cosf(time * 0.1f + i * 0.111f) + rnd;
-			pos.y = sinf(time * 0.1f + i * 0.112f) + cosf(time * 0.1f + i * 0.112f) + rnd;
-			pos.z = sinf(time * 0.1f + i * 0.113f) + cosf(time * 0.1f + i * 0.113f) + rnd;
-			vec3 pos1 = pos + right;
-			vec3 pos2 = pos - right;
-			vec3 pos3 = pos + up;
-			vec2 uv1{ 0,0 };
-			vec2 uv2{ 1,0 };
-			vec2 uv3{ 0.5f,1.0f };
-			u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
-			ddr.AddVert(pos1, uv1, col);
-			ddr.AddVert(pos2, uv2, col);
-			ddr.AddVert(pos3, uv3, col);
+			ddr.BeginRender(0);
+			ddr.StartPrimitive(PrimType_TriangleList);
+			ddr.UseMaterial(m_particleMat);
+			float width = sinf(time) * 0.05f + 0.05f;
+			vec3 right = vec3(camMatrix[0] * width);
+			vec3 up = vec3(camMatrix[1] * width);
+			for (int i = 0; i < 20000; i++)
+			{
+				float rnd = (rand() & 0xff) / 2550.0f;
+				vec3 pos;
+				pos.x = sinf(time * 0.1f + i * 0.111f) + cosf(time * 0.1f + i * 0.111f) + rnd;
+				pos.y = sinf(time * 0.1f + i * 0.112f) + cosf(time * 0.1f + i * 0.112f) + rnd;
+				pos.z = sinf(time * 0.1f + i * 0.113f) + cosf(time * 0.1f + i * 0.113f) + rnd;
+				vec3 pos1 = pos + right;
+				vec3 pos2 = pos - right;
+				vec3 pos3 = pos + up;
+				vec2 uv1{ 0,0 };
+				vec2 uv2{ 1,0 };
+				vec2 uv3{ 0.5f,1.0f };
+				u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
+				ddr.AddVert(pos1, uv1, col);
+				ddr.AddVert(pos2, uv2, col);
+				ddr.AddVert(pos3, uv3, col);
+			}
+			ddr.EndPrimitive();
+			ddr.EndRender();
 		}
-		ddr.EndPrimitive();
-		ddr.EndRender();
 	}
 }
 
@@ -144,6 +152,8 @@ void Application::Draw()
 	if (!m_vikingRoom->IsLoaded())
 		return;
 
+//	PROFILE_GPU("App::Draw");
+
 	m_view.Apply();
 
 	auto& gil = GIL::Instance();
@@ -152,45 +162,54 @@ void Application::Draw()
 	modelData.model = mat4x4(1);
 	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
 
-	vec4 col1{ 1.0f, 0.0f, 0.0f, 1.0f };
-	m_vikingRoomMat->SetUniform_vec4("blendColor", col1, true);
-	gil.RenderStaticMeshInstances(m_vikingRoom, m_roomInstances, 64 * 32);
+	{
+		PROFILE_GPU("ROOMS");
+		vec4 col1{ 1.0f, 0.0f, 0.0f, 1.0f };
+		m_vikingRoomMat->SetUniform_vec4("blendColor", col1, true);
+		gil.RenderStaticMeshInstances(m_vikingRoom, m_roomInstances, roomGridSize * roomGridSize / 2);
 
-	vec4 col2{ 0.0f, 0.0f, 1.0f, 1.0f };
-	m_vikingRoomMat->SetUniform_vec4("blendColor", col2, true);
+		vec4 col2{ 0.0f, 0.0f, 1.0f, 1.0f };
+		m_vikingRoomMat->SetUniform_vec4("blendColor", col2, true);
 
-	gil.RenderStaticMeshInstances(m_vikingRoom, &m_roomInstances[64*32], 64 * 32);
+		gil.RenderStaticMeshInstances(m_vikingRoom, &m_roomInstances[roomGridSize * roomGridSize / 2], roomGridSize * roomGridSize / 2);
+	}
 
 	modelData.model = mat4x4(1);
 	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
 
-	auto& ddr = DefDynamicRenderer::Instance();
-	ddr.Render(0xffff);
-
-	auto& idr = ImmDynamicRenderer::Instance();
-	idr.BeginRender();
-	idr.StartPrimitive(PrimType_TriangleList);
-	idr.UseMaterial(m_beeMat);
-	vec3 right = m_cameraMatrix[0] * m_beeScale;
-	vec3 up = m_cameraMatrix[1] * m_beeScale;
-	u32 beeCol = 0xffffffff;
-	for (auto& bee : m_bees)
 	{
-		vec3 bl = bee.pos - right - up;
-		vec3 br = bee.pos + right - up;
-		vec3 tl = bee.pos - right + up;
-		vec3 tr = bee.pos + right + up;
-
-		idr.AddVert(br, { 1,1 }, beeCol);
-		idr.AddVert(bl, { 0,1 }, beeCol);
-		idr.AddVert(tl, { 0,0 }, beeCol);
-
-		idr.AddVert(br, { 1,1 }, beeCol);
-		idr.AddVert(tl, { 0,0 }, beeCol);
-		idr.AddVert(tr, { 1,0 }, beeCol);
+		PROFILE_GPU("PARTICLES");
+		auto& ddr = DefDynamicRenderer::Instance();
+		ddr.Render(0xffff);
 	}
-	idr.EndPrimitive();
-	idr.EndRender();
+
+	{
+		PROFILE_GPU("BEES");
+		auto& idr = ImmDynamicRenderer::Instance();
+		idr.BeginRender();
+		idr.StartPrimitive(PrimType_TriangleList);
+		idr.UseMaterial(m_beeMat);
+		vec3 right = m_cameraMatrix[0] * m_beeScale;
+		vec3 up = m_cameraMatrix[1] * m_beeScale;
+		u32 beeCol = 0xffffffff;
+		for (auto& bee : m_bees)
+		{
+			vec3 bl = bee.pos - right - up;
+			vec3 br = bee.pos + right - up;
+			vec3 tl = bee.pos - right + up;
+			vec3 tr = bee.pos + right + up;
+
+			idr.AddVert(br, { 1,1 }, beeCol);
+			idr.AddVert(bl, { 0,1 }, beeCol);
+			idr.AddVert(tl, { 0,0 }, beeCol);
+
+			idr.AddVert(br, { 1,1 }, beeCol);
+			idr.AddVert(tl, { 0,0 }, beeCol);
+			idr.AddVert(tr, { 1,0 }, beeCol);
+		}
+		idr.EndPrimitive();
+		idr.EndRender();
+	}
 
 	if (m_font->IsLoaded())
 	{

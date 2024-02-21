@@ -76,6 +76,8 @@ int RenderThread::Go()
 		// wait for draw fences to come in
 		gil.FrameWait();
 
+		PROFILE_FRAME_SYNC();
+
 		// signalling draw started allows the next update frame to begin
 		SignalDrawStarted();
 
@@ -91,6 +93,8 @@ int RenderThread::Go()
 		{
 			item.task();
 		}
+
+		PROFILE_RENDER();
 
 		gil.EndFrame();
 	}
