@@ -28,35 +28,6 @@ enum SROStage
 };
 extern hashtable<string, SROStage> SROStage_Lookup;
 
-enum SAType
-{
-	SAType_f32,
-	SAType_i32,
-	SAType_vec2,
-	SAType_vec3,
-	SAType_vec4,
-	SAType_ivec2,
-	SAType_ivec3,
-	SAType_ivec4
-};
-extern hashtable<string, SAType> SAType_Lookup;
-extern hashtable<SAType, string> SATypeToString_Lookup;
-
-enum SAFmt
-{
-	SAFmt_R32_SFLOAT,
-	SAFmt_R32G32_SFLOAT,
-	SAFmt_R32G32B32_SFLOAT,
-	SAFmt_R32G32B32A32_SFLOAT,
-	SAFmt_R32_SINT,
-	SAFmt_R32G32_SINT,
-	SAFmt_R32G32B32_SINT,
-	SAFmt_R32G32B32A32_SINT,
-	SAFmt_R8G8B8A8_UNORM
-};
-extern hashtable<string, SAFmt> SAFmt_Lookup;
-extern hashtable<SAType, SAFmt> SATypeToSAFmt_Lookup;
-
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk
 struct ShaderAssetData : public AssetData
@@ -85,11 +56,13 @@ public:
 	struct ShaderAttribute
 	{
 		string name;
-		SAType type;			// f32, i32, vec2, vec3, vec4, ivec2, ivec3, ivec4
-		SAFmt  fmt;				// 8bit? 32bit? UNORM?
+		VertAttribType type;			// f32, i32, vec2, vec3, vec4, ivec2, ivec3, ivec4
 		u32 binding;
 	};
-	vector<ShaderAttribute> vertexAttributes;
+	
+	string inputAttributesName;
+	InputAttributesDescription* iad = nullptr;
+
 	vector<ShaderAttribute> interpolants;
 	vector<ShaderAttribute> fragmentOutputs;
 };

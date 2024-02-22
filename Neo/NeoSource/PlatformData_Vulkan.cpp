@@ -554,4 +554,28 @@ void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData)
 {
 }
 
+IADPlatformData* IADPlatformData_Create(InputAttributesDescription* iad)
+{
+    auto platformData = new IADPlatformData;
+
+    for (auto& binding : iad->bindings)
+    {
+        VkVertexInputBindingDescription bindingDescription{};
+        bindingDescription.binding = binding.binding;
+        bindingDescription.inputRate = binding.bindingIsPerInstance ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
+        platformData->bindingDescriptions.push_back(bindingDescription);
+    }
+
+    for (auto& attrib : iad->attributes)
+    {
+        VkVertexInputAttributeDescription attributeDescription{};
+        attributeDescription.binding = attrib.binding;
+        attributeDescription.location = attrib.location;
+        attributeDescription.format = VertexFormatToVk(attrib.format);
+        attributeDescription.offset = attrib.offset;
+        platformData->attributeDescriptions.push_back(attributeDescription);
+    }
+
+    return platformData;
+}
 

@@ -18,6 +18,10 @@
 #include "Thread.h"
 #include "Texture.h"
 #include "MathUtils.h"
+#include "ShaderManager.h"
+
+VkFormat VertexFormatToVk(VertexFormat vf);
+string VertexFormatToString(VertexFormat vf);
 
 struct Vertex {
 	glm::vec3 pos;

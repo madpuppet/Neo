@@ -51,6 +51,16 @@ void GIL::StartupMainThread()
     m_joystick = SDL_JoystickOpen(0);
 }
 
+static VkFormat s_VertexFormatToVk[] =
+{
+    VK_FORMAT_R8G8B8A8_UNORM,
+    VK_FORMAT_R32G32_SFLOAT,
+    VK_FORMAT_R32G32B32_SFLOAT
+};
+VkFormat VertexFormatToVk(VertexFormat vf) { return s_VertexFormatToVk[vf]; }
+static string s_VertexFormatToString[] = { "vec4", "vec2", "vec3" };
+string VertexFormatToString(VertexFormat vf) { return s_VertexFormatToString[vf]; }
+
 void GIL::Startup()
 {
     createInstance();
@@ -179,7 +189,9 @@ void GIL::BeginFrame()
         Error("failed to begin recording command buffer!");
     }
 
+#if PROFILE_ENABLED
     vkCmdResetQueryPool(commandBuffer, m_queryPool, 0, MaxProfileTimestamps);
+#endif
 
     // start render pass == TODO: this should be a specific "setup render pass" function
     VkRenderPassBeginInfo renderPassInfo{};

@@ -76,3 +76,10 @@ struct UniformBufferPlatformData
 UniformBufferPlatformData* UniformBufferPlatformData_Create(const struct UBOInfo &uboInfo, bool dynamic);
 void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData);
 
+struct IADPlatformData
+{
+	vector<VkVertexInputBindingDescription> bindingDescriptions;
+	vector<VkVertexInputAttributeDescription> attributeDescriptions;
+};
+IADPlatformData* IADPlatformData_Create(struct InputAttributesDescription *iad);
+

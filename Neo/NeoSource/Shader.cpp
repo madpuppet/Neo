@@ -10,14 +10,10 @@
 #include <fstream>
 #include <cstdlib>
 
-#define SHADER_VERSION 1
+#define SHADER_VERSION 5
 
 hashtable<string, SROType> SROType_Lookup;
 hashtable<string, SROStage> SROStage_Lookup;
-hashtable<string, SAType> SAType_Lookup;
-hashtable<SAType, string> SATypeToString_Lookup;
-hashtable<string, SAFmt> SAFmt_Lookup;
-hashtable<SAType, SAFmt> SATypeToSAFmt_Lookup;
 
 bool CompileShader(MemBlock srcBlock, MemBlock& spvBlock, AssetType assetType);
 
@@ -42,21 +38,11 @@ void ParseAttributes(vector<ShaderAssetData::ShaderAttribute> &attribs, stringli
 {
 	if (tokens.size() >= 3)
 	{
-		string saTypeStr = tokens[1];
+		string vertAttribTypeStr = tokens[1];
 		string name = tokens[2];
-		SAType saType = SAType_Lookup[saTypeStr];
-		SAFmt saFmt;
-		if (tokens.size() >= 5)
-		{
-			string fmtStr = tokens[3];
-			saFmt = SAFmt_Lookup[fmtStr];
-		}
-		else
-		{
-			saFmt = SATypeToSAFmt_Lookup[saType];
-		}
+		VertAttribType vertAttribType = VertAttribType_Lookup[vertAttribTypeStr];
 		int binding = (int)attribs.size();
-		attribs.emplace_back(name, saType, saFmt, binding);
+		attribs.emplace_back(name, vertAttribType, binding);
 	}
 	else
 	{
@@ -81,9 +67,8 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 			continue;
 
 		// get the SRO objects... (ubo, sampler, ubod, sbo)
-		string structName = std::move(tokens[0]);
-		auto uboInfo = sm.FindUBO(structName);
-		bool isSampler = StringEqual(structName, "Sampler");
+		auto uboInfo = sm.FindUBO(tokens[0]);
+		bool isSampler = StringEqual(tokens[0], "Sampler");
 		if (uboInfo || isSampler)
 		{
 			Assert(tokens.size() > 6, "Not enough tokens for a UBO declaration!");
@@ -111,16 +96,16 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 				stageMask = SROStage_Vertex | SROStage_Fragment;
 
 			SROType type = uboInfo ? SROType_UBO : SROType_Sampler;
-			SROs.emplace_back(structName, varName, type, sroSet, sroBinding, stageMask, uboInfo);
+			SROs.emplace_back(tokens[0], varName, type, sroSet, sroBinding, stageMask, uboInfo);
 		}
 
 		// VS_IN <type> <name>(<binding>)
 		else if (tokens[0] == "VS_IN")
 		{
-			if (tokens.size() >= 3)
-			{
-				ParseAttributes(vertexAttributes, tokens);
-			}
+			Assert(tokens.size() >= 2, "Not enough tokens!");
+			inputAttributesName = tokens[1];
+			iad = ShaderManager::Instance().FindIAD(inputAttributesName);
+			Assert(iad, STR("Cannot find input attributes {}", inputAttributesName));
 		}
 		else if (tokens[0] == "VS_TO_FS")
 		{
@@ -203,16 +188,16 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 	}
 
 	// output vertex shader attributes
-	for (auto& attrib : vertexAttributes)
+	for (auto& attrib : iad->attributes)
 	{
-		string attribType = SATypeToString_Lookup[attrib.type];
-		vertOutputFile << std::format("layout(location = {}) in {} {};\n", attrib.binding, attribType, attrib.name);
+		string attribType = VertexFormatToString(attrib.format);
+		vertOutputFile << std::format("layout(location = {}) in {} {};\n", attrib.location, attribType, attrib.name);
 	}
 
 	// output interpolants
 	for (auto& attrib : interpolants)
 	{
-		string attribType = SATypeToString_Lookup[attrib.type];
+		string attribType = VertAttribTypeToString_Lookup[attrib.type];
 		vertOutputFile << std::format("layout(location = {}) out {} {};\n", attrib.binding, attribType, attrib.name);
 		fragOutputFile << std::format("layout(location = {}) in {} {};\n", attrib.binding, attribType, attrib.name);
 	}
@@ -220,7 +205,7 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 	// output fragment shader outs
 	for (auto& attrib : fragmentOutputs)
 	{
-		string attribType = SATypeToString_Lookup[attrib.type];
+		string attribType = VertAttribTypeToString_Lookup[attrib.type];
 		fragOutputFile << std::format("layout(location = {}) out {} {};\n", attrib.binding, attribType, attrib.name);
 	}
 
@@ -275,7 +260,6 @@ void WriteAttributes(Serializer& stream, vector<ShaderAssetData::ShaderAttribute
 	{
 		stream.WriteString(attrib.name);
 		stream.WriteU32(attrib.type);
-		stream.WriteU32(attrib.fmt);
 		stream.WriteU32(attrib.binding);
 	}
 }
@@ -288,8 +272,7 @@ void ReadAttributes(Serializer& stream, vector<ShaderAssetData::ShaderAttribute>
 	{
 		ShaderAssetData::ShaderAttribute attrib;
 		attrib.name = stream.ReadString();
-		attrib.type = (SAType)stream.ReadU32();
-		attrib.fmt = (SAFmt)stream.ReadU32();
+		attrib.type = (VertAttribType)stream.ReadU32();
 		attrib.binding = stream.ReadU32();
 	}
 }
@@ -311,7 +294,8 @@ MemBlock ShaderAssetData::AssetToMemory()
 		stream.WriteU32(sro.stageMask);
 	}
 
-	WriteAttributes(stream, vertexAttributes);
+	stream.WriteString(inputAttributesName);
+
 	WriteAttributes(stream, interpolants);
 	WriteAttributes(stream, fragmentOutputs);
 
@@ -356,7 +340,9 @@ bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 	auto sortFunc = [](const ShaderResourceObjectInfo& a, const ShaderResourceObjectInfo& b) { return (a.set < b.set) || (a.binding < b.binding); };
 	std::sort(SROs.begin(), SROs.end(), sortFunc);
 
-	ReadAttributes(stream, vertexAttributes);
+	inputAttributesName = stream.ReadString();
+	iad = ShaderManager::Instance().FindIAD(inputAttributesName);
+
 	ReadAttributes(stream, interpolants);
 	ReadAttributes(stream, fragmentOutputs);
 
@@ -405,44 +391,6 @@ ShaderFactory::ShaderFactory()
 	SROStage_Lookup["Geometry"] = SROStage_Geometry;
 	SROStage_Lookup["Vertex"] = SROStage_Vertex;
 	SROStage_Lookup["Fragment"] = SROStage_Fragment;
-
-	SAType_Lookup["f32"] = SAType_f32;
-	SAType_Lookup["i32"] = SAType_i32;
-	SAType_Lookup["vec2"] = SAType_vec2;
-	SAType_Lookup["vec3"] = SAType_vec3;
-	SAType_Lookup["vec4"] = SAType_vec4;
-	SAType_Lookup["ivec2"] = SAType_ivec2;
-	SAType_Lookup["ivec3"] = SAType_ivec3;
-	SAType_Lookup["ivec4"] = SAType_ivec4;
-
-	
-	SATypeToString_Lookup[SAType_f32] = "f32";
-	SATypeToString_Lookup[SAType_i32] = "i32";
-	SATypeToString_Lookup[SAType_vec2] = "vec2";
-	SATypeToString_Lookup[SAType_vec3] = "vec3";
-	SATypeToString_Lookup[SAType_vec4] = "vec4";
-	SATypeToString_Lookup[SAType_ivec2] = "ivec2";
-	SATypeToString_Lookup[SAType_ivec3] = "ivec3";
-	SATypeToString_Lookup[SAType_ivec4] = "ivec4";
-
-	SAFmt_Lookup["R32_SFLOAT"] = SAFmt_R32_SFLOAT;
-	SAFmt_Lookup["R32G32_SFLOAT"] = SAFmt_R32G32_SFLOAT;
-	SAFmt_Lookup["R32G32B32_SFLOAT"] = SAFmt_R32G32B32_SFLOAT;
-	SAFmt_Lookup["R32G32B32A32_SFLOAT"] = SAFmt_R32G32B32A32_SFLOAT;
-	SAFmt_Lookup["R32_SINT"] = SAFmt_R32_SINT;
-	SAFmt_Lookup["R32G32_SINT"] = SAFmt_R32G32_SINT;
-	SAFmt_Lookup["R32G32B32_SINT"] = SAFmt_R32G32B32_SINT;
-	SAFmt_Lookup["R32G32B32A32_SINT"] = SAFmt_R32G32B32A32_SINT;
-	SAFmt_Lookup["R8G8B8A8_UNORM"] = SAFmt_R8G8B8A8_UNORM;
-
-	SATypeToSAFmt_Lookup[SAType_f32] = SAFmt_R32_SFLOAT;
-	SATypeToSAFmt_Lookup[SAType_i32] = SAFmt_R32_SINT;
-	SATypeToSAFmt_Lookup[SAType_vec2] = SAFmt_R32G32_SFLOAT;
-	SATypeToSAFmt_Lookup[SAType_vec3] = SAFmt_R32G32B32_SFLOAT;
-	SATypeToSAFmt_Lookup[SAType_vec4] = SAFmt_R32G32B32A32_SFLOAT;
-	SATypeToSAFmt_Lookup[SAType_ivec2] = SAFmt_R32G32_SINT;
-	SATypeToSAFmt_Lookup[SAType_ivec3] = SAFmt_R32G32B32_SINT;
-	SATypeToSAFmt_Lookup[SAType_ivec4] = SAFmt_R32G32B32A32_SINT;
 }
 
 Shader* ShaderFactory::Create(const string& name)

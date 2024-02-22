@@ -281,14 +281,17 @@ Serializer_BinaryWriteGrow::Serializer_BinaryWriteGrow()
 
 void Serializer_BinaryWriteGrow::WriteMemory(const u8 *pMem, u32 size)
 {
-	u32 oldSize = (u32)m_mem.size();
-	u32 newSize = oldSize + size;
-	if (newSize < m_mem.capacity())
+	if (size > 0)
 	{
-		m_mem.reserve(Max(oldSize * 2, newSize));
+		u32 oldSize = (u32)m_mem.size();
+		u32 newSize = oldSize + size;
+		if (newSize < m_mem.capacity())
+		{
+			m_mem.reserve(Max(oldSize * 2, newSize));
+		}
+		m_mem.resize(newSize);
+		memcpy(&m_mem[oldSize], pMem, size);
 	}
-	m_mem.resize(newSize);
-	memcpy(&m_mem[oldSize], pMem, size);
 }
 
 void Serializer_BinaryWriteGrow::WriteMemory(const MemBlock& block)

@@ -1,6 +1,8 @@
 #include "Neo.h"
 #include "ImmDynamicRenderer.h"
 
+#if PROFILE_ENABLED
+
 DECLARE_MODULE(Profiler, NeoModuleInitPri_Profiler, NeoModulePri_None, NeoModulePri_None);
 
 u32 ProfilerScopeGPU::s_uniqueID = 0;
@@ -194,3 +196,4 @@ void Profiler::AddProfileGPU_End(u32 uid)
 	point.end = GIL::Instance().AddGpuTimeQuery();
 }
 
+#endif

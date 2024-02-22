@@ -48,7 +48,7 @@ int RenderThread::Go()
 	m_doStartupTasks.Wait();
 
 	// need these created before any other shader resources can create
-	ShaderManager::Instance().CreateInstances();
+	ShaderManager::Instance().CreatePlatformData();
 	AssetManager::Instance().StartWork();
 
 	m_preDrawTaskLock.Lock();

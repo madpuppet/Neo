@@ -2,7 +2,7 @@
 
 #include "BitmapFont.h"
 
-#if defined(PROFILING_ENABLED)
+#if PROFILING_ENABLED
 class Profiler : public Module<Profiler>
 {
 	int m_currentFrame = 0;

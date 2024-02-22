@@ -26,7 +26,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-#define PROFILING_ENABLED 1
+#define PROFILING_ENABLED 0
 
 //===============================================================
 //========== WINDOWS ============================================
@@ -161,7 +161,7 @@ CallbackHandle AllocUniqueCallbackHandle();
 
 #define STR(...) std::format(__VA_ARGS__)
 
-#define ASSERTS_ENABLED 0
+#define ASSERTS_ENABLED 1
 
 #if ASSERTS_ENABLED
 void Error(const string &msg);
