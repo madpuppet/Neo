@@ -129,11 +129,11 @@ bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreat
 		return false;
 	}
 
-	hashtable<Vertex, u32> uniqueVertices{};
+	hashtable<Vertex_p3f_t2f_c4b, u32> uniqueVertices{};
 
 	for (const auto& shape : shapes) {
 		for (const auto& index : shape.mesh.indices) {
-			Vertex vertex{};
+			Vertex_p3f_t2f_c4b vertex{};
 
 			vertex.pos = {
 				attrib.vertices[3 * index.vertex_index + 0],
@@ -141,12 +141,12 @@ bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreat
 				-attrib.vertices[3 * index.vertex_index + 1]
 			};
 
-			vertex.uv = {
+			vertex.texCoord = {
 				attrib.texcoords[2 * index.texcoord_index + 0],
 				1.0f - attrib.texcoords[2 * index.texcoord_index + 1]
 			};
 
-			vertex.col = vec4ToR8G8B8A8({ 1.0f, 1.0f, 1.0f, 1.0f });
+			vertex.color = vec4ToR8G8B8A8({ 1.0f, 1.0f, 1.0f, 1.0f });
 
 			if (uniqueVertices.count(vertex) == 0) {
 				uniqueVertices[vertex] = static_cast<uint32_t>(verts.size());
@@ -169,7 +169,7 @@ MemBlock StaticMeshAssetData::AssetToMemory()
 	stream.WriteU16(STATICMESH_VERSION);
 	stream.WriteString(name);
 
-	u32 vertSize = (u32)(verts.size() * sizeof(Vertex));
+	u32 vertSize = (u32)(verts.size() * sizeof(Vertex_p3f_t2f_c4b));
 	stream.WriteU32(vertSize);
 	stream.WriteMemory((u8*)verts.data(), vertSize);
 	u32 indiceSize = (u32)(indices.size() * sizeof(u32));
@@ -202,7 +202,7 @@ bool StaticMeshAssetData::MemoryToAsset(const MemBlock& block)
 	auto indiceBlock = stream.ReadMemory();
 	materialName = stream.ReadString();
 
-	verts.assign((Vertex*)vertBlock.Mem(), (Vertex*)(vertBlock.Mem() + vertBlock.Size()));
+	verts.assign((Vertex_p3f_t2f_c4b*)vertBlock.Mem(), (Vertex_p3f_t2f_c4b*)(vertBlock.Mem() + vertBlock.Size()));
 	vertBlock.ClearMemPtrs();
 
 	indices.assign((u32*)indiceBlock.Mem(), (u32*)(indiceBlock.Mem() + indiceBlock.Size()));

@@ -48,27 +48,10 @@ struct StaticMeshAssetData : public AssetData
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 	virtual bool SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params) override;
 
-	struct Vertex
-	{
-		vec3 pos;
-		vec2 uv;
-		u32 col;
-		bool operator==(const Vertex& other) const {
-			return pos == other.pos && col == other.col && uv == other.uv;
-		}
-	};
-	vector<Vertex> verts;
+	vector<Vertex_p3f_t2f_c4b> verts;
 	vector<u32> indices;
 	string materialName;
 
 	MaterialRef material;
 };
-
-namespace std {
-	template<> struct hash<StaticMeshAssetData::Vertex> {
-		size_t operator()(StaticMeshAssetData::Vertex const& vertex) const {
-			return ((hash<vec3>()(vertex.pos) ^ (hash<u32>()(vertex.col) << 1)) >> 1) ^ (hash<vec2>()(vertex.uv) << 1);
-		}
-	};
-}
 

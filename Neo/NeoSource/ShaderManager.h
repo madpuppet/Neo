@@ -17,6 +17,14 @@ struct Vertex_p3f_t2f_c4b
 		return pos == other.pos && color == other.color && texCoord == other.texCoord;
 	}
 };
+template<> struct std::hash<Vertex_p3f_t2f_c4b>
+{
+	size_t operator()(Vertex_p3f_t2f_c4b const& vertex) const
+	{
+		return ((std::hash<glm::vec3>()(vertex.pos) ^ (std::hash<u32>()(vertex.color) << 1)) >> 1) ^ (std::hash<glm::vec2>()(vertex.texCoord) << 1);
+	}
+};
+
 
 enum VertAttribType
 {

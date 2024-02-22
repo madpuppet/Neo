@@ -18,7 +18,7 @@ const vector<const char*> deviceExtensions = {
     VK_KHR_SWAPCHAIN_EXTENSION_NAME
 };
 
-static std::vector<Vertex> s_vertices;
+static std::vector<Vertex_p3f_t2f_c4b> s_vertices;
 static std::vector<uint32_t> s_indices;
 
 VkResult CreateDebugUtilsMessengerEXT(VkInstance instance, const VkDebugUtilsMessengerCreateInfoEXT* pCreateInfo, const VkAllocationCallbacks* pAllocator, VkDebugUtilsMessengerEXT* pDebugMessenger)

@@ -213,12 +213,12 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
     VkPipelineVertexInputStateCreateInfo vertexInputInfo{};
     vertexInputInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
 
-    auto bindingDescription = Vertex::getBindingDescription();
-    auto attributeDescriptions = Vertex::getAttributeDescriptions();
+    auto& bindingDescriptions = shaderAD->iad->platformData->bindingDescriptions;
+    auto& attributeDescriptions = shaderAD->iad->platformData->attributeDescriptions;
 
-    vertexInputInfo.vertexBindingDescriptionCount = 1;
-    vertexInputInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
-    vertexInputInfo.pVertexBindingDescriptions = &bindingDescription;
+    vertexInputInfo.vertexBindingDescriptionCount = (u32)bindingDescriptions.size();
+    vertexInputInfo.vertexAttributeDescriptionCount = (u32)attributeDescriptions.size();
+    vertexInputInfo.pVertexBindingDescriptions = bindingDescriptions.data();
     vertexInputInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
 
     VkPipelineInputAssemblyStateCreateInfo inputAssembly{};
@@ -562,6 +562,7 @@ IADPlatformData* IADPlatformData_Create(InputAttributesDescription* iad)
     {
         VkVertexInputBindingDescription bindingDescription{};
         bindingDescription.binding = binding.binding;
+        bindingDescription.stride = binding.stride;
         bindingDescription.inputRate = binding.bindingIsPerInstance ? VK_VERTEX_INPUT_RATE_INSTANCE : VK_VERTEX_INPUT_RATE_VERTEX;
         platformData->bindingDescriptions.push_back(bindingDescription);
     }
