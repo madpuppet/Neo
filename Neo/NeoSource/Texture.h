@@ -12,6 +12,14 @@
 #include "AssetManager.h"
 #include "ResourceRef.h"
 
+enum TextureLayout
+{
+	TextureLayout_Undefined,		// initial undefined layout
+	TextureLayout_TransferDest,		// destination of a copy command
+	TextureLayout_Attachment,		// render pass attachment
+	TextureLayout_ShaderRead		// shader sampling resource
+};
+
 enum TextureType
 {
 	TextureType_None,
@@ -74,10 +82,10 @@ public:
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 	virtual bool SrcFilesToAsset(vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) override;
 
-	u16 width;
-	u16 height;
-	u16 depth;
-	TexturePixelFormat format;
+	bool isRenderTarget = false;
+	u16 width = 0;
+	u16 height = 0;
+	TexturePixelFormat format = PixFmt_Undefined;
 	vector<MemBlock> images;		// one for each mip level
 };
 
@@ -89,16 +97,16 @@ class Texture : public Resource
 	virtual void Reload() override;
 	virtual AssetType GetAssetType() const override { return AssetType_Texture; }
 
-	int m_width;
-	int m_height;
-	int m_depth;
-	TextureType m_textureType;
-	TexturePixelFormat m_texturePixelFormat;
 	TextureAssetData* m_assetData;
 	struct TexturePlatformData* m_platformData;
 
+	// current layout determines how this texture is currently being used
+	// we need to change the layout to use 
+	TextureLayout m_currentLayout;
+
 public:
 	Texture(const string& name);
+	Texture(const string& name, int width, int height, TexturePixelFormat format);
 	virtual ~Texture();
 
 	TextureAssetData* GetAssetData() { return m_assetData; }
@@ -114,6 +122,8 @@ public:
 	TextureFactory();
 
 	Texture* Create(const string& name);
+	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format);
+
 	void Destroy(Texture* texture);
 };
 
@@ -123,5 +133,12 @@ public:
 // TextureRef myTex;
 // myTex->Create("name");
 //
-using TextureRef = ResourceRef<Texture, TextureFactory>;
+class TextureRef : public ResourceRef<Texture, TextureFactory>
+{
+public:
+	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
+	{
+		return TextureFactory::Instance().CreateRenderTarget(name, width, height, format);
+	}
+};
 

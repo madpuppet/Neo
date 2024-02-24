@@ -119,6 +119,13 @@ struct InputAttributesDescription
 	struct IADPlatformData* platformData;
 };
 
+struct RenderPassInfo
+{
+	vector<TextureRef> renderTargets;
+	struct RPIPlatformData* platformData;
+};
+
+
 class ShaderManager : public Module<ShaderManager>
 {
 	hashtable<string, UBOInfo*> m_ubos;

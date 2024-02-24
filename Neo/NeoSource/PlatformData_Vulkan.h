@@ -5,40 +5,40 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct TexturePlatformData
 {
-	VkImage textureImage;
-	VkDeviceMemory textureImageMemory;
-	VkImageView textureImageView;
+	VkImage textureImage = nullptr;
+	VkDeviceMemory textureImageMemory = nullptr;
+	VkImageView textureImageView = nullptr;
 };
 TexturePlatformData* TexturePlatformData_Create(struct TextureAssetData* assetData);
 void TexturePlatformData_Destroy(TexturePlatformData* platformData);
 
 struct VertexShaderPlatformData
 {
-	VkShaderModule shaderModule;
+	VkShaderModule shaderModule = nullptr;
 };
 VertexShaderPlatformData* VertexShaderPlatformData_Create(struct VertexShaderAssetData* assetData);
 void VertexShaderPlatformData_Destroy(VertexShaderPlatformData* platformData);
 
 struct PixelShaderPlatformData
 {
-	VkShaderModule shaderModule;
+	VkShaderModule shaderModule = nullptr;
 };
 PixelShaderPlatformData* PixelShaderPlatformData_Create(struct PixelShaderAssetData* assetData);
 void PixelShaderPlatformData_Destroy(PixelShaderPlatformData* platformData);
 
 struct ShaderPlatformData
 {
-	VkShaderModule vertShaderModule;
-	VkShaderModule fragShaderModule;
+	VkShaderModule vertShaderModule = nullptr;
+	VkShaderModule fragShaderModule = nullptr;
 };
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
 
 struct MaterialPlatformData
 {
-	VkPipelineLayout pipelineLayout;
-	VkPipeline polygonPipeline;
-	VkPipeline linePipeline;
+	VkPipelineLayout pipelineLayout = nullptr;
+	VkPipeline polygonPipeline = nullptr;
+	VkPipeline linePipeline = nullptr;
 
 	// we'll do the layouts per material so we can mark some materials as being static UBOs instead of dynamic UBOs
 	static const int MaxSets = 4;

@@ -15,7 +15,7 @@ ImmDynamicRenderer::ImmDynamicRenderer()
 		{
 			for (int i = 0; i < 2; i++)
 			{
-				m_geomBuffers[i] = GIL::Instance().CreateGeometryBuffer(nullptr, IMMDYNREN_MAXVERTS * sizeof(Vertex), nullptr, IMMDYNREN_MAXINDICES * sizeof(u32));
+				m_geomBuffers[i] = GIL::Instance().CreateGeometryBuffer(nullptr, IMMDYNREN_MAXVERTS * sizeof(Vertex_p3f_t2f_c4b), nullptr, IMMDYNREN_MAXINDICES * sizeof(u32));
 				GIL::Instance().MapGeometryBufferMemory(m_geomBuffers[i], &(vertexBufferPtr[i]), &(indexBufferPtr[i]));
 			}
 		}
@@ -57,14 +57,14 @@ void ImmDynamicRenderer::StartPrimitive(PrimType primType)
 	m_indexStart = m_nextIndex;
 }
 
-void ImmDynamicRenderer::AddVert(const vec3& pos, const vec2& uv, u32 col)
+void ImmDynamicRenderer::AddVert(const vec3& pos, const vec2& texCoord, u32 color)
 {
 	if (m_nextVert < IMMDYNREN_MAXVERTS && m_nextIndex < IMMDYNREN_MAXINDICES)
 	{
-		Vertex* vertMem = (Vertex*)vertexBufferPtr[m_currentFrame] + m_nextVert;
+		auto vertMem = (Vertex_p3f_t2f_c4b*)vertexBufferPtr[m_currentFrame] + m_nextVert;
 		vertMem->pos = pos;
-		vertMem->uv = uv;
-		vertMem->col = col;
+		vertMem->texCoord = texCoord;
+		vertMem->color = color;
 
 		if (m_primType == PrimType_LineList || m_primType == PrimType_TriangleList)
 		{
@@ -92,7 +92,7 @@ void ImmDynamicRenderer::EndRender()
 
 void ImmDynamicRenderer::EndFrame()
 {
-	int vertDataSize = m_nextVert * sizeof(Vertex);
+	int vertDataSize = m_nextVert * sizeof(Vertex_p3f_t2f_c4b);
 	int indexDataSize = m_nextIndex * sizeof(u32);
 	GIL::Instance().FlushGeometryBufferMemory(m_geomBuffers[m_currentFrame], vertDataSize, indexDataSize);
 	m_currentFrame = (m_currentFrame + 1) % IMMDYNREN_FRAMES;

@@ -5,7 +5,7 @@ UBO_Material Material(1,0) : F
 Sampler Albedo(1, 1) : F
 UBO_Model Model(2,0) : V
 
-VS_IN Vertex_p3f_t2f_c4b
+VS_IN Vertex_null
 
 VS_TO_FS vec4 fragColor
 VS_TO_FS vec2 fragTexCoord
@@ -28,7 +28,7 @@ FRAGMENT_SHADER_CODE =============================
 
 void main() {
     outColor = texture(Albedo, fragTexCoord) * fragColor * Material.blendColor;
-//    if (outColor.a == 0.0)
-//        discard;
+    if (outColor.a == 0.0)
+        discard;
 }
 

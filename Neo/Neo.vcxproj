@@ -292,6 +292,7 @@
     <None Include="include\SDL_config.h.cmake" />
     <None Include="include\SDL_config.h.in" />
     <None Include="include\SDL_config_macosx.h.orig" />
+    <None Include="SourceData\shaders\particle.shader" />
     <None Include="SourceData\shaders\standard_ortho.shader" />
   </ItemGroup>
   <ItemGroup>
@@ -653,7 +654,6 @@
     <ClInclude Include="NeoSource\MathUtils.h" />
     <ClInclude Include="NeoSource\MemBlock.h" />
     <ClInclude Include="NeoSource\Memory.h" />
-    <ClInclude Include="NeoSource\PixelShader.h" />
     <ClInclude Include="NeoSource\DefDynamicRenderer.h" />
     <ClInclude Include="NeoSource\Profiler.h" />
     <ClInclude Include="NeoSource\Shader.h" />
@@ -679,7 +679,6 @@
     <ClCompile Include="NeoSource\Shader.cpp" />
     <ClCompile Include="NeoSource\ShaderManager.cpp" />
     <ClCompile Include="NeoSource\TimeManager.cpp" />
-    <ClInclude Include="NeoSource\VertexShader.h" />
     <ClInclude Include="NeoSource\StringUtils.h" />
     <ClInclude Include="NeoSource\Texture.h" />
     <ClInclude Include="NeoSource\Thread.h" />
@@ -713,7 +712,6 @@
     <ClCompile Include="NeoSource\Material.cpp" />
     <ClCompile Include="NeoSource\MemBlock.cpp" />
     <ClCompile Include="NeoSource\Memory.cpp" />
-    <ClCompile Include="NeoSource\PixelShader.cpp" />
     <ClCompile Include="NeoSource\StaticMesh.cpp" />
     <ClCompile Include="NeoSource\Module.cpp" />
     <ClCompile Include="NeoSource\PlatformData_Vulkan.cpp" />
@@ -722,7 +720,6 @@
     <ClCompile Include="NeoSource\ResourceLoadedManager.cpp" />
     <ClCompile Include="NeoSource\Serializer.cpp" />
     <ClCompile Include="NeoSource\SHAD.cpp" />
-    <ClCompile Include="NeoSource\VertexShader.cpp" />
     <ClCompile Include="NeoSource\StringUtils.cpp" />
     <ClCompile Include="NeoSource\Texture.cpp" />
     <ClCompile Include="NeoSource\Thread.cpp" />

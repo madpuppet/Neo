@@ -13,6 +13,20 @@ Texture::Texture(const string& name) : Resource(name)
 	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
 }
 
+Texture::Texture(const string& name, int width, int height, TexturePixelFormat format) : Resource(name)
+{
+	m_assetData = new TextureAssetData;
+	m_assetData->type = AssetType_Texture;
+	m_assetData->name = name;
+	m_assetData->version = TEXTURE_VERSION;
+	m_assetData->width = width;
+	m_assetData->height = height;
+	m_assetData->format = format;
+	m_assetData->isRenderTarget = true;
+	RenderThread::Instance().AddPreDrawTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
+}
+
+
 Texture::~Texture()
 {
 }
@@ -62,6 +76,25 @@ Texture* TextureFactory::Create(const string& name)
 	return it->second;
 }
 
+Texture* TextureFactory::CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
+{
+	u64 hash = StringHash64(name);
+	auto it = m_resources.find(hash);
+	if (it == m_resources.end())
+	{
+		Texture* resource = new Texture(name, width, height, format);
+		m_resources.insert(std::pair<u64, Texture*>(hash, resource));
+		return resource;
+	}
+
+	auto ad = it->second->GetAssetData();
+	Assert(ad && ad->width == width && ad->height == height && ad->format == format, STR("render target {} already exists at different size/format", name));
+
+	it->second->IncRef();
+	return it->second;
+}
+
+
 void TextureFactory::Destroy(Texture* texture)
 {
 	if (texture && texture->DecRef() == 0)
@@ -81,8 +114,7 @@ bool TextureAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreatePa
 	// pack it into an asset
 	width = texWidth;
 	height = texHeight;
-	depth = texChannels;
-	switch (depth)
+	switch (texChannels)
 	{
 		case 1:
 			format = PixFmt_R8_UNORM;
@@ -126,7 +158,6 @@ MemBlock TextureAssetData::AssetToMemory()
 	stream.WriteString(name);
 	stream.WriteU16(width);
 	stream.WriteU16(height);
-	stream.WriteU16(depth);
 	stream.WriteU16((u16)format);
 	stream.WriteU16((u16)images.size());
 	for (auto& block : images)
@@ -155,7 +186,6 @@ bool TextureAssetData::MemoryToAsset(const MemBlock& block)
 
 	width = stream.ReadU16();
 	height = stream.ReadU16();
-	depth = stream.ReadU16();
 	format = (TexturePixelFormat)stream.ReadU16();
 	int miplevels = stream.ReadU16();
 	for (int i = 0; i < miplevels; i++)

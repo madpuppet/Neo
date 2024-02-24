@@ -8,9 +8,6 @@
 enum AssetType
 {
 	AssetType_Texture,
-	AssetType_VertexShader,
-	AssetType_PixelShader,
-	AssetType_ComputeShader,
 	AssetType_StaticMesh,
 	AssetType_Animation,
 	AssetType_Database,

@@ -71,7 +71,7 @@ class Shader : public Resource
 {
 	void OnAssetDeliver(struct AssetData* data);
 	virtual void Reload() override;
-	virtual AssetType GetAssetType() const override { return AssetType_VertexShader; }
+	virtual AssetType GetAssetType() const override { return AssetType_Shader; }
 	ShaderAssetData* m_assetData;
 	ShaderPlatformData* m_platformData;
 

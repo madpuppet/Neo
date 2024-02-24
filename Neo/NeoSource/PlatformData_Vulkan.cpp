@@ -1,8 +1,6 @@
 #include "Neo.h"
 #include "PlatformData_Vulkan.h"
 #include "Texture.h"
-#include "VertexShader.h"
-#include "PixelShader.h"
 #include "Material.h"
 #include "StaticMesh.h"
 #include "ShaderManager.h"
@@ -20,29 +18,52 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 
     auto& gil = GIL::Instance();
 
-    VkDeviceSize imageSize = assetData->images[0].Size();
-    VkBuffer stagingBuffer;
-    VkDeviceMemory stagingBufferMemory;
-    gil.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
-
-    void* data;
-    vkMapMemory(gil.Device(), stagingBufferMemory, 0, imageSize, 0, &data);
-    memcpy(data, assetData->images[0].Mem(), static_cast<size_t>(imageSize));
-    vkUnmapMemory(gil.Device(), stagingBufferMemory);
-
     Assert(assetData->format != PixFmt_Undefined, "Undefined pixel format!");
     VkFormat fmt = gil.FindVulkanFormat(assetData->format);
-    gil.createImage(assetData->width, assetData->height, 1, fmt, VK_IMAGE_TILING_OPTIMAL,
-        VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
-    gil.transitionImageLayout(platformData->textureImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
-    gil.copyBufferToImage(stagingBuffer, platformData->textureImage, static_cast<uint32_t>(assetData->width), static_cast<uint32_t>(assetData->height));
 
-    vkDestroyBuffer(gil.Device(), stagingBuffer, nullptr);
-    vkFreeMemory(gil.Device(), stagingBufferMemory, nullptr);
+    if (assetData->isRenderTarget)
+    {
+        gil.createImage(assetData->width, assetData->height, 1, fmt,
+            VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
 
-    gil.generateMipmaps(platformData->textureImage, fmt, assetData->width, assetData->height, 1);
+        // Create image view
+        VkImageViewCreateInfo viewInfo = { VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO };
+        viewInfo.image = platformData->textureImage;
+        viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+        viewInfo.format = fmt;
+        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.baseMipLevel = 0;
+        viewInfo.subresourceRange.levelCount = 1;
+        viewInfo.subresourceRange.baseArrayLayer = 0;
+        viewInfo.subresourceRange.layerCount = 1;
+        vkCreateImageView(gil.Device(), &viewInfo, nullptr, &platformData->textureImageView);
 
-    platformData->textureImageView = gil.createImageView(platformData->textureImage, fmt, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        gil.transitionImageLayout(platformData->textureImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL, 1);
+    }
+    else
+    {
+        VkDeviceSize imageSize = assetData->images[0].Size();
+        VkBuffer stagingBuffer;
+        VkDeviceMemory stagingBufferMemory;
+        gil.createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT, stagingBuffer, stagingBufferMemory);
+
+        void* data;
+        vkMapMemory(gil.Device(), stagingBufferMemory, 0, imageSize, 0, &data);
+        memcpy(data, assetData->images[0].Mem(), static_cast<size_t>(imageSize));
+        vkUnmapMemory(gil.Device(), stagingBufferMemory);
+
+        gil.createImage(assetData->width, assetData->height, 1, fmt, VK_IMAGE_TILING_OPTIMAL,
+            VK_IMAGE_USAGE_TRANSFER_SRC_BIT | VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
+        gil.transitionImageLayout(platformData->textureImage, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1);
+        gil.copyBufferToImage(stagingBuffer, platformData->textureImage, static_cast<uint32_t>(assetData->width), static_cast<uint32_t>(assetData->height));
+
+        vkDestroyBuffer(gil.Device(), stagingBuffer, nullptr);
+        vkFreeMemory(gil.Device(), stagingBufferMemory, nullptr);
+
+        gil.generateMipmaps(platformData->textureImage, fmt, assetData->width, assetData->height, 1);
+        platformData->textureImageView = gil.createImageView(platformData->textureImage, fmt, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+    }
 
     return platformData;
 };
@@ -72,33 +93,6 @@ VkShaderModule CreateShader(VkDevice device, MemBlock spv)
     vkCreateShaderModule(device, &createInfo, nullptr, &shaderModule);
     return shaderModule;
 }
-
-PixelShaderPlatformData* PixelShaderPlatformData_Create(struct PixelShaderAssetData* assetData)
-{
-    PixelShaderPlatformData* platformData = new PixelShaderPlatformData;
-    platformData->shaderModule = CreateShader(GIL::Instance().Device(), assetData->spvData);
-    return platformData;
-}
-
-void PixelShaderPlatformData_Destroy(PixelShaderPlatformData* platformData)
-{
-    auto device = GIL::Instance().Device();
-    vkDestroyShaderModule(device, platformData->shaderModule, nullptr);
-}
-
-VertexShaderPlatformData* VertexShaderPlatformData_Create(struct VertexShaderAssetData* assetData)
-{
-    VertexShaderPlatformData* platformData = new VertexShaderPlatformData;
-    platformData->shaderModule = CreateShader(GIL::Instance().Device(), assetData->spvData);
-    return platformData;
-}
-
-void VertexShaderPlatformData_Destroy(VertexShaderPlatformData* platformData)
-{
-    auto device = GIL::Instance().Device();
-    vkDestroyShaderModule(device, platformData->shaderModule, nullptr);
-}
-
 
 MaterialSampler* FindSampler(MaterialAssetData* assetData, const string& name)
 {

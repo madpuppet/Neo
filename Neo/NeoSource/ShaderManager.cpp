@@ -103,4 +103,3 @@ void ShaderManager::CreatePlatformData()
 		iad->platformData = IADPlatformData_Create(iad);
 	}
 }
-

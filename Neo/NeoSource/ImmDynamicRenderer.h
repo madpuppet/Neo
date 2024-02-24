@@ -11,13 +11,6 @@
 
 class ImmDynamicRenderer : public Module<ImmDynamicRenderer>
 {
-	struct Vertex
-	{
-		vec3 pos;
-		vec2 uv;
-		u32 col;
-	};
-
 	// geometry buffers have vertex buffers
 	array<NeoGeometryBuffer*, IMMDYNREN_FRAMES> m_geomBuffers;
 

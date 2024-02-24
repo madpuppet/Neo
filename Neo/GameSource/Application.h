@@ -31,12 +31,13 @@ protected:
 	BitmapFontRef m_font;
 	MaterialRef m_beeMat;
 	ShaderRef m_shader;
+	TextureRef m_beeRenderTarget;
 
 	mat4x4 m_cameraMatrix;
 	float m_beeScale;
 	array<Bee, 20000> m_bees;
 
-	static const int roomGridSize = 100;
+	static const int roomGridSize = 5;
 	mat4x4 m_roomInstances[roomGridSize * roomGridSize];
 };
 

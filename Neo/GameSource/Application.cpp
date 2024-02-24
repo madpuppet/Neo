@@ -46,6 +46,7 @@ Application::Application()
 
 	m_particleMat.Create("particles");
 	m_font.Create("c64");
+	m_beeRenderTarget.CreateRenderTarget("bee", 256, 256, PixFmt_R8G8B8A8_UNORM);
 	m_beeMat.Create("bee");
 	m_shader.Create("standard");
 
