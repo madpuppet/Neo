@@ -32,9 +32,8 @@ static int GetTime(const string name, const stringlist &extensions, u64& time)
 	return -1;
 }
 
-void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name, AssetCreateParams* params, const DeliverAssetDataCB& cb)
+void AssetManager::DeliverAssetDataAsync(const string &assetType, const string& name, AssetCreateParams* params, const DeliverAssetDataCB& cb)
 {
-	Assert(!name.empty(), STR("Called Deliver asset with no name - type {}", assetType));
 	Assert(m_assetTypeInfoMap.contains(assetType), std::format("Cannot create asset: {} - unregistered asset type: {}", name, assetType));
 
 	auto assetTypeInfo = m_assetTypeInfoMap[assetType];
@@ -157,7 +156,7 @@ void AssetManager::DeliverAssetDataAsync(AssetType assetType, const string& name
 	);
 }
 
-AssetTypeInfo* AssetManager::FindAssetTypeInfo(int type)
+AssetTypeInfo* AssetManager::FindAssetTypeInfo(const string &type)
 {
 	auto it = m_assetTypeInfoMap.find(type);
 	return (it != m_assetTypeInfoMap.end()) ? it->second : nullptr;

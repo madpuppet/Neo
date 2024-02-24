@@ -72,9 +72,6 @@ struct MaterialSampler
 
 class Material : public Resource
 {
-	void OnAssetDeliver(struct AssetData* data);
-	virtual AssetType GetAssetType() const override { return AssetType_Material; }
-
 	virtual void Reload() override;
 
 	struct MaterialAssetData* m_assetData = nullptr;
@@ -86,9 +83,10 @@ class Material : public Resource
 	void SetUniform(const string& name, UniformType type, const void* data, bool flush);
 
 public:
-	Material(const string& name);
-	Material(const string& name, Material *parent);
-	virtual ~Material();
+	static const string AssetType;
+	virtual const string& GetType() const { return AssetType; }
+	virtual ~Material() {}
+	void OnAssetDeliver(struct AssetData* data);
 
 	void SetUniform_vec4(const string& name, const vec4& value, bool flush) { SetUniform(name, UniformType_vec4, &value, flush); }
 	void SetUniform_ivec4(const string& name, const ivec4& value, bool flush) { SetUniform(name, UniformType_ivec4, &value, flush); }

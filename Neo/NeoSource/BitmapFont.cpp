@@ -12,20 +12,12 @@ CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border aro
 
 DECLARE_MODULE(BitmapFontFactory, NeoModuleInitPri_BitmapFontFactory, NeoModulePri_None, NeoModulePri_None);
 
-BitmapFont::BitmapFont(const string& name) : Resource(name)
-{
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_BitmapFont, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
-}
-
-BitmapFont::~BitmapFont()
-{
-}
+const string BitmapFont::AssetType = "BitmapFont";
 
 void BitmapFont::OnAssetDeliver(AssetData* data)
 {
 	if (data)
 	{
-		Assert(data->type == AssetType_BitmapFont, "Bad Asset Type");
 		m_assetData = dynamic_cast<BitmapFontAssetData*>(data);
 
 		// create dependant resources
@@ -60,11 +52,11 @@ void BitmapFont::Reload()
 template <> ResourceFactory<BitmapFont>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->name = "BitmapFont";
+	ati->name = BitmapFont::AssetType;
 	ati->assetExt = ".neobmf";
 	ati->assetCreator = []() -> AssetData* { return new BitmapFontAssetData; };
 	ati->sourceExt.push_back({ { ".fnt", }, true });		// on of these src image files
-	AssetManager::Instance().RegisterAssetType(AssetType_BitmapFont, ati);
+	AssetManager::Instance().RegisterAssetType(ati);
 }
 
 class LineParser
@@ -295,7 +287,7 @@ MemBlock BitmapFontAssetData::AssetToMemory()
 {
 	Serializer_BinaryWriteGrow stream;
 
-	stream << type << version << name;
+	stream << version << name;
 
 	stream << info.face << info.charset << info.stretchH << info.bold << info.italic << info.unicode << info.smooth
 		   << info.aa << info.outline << info.packed << info.alphaChnl << info.padding << info.spacing << info.lineHeight
@@ -321,13 +313,8 @@ bool BitmapFontAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
 
-	stream >> type >> version >> name;
+	stream >> version >> name;
 
-	if (type != AssetType_BitmapFont)
-	{
-		LOG(BitmapFont, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_BitmapFont));
-		return false;
-	}
 	if (version != BITMAPFONT_VERSION)
 	{
 		LOG(BitmapFont, STR("Rebuilding {} - old version {} - expected {}", name, version, BITMAPFONT_VERSION));

@@ -3,6 +3,7 @@
 #include "Resource.h"
 #include "StringUtils.h"
 #include <functional>
+#include "AssetManager.h"
 
 template <class T>
 class ResourceFactory
@@ -28,7 +29,14 @@ public:
 	}
 	T* Create(const string& name)
 	{
-		return Create(name, [name]()->T* { return new T(name); });
+		auto creator = [name]()->T*
+		{
+			auto resource = new T;
+			resource->Init(name);
+			AssetManager::Instance().DeliverAssetDataAsync(resource->GetType(), name, nullptr, [resource](AssetData* data) { resource->OnAssetDeliver(data); });
+			return resource;
+		};
+		return Create(name, creator);
 	}
 	void Destroy(T* resource)
 	{

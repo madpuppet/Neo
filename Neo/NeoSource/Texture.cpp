@@ -8,16 +8,12 @@
 
 DECLARE_MODULE(TextureFactory, NeoModuleInitPri_TextureFactory, NeoModulePri_None, NeoModulePri_None);
 
-Texture::Texture(const string& name) : Resource(name)
-{
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Texture, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
-}
+const string Texture::AssetType = "Texture";
 
-Texture::Texture(const string& name, int width, int height, TexturePixelFormat format) : Resource(name)
+void Texture::InitRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
 {
 	m_assetData = new TextureAssetData;
-	m_assetData->type = AssetType_Texture;
-	m_assetData->name = name;
+	Init(name);
 	m_assetData->version = TEXTURE_VERSION;
 	m_assetData->width = width;
 	m_assetData->height = height;
@@ -25,7 +21,6 @@ Texture::Texture(const string& name, int width, int height, TexturePixelFormat f
 	m_assetData->isRenderTarget = true;
 	RenderThread::Instance().AddPreDrawTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
 }
-
 
 Texture::~Texture()
 {
@@ -35,7 +30,6 @@ void Texture::OnAssetDeliver(AssetData* data)
 {
 	if (data)
 	{
-		Assert(data->type == AssetType_Texture, "Bad Asset Type");
 		m_assetData = dynamic_cast<TextureAssetData*>(data);
 		RenderThread::Instance().AddPreDrawTask([this]() { m_platformData = TexturePlatformData_Create(m_assetData); OnLoadComplete(); });
 	}
@@ -50,15 +44,26 @@ void Texture::Reload()
 {
 }
 
+Texture* TextureFactory::CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
+{
+	auto creator = [name, width, height, format]()->Texture*
+	{
+		auto resource = new Texture;
+		resource->InitRenderTarget(name, width, height, format);
+		return resource;
+	};
+	return Create(name, creator);
+}
+
 template <> ResourceFactory<Texture>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->name = "Texture";
+	ati->name = Texture::AssetType;
 	ati->assetExt = ".neotex";
 	ati->assetCreator = []() -> AssetData* { return new TextureAssetData; };
 	ati->sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
 	ati->sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
-	AssetManager::Instance().RegisterAssetType(AssetType_Texture, ati);
+	AssetManager::Instance().RegisterAssetType(ati);
 }
 
 bool TextureAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)
@@ -109,9 +114,9 @@ bool TextureAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreatePa
 MemBlock TextureAssetData::AssetToMemory()
 {
 	Serializer_BinaryWriteGrow stream;
-	stream.WriteU16(AssetType_Texture);
 	stream.WriteU16(TEXTURE_VERSION);
 	stream.WriteString(name);
+
 	stream.WriteU16(width);
 	stream.WriteU16(height);
 	stream.WriteU16((u16)format);
@@ -125,15 +130,9 @@ MemBlock TextureAssetData::AssetToMemory()
 bool TextureAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
-	type = (AssetType)stream.ReadU16();
 	version = stream.ReadU16();
 	name = stream.ReadString();
 
-	if (type != AssetType_Texture)
-	{
-		LOG(Texture, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Texture));
-		return false;
-	}
 	if (version != TEXTURE_VERSION)
 	{
 		LOG(Texture, STR("Rebuilding {} - old version {} - expected {}", name, version, TEXTURE_VERSION));

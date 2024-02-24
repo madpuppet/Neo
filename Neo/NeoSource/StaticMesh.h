@@ -7,18 +7,17 @@
 
 class StaticMesh : public Resource
 {
-	void OnAssetDeliver(struct AssetData* data);
-	virtual AssetType GetAssetType() const override { return AssetType_StaticMesh; }
-
 	virtual void Reload() override;
 
 	struct StaticMeshAssetData* m_assetData;
 	struct StaticMeshPlatformData* m_platformData;
 
 public:
-	StaticMesh(const string& name);
-	StaticMesh(const string& name, Material* parent);
-	virtual ~StaticMesh();
+	static const string AssetType;
+	virtual const string& GetType() const { return AssetType; }
+	virtual ~StaticMesh() {}
+
+	void OnAssetDeliver(struct AssetData* data);
 
 	StaticMeshAssetData* GetAssetData() { return m_assetData; }
 	StaticMeshPlatformData* GetPlatformData() { return m_platformData; }

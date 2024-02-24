@@ -189,7 +189,7 @@ void GIL::BeginFrame()
         Error("failed to begin recording command buffer!");
     }
 
-#if PROFILE_ENABLED
+#if PROFILING_ENABLED
     vkCmdResetQueryPool(commandBuffer, m_queryPool, 0, MaxProfileTimestamps);
 #endif
 

@@ -70,15 +70,16 @@ public:
 
 class Shader : public Resource
 {
-	void OnAssetDeliver(struct AssetData* data);
 	virtual void Reload() override;
-	virtual AssetType GetAssetType() const override { return AssetType_Shader; }
 	ShaderAssetData* m_assetData;
 	ShaderPlatformData* m_platformData;
 
 public:
-	Shader(const string& name);
-	virtual ~Shader();
+	static const string AssetType;
+	virtual const string& GetType() const { return AssetType; }
+	virtual ~Shader() {}
+
+	void OnAssetDeliver(struct AssetData* data);
 
 	ShaderAssetData* GetAssetData() { return m_assetData; }
 	ShaderPlatformData* GetPlatformData() { return m_platformData; }

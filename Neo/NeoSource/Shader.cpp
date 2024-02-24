@@ -15,9 +15,9 @@
 hashtable<string, SROType> SROType_Lookup;
 hashtable<string, SROStage> SROStage_Lookup;
 
-bool CompileShader(MemBlock srcBlock, MemBlock& spvBlock, AssetType assetType);
-
 DECLARE_MODULE(ShaderFactory, NeoModuleInitPri_ShaderFactory, NeoModulePri_None, NeoModulePri_None);
+
+const string Shader::AssetType = "Shader";
 
 bool LoadFile(const string& path, MemBlock& block)
 {
@@ -280,14 +280,14 @@ void ReadAttributes(Serializer& stream, vector<ShaderAssetData::ShaderAttribute>
 MemBlock ShaderAssetData::AssetToMemory()
 {
 	Serializer_BinaryWriteGrow stream;
-	stream.WriteU16(type);
-	stream.WriteU16(AssetType_Shader);
+	stream.WriteU16(SHADER_VERSION);
 	stream.WriteString(name);
 
 	stream.WriteU32((u32)SROs.size());
 	for (auto& sro : SROs)
 	{
 		stream.WriteString(sro.name);
+		stream.WriteString(sro.varName);
 		stream.WriteU32(sro.type);
 		stream.WriteU32(sro.set);
 		stream.WriteU32(sro.binding);
@@ -308,15 +308,12 @@ MemBlock ShaderAssetData::AssetToMemory()
 bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
-	type = (AssetType)stream.ReadU16();
 	version = stream.ReadU16();
 	name = stream.ReadString();
 
-	if (type != AssetType_Shader)
-	{
-		LOG(Shader, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Shader));
-		return false;
-	}
+	u64 addr = (u64)this;
+	LOG(Shader, STR("MemoryToAsset:{} : {}", name, addr));
+
 	if (version != SHADER_VERSION)
 	{
 		LOG(Shader, STR("Rebuilding {} - old version {} - expected {}", name, version, SHADER_VERSION));
@@ -330,6 +327,7 @@ bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 	{
 		ShaderResourceObjectInfo sro;
 		sro.name = stream.ReadString();
+		sro.varName = stream.ReadString();
 		sro.type = (SROType)stream.ReadU32();
 		sro.set = stream.ReadU32();
 		sro.binding = stream.ReadU32();
@@ -337,7 +335,17 @@ bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 		sro.uboInfo = sm.FindUBO(sro.name);
 		SROs.push_back(sro);
 	}
-	auto sortFunc = [](const ShaderResourceObjectInfo& a, const ShaderResourceObjectInfo& b) { return (a.set < b.set) || (a.binding < b.binding); };
+//	auto sortFunc = [](const ShaderResourceObjectInfo& a, const ShaderResourceObjectInfo& b) { return (a.set < b.set) || (a.binding < b.binding); };
+
+	auto sortFunc = [](const ShaderResourceObjectInfo& a, const ShaderResourceObjectInfo& b) {
+		if (a.set != b.set) {
+			return a.set < b.set;
+		}
+		else {
+			return a.binding < b.binding;
+		}
+	};
+
 	std::sort(SROs.begin(), SROs.end(), sortFunc);
 
 	inputAttributesName = stream.ReadString();
@@ -350,15 +358,6 @@ bool ShaderAssetData::MemoryToAsset(const MemBlock& block)
 	fragSPVData = stream.ReadMemory();
 
 	return true;
-}
-
-Shader::Shader(const string& name) : Resource(name)
-{
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Shader, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
-}
-
-Shader::~Shader()
-{
 }
 
 void Shader::OnAssetDeliver(struct AssetData* data)
@@ -382,11 +381,11 @@ void Shader::Reload()
 template <> ResourceFactory<Shader>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->name = "Shader";
+	ati->name = Shader::AssetType;
 	ati->assetCreator = []() -> AssetData* { return new ShaderAssetData; };
 	ati->assetExt = ".neoshader";
 	ati->sourceExt.push_back({ { ".shader" }, true });		// compile from source
-	AssetManager::Instance().RegisterAssetType(AssetType_Shader, ati);
+	AssetManager::Instance().RegisterAssetType(ati);
 
 	SROStage_Lookup["Geometry"] = SROStage_Geometry;
 	SROStage_Lookup["Vertex"] = SROStage_Vertex;

@@ -14,18 +14,10 @@
 
 DECLARE_MODULE(StaticMeshFactory, NeoModuleInitPri_StaticMeshFactory, NeoModulePri_None, NeoModulePri_None);
 
-StaticMesh::StaticMesh(const string& name) : Resource(name)
-{
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_StaticMesh, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
-}
-
-StaticMesh::~StaticMesh()
-{
-}
+const string StaticMesh::AssetType = "StaticMesh";
 
 void StaticMesh::OnAssetDeliver(AssetData* data)
 {
-	Assert(data->type == AssetType_StaticMesh, "Bad Asset Type");
 	m_assetData = dynamic_cast<StaticMeshAssetData*>(data);
 
 	// create dependant resources
@@ -45,11 +37,11 @@ void StaticMesh::Reload()
 template <> ResourceFactory<StaticMesh>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->name = "StaticMesh";
+	ati->name = StaticMesh::AssetType;
 	ati->assetExt = ".neomdl";
 	ati->assetCreator = []() -> AssetData* { return new StaticMeshAssetData; };
 	ati->sourceExt.push_back({ { ".obj" }, true });		// on of these src image files
-	AssetManager::Instance().RegisterAssetType(AssetType_StaticMesh, ati);
+	AssetManager::Instance().RegisterAssetType(ati);
 }
 
 class MemoryStream : public std::streambuf {
@@ -140,7 +132,6 @@ bool StaticMeshAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreat
 MemBlock StaticMeshAssetData::AssetToMemory()
 {
 	Serializer_BinaryWriteGrow stream;
-	stream.WriteU16(AssetType_StaticMesh);
 	stream.WriteU16(STATICMESH_VERSION);
 	stream.WriteString(name);
 
@@ -158,15 +149,9 @@ MemBlock StaticMeshAssetData::AssetToMemory()
 bool StaticMeshAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
-	type = (AssetType)stream.ReadU16();
 	version = stream.ReadU16();
 	name = stream.ReadString();
 
-	if (type != AssetType_StaticMesh)
-	{
-		LOG(Mesh, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_StaticMesh));
-		return false;
-	}
 	if (version != STATICMESH_VERSION)
 	{
 		LOG(Mesh, STR("Rebuilding {} - old version {} - expected {}", name, version, STATICMESH_VERSION));

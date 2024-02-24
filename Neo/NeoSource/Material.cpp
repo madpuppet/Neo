@@ -9,14 +9,9 @@
 
 DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
 
+const string Material::AssetType = "Material";
+
 const char* UniformTypeToString[] = { "vec4", "ivec4", "mat4x4", "f32", "i32" };
-
-Material::Material(const string& name) : Resource(name)
-{
-	AssetManager::Instance().DeliverAssetDataAsync(AssetType_Material, name, nullptr, [this](AssetData* data) { OnAssetDeliver(data); });
-}
-
-Material::Material(const string& name, Material* parent) : Resource(name) {}
 
 void Material::SetUniform(const string& name, UniformType type, const void *data, bool flush)
 {
@@ -35,15 +30,10 @@ void Material::SetUniform(const string& name, UniformType type, const void *data
 	Error(STR("uniform {} not found in material {}", name, m_name));
 }
 
-Material::~Material()
-{
-}
-
 void Material::OnAssetDeliver(AssetData* data)
 {
 	if (data)
 	{
-		Assert(data->type == AssetType_Material, "Bad Asset Type");
 		m_assetData = dynamic_cast<MaterialAssetData*>(data);
 
 		// create dependant resources
@@ -78,11 +68,11 @@ void Material::Reload()
 template <> ResourceFactory<Material>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
-	ati->name = "Material";
+	ati->name = Material::AssetType;
 	ati->assetCreator = []() -> AssetData* { return new MaterialAssetData; };
 	ati->assetExt = ".neomat";
 	ati->sourceExt.push_back({ { ".material" }, true });		// on of these src image files
-	AssetManager::Instance().RegisterAssetType(AssetType_Material, ati);
+	AssetManager::Instance().RegisterAssetType(ati);
 }
 
 Material* MaterialFactory::CreateInstance(const string& name, const string& original)
@@ -277,7 +267,6 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 MemBlock MaterialAssetData::AssetToMemory()
 {
 	Serializer_BinaryWriteGrow stream;
-	stream.WriteU16(AssetType_Material);
 	stream.WriteU16(MATERIAL_VERSION);
 	stream.WriteString(name);
 
@@ -317,15 +306,9 @@ MemBlock MaterialAssetData::AssetToMemory()
 bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 {
 	Serializer_BinaryRead stream(block);
-	type = (AssetType)stream.ReadU16();
 	version = stream.ReadU16();
 	name = stream.ReadString();
 
-	if (type != AssetType_Material)
-	{
-		LOG(Material, STR("Rebuilding {} - bad type {} - expected {}", name, (int)type, (int)AssetType_Material));
-		return false;
-	}
 	if (version != MATERIAL_VERSION)
 	{
 		LOG(Material, STR("Rebuilding {} - old version {} - expected {}", name, version, MATERIAL_VERSION));

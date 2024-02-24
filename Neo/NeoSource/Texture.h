@@ -93,10 +93,7 @@ public:
 // texture is the game facing class that represents any type of texture  (zbuffer, rendertarget, image)
 class Texture : public Resource
 {
-	void OnAssetDeliver(struct AssetData *data);
-
 	virtual void Reload() override;
-	virtual AssetType GetAssetType() const override { return AssetType_Texture; }
 
 	TextureAssetData* m_assetData;
 	struct TexturePlatformData* m_platformData;
@@ -106,8 +103,11 @@ class Texture : public Resource
 	TextureLayout m_currentLayout;
 
 public:
-	Texture(const string& name);
-	Texture(const string& name, int width, int height, TexturePixelFormat format);
+	void OnAssetDeliver(struct AssetData* data);
+	void InitRenderTarget(const string& name, int width, int height, TexturePixelFormat format);
+
+	static const string AssetType;
+	virtual const string& GetType() const { return AssetType; }
 	virtual ~Texture();
 
 	TextureAssetData* GetAssetData() { return m_assetData; }
@@ -118,10 +118,7 @@ public:
 class TextureFactory : public ResourceFactory<Texture>, public Module<TextureFactory>
 {
 public:
-	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
-	{
-		return Create(name, [name, width, height, format]()->Texture* { return new Texture(name, width, height, format); });
-	}
+	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format);
 };
 
 // texture references is a scoped pointer to a texture.  the texture will be destroyed with the TextureRef goes out of scope or is destroyed
@@ -135,8 +132,7 @@ class TextureRef : public ResourceRef<Texture, TextureFactory>
 public:
 	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
 	{
-		TextureFactory& factory = TextureFactory::Instance();
-		return factory.CreateRenderTarget(name, width, height, format);
+		return TextureFactory::Instance().CreateRenderTarget(name, width, height, format);
 	}
 };
 

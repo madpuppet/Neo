@@ -83,18 +83,18 @@ public:
 // texture is the game facing class that represents any type of texture  (zbuffer, rendertarget, image)
 class BitmapFont : public Resource
 {
-	void OnAssetDeliver(struct AssetData* data);
-
 	virtual void Reload() override;
-	virtual AssetType GetAssetType() const override { return AssetType_BitmapFont; }
 
 	BitmapFontAssetData* m_assetData;
 
 	MaterialRef m_white;
 
 public:
-	BitmapFont(const string& name);
-	virtual ~BitmapFont();
+	static const string AssetType;
+	virtual const string& GetType() const { return AssetType; }
+
+	virtual ~BitmapFont() {}
+	void OnAssetDeliver(struct AssetData* data);
 
 	BitmapFontAssetData* GetAssetData() { return m_assetData; }
 

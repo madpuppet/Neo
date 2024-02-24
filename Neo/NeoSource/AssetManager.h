@@ -5,26 +5,12 @@
 #include "MemBlock.h"
 #include "Serializer.h"
 
-enum AssetType
-{
-	AssetType_Texture,
-	AssetType_StaticMesh,
-	AssetType_Animation,
-	AssetType_Database,
-	AssetType_Material,
-	AssetType_BitmapFont,
-	AssetType_Shader,
-	AssetType_RenderPass,
-
-	AssetType_Extended = 0x100		// game can use asset type values after this point to create their own asset types
-};
-
 struct AssetData
 {
 	AssetData() = default;
 	virtual ~AssetData() = default;
 
-	u32 type;		// AssetType (or custom asset type)
+	string type;	// asset type name (ie. Material, Texture)
 	string name;	// for debug purposes
 	u16 version;	// increment the version to force a rebuild of assets
 
@@ -68,7 +54,7 @@ class AssetManager : public Module<AssetManager>
 	WorkerFarm m_assetTasks;
 
 	// map of asset type creators
-	hashtable<int, AssetTypeInfo*> m_assetTypeInfoMap;
+	hashtable<string, AssetTypeInfo*> m_assetTypeInfoMap;
 
 public:
 	AssetManager();
@@ -80,26 +66,11 @@ public:
 	void KillWorkerFarm();
 
 	// register an asset type that can be delivered
-	void RegisterAssetType(int assetType, AssetTypeInfo* assetCreator) { m_assetTypeInfoMap.insert(std::pair<int, AssetTypeInfo*>(assetType, assetCreator)); }
+	void RegisterAssetType(AssetTypeInfo* assetCreator) { m_assetTypeInfoMap[assetCreator->name] = assetCreator; }
 
 	// gather all data from file systems
-	void DeliverAssetDataAsync(AssetType type, const string &name, AssetCreateParams* params, const DeliverAssetDataCB& cb);
+	void DeliverAssetDataAsync(const string &type, const string &name, AssetCreateParams* params, const DeliverAssetDataCB& cb);
 
 	// get registered asset type info for a specified type
-	AssetTypeInfo *FindAssetTypeInfo(int type);
-};
-
-// C++20 formatter lets us convert AssetType to string for Log(STR("{}", (AssetType)type));
-template <>
-struct std::formatter<AssetType> : std::formatter<int> {
-	constexpr auto parse(std::format_parse_context& ctx) {
-		return ctx.begin();
-	}
-	auto format(const AssetType& obj, std::format_context& ctx) const {
-		auto typeInfo = AssetManager::Instance().FindAssetTypeInfo((int)obj);
-		if (typeInfo)
-			return std::format_to(ctx.out(), "{}", typeInfo->name);
-		else
-			return std::format_to(ctx.out(), "??assetType_{}", (int)obj);
-	}
+	AssetTypeInfo *FindAssetTypeInfo(const string& type);
 };

@@ -9,7 +9,7 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 	// find any callbacks to this resource
 	ScopedMutexLock lock(m_mutex);
 
-	LOG(Asset, STR("<< COMPLETED: {} [{}]",resource->GetName(), resource->GetAssetType()));
+	LOG(Asset, STR("<< COMPLETED: {} [{}]",resource->GetName(), resource->GetType()));
 
 	// we need to do this here, so it is mutex locked
 	resource->MarkIsLoaded();
@@ -27,7 +27,7 @@ void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 			}
 		}
 
-		LOG(Asset, STR("  deps: {}[{}] {}/{}", depInfo->resource->GetName(), depInfo->resource->GetAssetType(), depInfo->completed, depInfo->dependancies.size()));
+		LOG(Asset, STR("  deps: {}[{}] {}/{}", depInfo->resource->GetName(), depInfo->resource->GetType(), depInfo->completed, depInfo->dependancies.size()));
 
 		// if our total completed matches are resources count, then we are done
 		if (depInfo->completed == depInfo->dependancies.size())
