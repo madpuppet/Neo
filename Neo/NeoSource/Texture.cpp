@@ -50,7 +50,7 @@ void Texture::Reload()
 {
 }
 
-TextureFactory::TextureFactory()
+template <> ResourceFactory<Texture>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
 	ati->name = "Texture";
@@ -59,50 +59,6 @@ TextureFactory::TextureFactory()
 	ati->sourceExt.push_back({ { ".png", ".tga", ".jpg" }, true });		// on of these src image files
 	ati->sourceExt.push_back({ { ".tex" }, false });						// an optional text file to config how to convert the file
 	AssetManager::Instance().RegisterAssetType(AssetType_Texture, ati);
-}
-
-Texture* TextureFactory::Create(const string& name)
-{
-	u64 hash = StringHash64(name);
-	auto it = m_resources.find(hash);
-	if (it == m_resources.end())
-	{
-		Texture* resource = new Texture(name);
-		m_resources.insert(std::pair<u64, Texture*>(hash, resource));
-
-		return resource;
-	}
-	it->second->IncRef();
-	return it->second;
-}
-
-Texture* TextureFactory::CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
-{
-	u64 hash = StringHash64(name);
-	auto it = m_resources.find(hash);
-	if (it == m_resources.end())
-	{
-		Texture* resource = new Texture(name, width, height, format);
-		m_resources.insert(std::pair<u64, Texture*>(hash, resource));
-		return resource;
-	}
-
-	auto ad = it->second->GetAssetData();
-	Assert(ad && ad->width == width && ad->height == height && ad->format == format, STR("render target {} already exists at different size/format", name));
-
-	it->second->IncRef();
-	return it->second;
-}
-
-
-void TextureFactory::Destroy(Texture* texture)
-{
-	if (texture && texture->DecRef() == 0)
-	{
-		u64 hash = StringHash64(texture->GetName());
-		m_resources.erase(hash);
-		delete texture;
-	}
 }
 
 bool TextureAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params)

@@ -101,18 +101,10 @@ public:
 };
 
 // texture factory keeps a map of all the currently created textures
-class MaterialFactory : public Module<MaterialFactory>
+class MaterialFactory : public ResourceFactory<Material>, public Module<MaterialFactory>
 {
-	hashtable<u64, Material*> m_resources;
-	Material* m_blank;
-
 public:
-	MaterialFactory();
-
-	Material* Create(const string& name);
 	Material* CreateInstance(const string& name, const string& original);
-	void Destroy(Material* texture);
-	Material* GetBlank() { return m_blank; }
 };
 
 class MaterialRef : public ResourceRef<Material, MaterialFactory>

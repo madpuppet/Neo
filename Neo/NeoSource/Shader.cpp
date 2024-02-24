@@ -379,7 +379,7 @@ void Shader::Reload()
 {
 }
 
-ShaderFactory::ShaderFactory()
+template <> ResourceFactory<Shader>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
 	ati->name = "Shader";
@@ -392,28 +392,3 @@ ShaderFactory::ShaderFactory()
 	SROStage_Lookup["Vertex"] = SROStage_Vertex;
 	SROStage_Lookup["Fragment"] = SROStage_Fragment;
 }
-
-Shader* ShaderFactory::Create(const string& name)
-{
-	u64 hash = StringHash64(name);
-	auto it = m_resources.find(hash);
-	if (it == m_resources.end())
-	{
-		Shader* resource = new Shader(name);
-		m_resources.insert(std::pair<u64, Shader*>(hash, resource));
-		return resource;
-	}
-	it->second->IncRef();
-	return it->second;
-}
-
-void ShaderFactory::Destroy(Shader* shader)
-{
-	if (shader && shader->DecRef() == 0)
-	{
-		u64 hash = StringHash64(shader->GetName());
-		m_resources.erase(hash);
-		delete shader;
-	}
-}
-

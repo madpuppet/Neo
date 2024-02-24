@@ -42,7 +42,7 @@ void StaticMesh::Reload()
 {
 }
 
-StaticMeshFactory::StaticMeshFactory()
+template <> ResourceFactory<StaticMesh>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
 	ati->name = "StaticMesh";
@@ -50,31 +50,6 @@ StaticMeshFactory::StaticMeshFactory()
 	ati->assetCreator = []() -> AssetData* { return new StaticMeshAssetData; };
 	ati->sourceExt.push_back({ { ".obj" }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_StaticMesh, ati);
-}
-
-StaticMesh* StaticMeshFactory::Create(const string& name)
-{
-	u64 hash = StringHash64(name);
-	auto it = m_resources.find(hash);
-	if (it == m_resources.end())
-	{
-		StaticMesh* resource = new StaticMesh(name);
-		m_resources.insert(std::pair<u64, StaticMesh*>(hash, resource));
-
-		return resource;
-	}
-	it->second->IncRef();
-	return it->second;
-}
-
-void StaticMeshFactory::Destroy(StaticMesh* resource)
-{
-	if (resource && resource->DecRef() == 0)
-	{
-		u64 hash = StringHash64(resource->GetName());
-		m_resources.erase(hash);
-		delete resource;
-	}
 }
 
 class MemoryStream : public std::streambuf {

@@ -75,7 +75,7 @@ void Material::Reload()
 {
 }
 
-MaterialFactory::MaterialFactory()
+template <> ResourceFactory<Material>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
 	ati->name = "Material";
@@ -85,53 +85,13 @@ MaterialFactory::MaterialFactory()
 	AssetManager::Instance().RegisterAssetType(AssetType_Material, ati);
 }
 
-Material* MaterialFactory::Create(const string& name)
-{
-	u64 hash = StringHash64(name);
-	auto it = m_resources.find(hash);
-	if (it == m_resources.end())
-	{
-		Material* resource = new Material(name);
-		m_resources.insert(std::pair<u64, Material*>(hash, resource));
-
-		return resource;
-	}
-	it->second->IncRef();
-	return it->second;
-}
-
 Material* MaterialFactory::CreateInstance(const string& name, const string& original)
 {
-	// create parent
-	Material* parent = Create(original);
-	u64 hash = StringHash64(original);
-	auto it = m_resources.find(hash);
-	if (it == m_resources.end())
-	{
-		// parent doesn't exist.. create it
-		Material* resource = new Material(name);
-		m_resources.insert(std::pair<u64, Material*>(hash, resource));
-		return resource;
-	}
+	auto parent = Create(name);
 
+	// TODO: create a clone of parent
 
-	// clone parent (when finished)
-	if (!StringEqual(it->second->GetName(), original))
-	{
-	}
-
-	it->second->IncRef();
-	return it->second;
-}
-
-void MaterialFactory::Destroy(Material* resource)
-{
-	if (resource && resource->DecRef() == 0)
-	{
-		u64 hash = StringHash64(resource->GetName());
-		m_resources.erase(hash);
-		delete resource;
-	}
+	return parent;
 }
 
 static vector<string> s_blendModeNames = { "opaque", "alpha", "blend", "additive", "subtractive" };

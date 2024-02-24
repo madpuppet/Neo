@@ -25,17 +25,8 @@ public:
 };
 
 // texture factory keeps a map of all the currently created textures
-class StaticMeshFactory : public Module<StaticMeshFactory>
-{
-	hashtable<u64, StaticMesh*> m_resources;
 
-public:
-	StaticMeshFactory();
-
-	StaticMesh* Create(const string& name);
-	void Destroy(StaticMesh* resource);
-};
-
+class StaticMeshFactory : public ResourceFactory<StaticMesh>, public Module<StaticMeshFactory> {};
 using StaticMeshRef = ResourceRef<StaticMesh, StaticMeshFactory>;
 
 // Asset data is the file data for this asset

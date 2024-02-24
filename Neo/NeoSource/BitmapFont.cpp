@@ -57,7 +57,7 @@ void BitmapFont::Reload()
 {
 }
 
-BitmapFontFactory::BitmapFontFactory()
+template <> ResourceFactory<BitmapFont>::ResourceFactory()
 {
 	auto ati = new AssetTypeInfo();
 	ati->name = "BitmapFont";
@@ -65,31 +65,6 @@ BitmapFontFactory::BitmapFontFactory()
 	ati->assetCreator = []() -> AssetData* { return new BitmapFontAssetData; };
 	ati->sourceExt.push_back({ { ".fnt", }, true });		// on of these src image files
 	AssetManager::Instance().RegisterAssetType(AssetType_BitmapFont, ati);
-}
-
-BitmapFont* BitmapFontFactory::Create(const string& name)
-{
-	u64 hash = StringHash64(name);
-	auto it = m_resources.find(hash);
-	if (it == m_resources.end())
-	{
-		BitmapFont* resource = new BitmapFont(name);
-		m_resources.insert(std::pair<u64, BitmapFont*>(hash, resource));
-
-		return resource;
-	}
-	it->second->IncRef();
-	return it->second;
-}
-
-void BitmapFontFactory::Destroy(BitmapFont* BitmapFont)
-{
-	if (BitmapFont && BitmapFont->DecRef() == 0)
-	{
-		u64 hash = StringHash64(BitmapFont->GetName());
-		m_resources.erase(hash);
-		delete BitmapFont;
-	}
 }
 
 class LineParser

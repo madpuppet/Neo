@@ -5,25 +5,30 @@
 #include <functional>
 
 template <class T>
-class Factory : public Module<Factory<T>>
+class ResourceFactory
 {
+protected:
 	hashtable<u64, T*> m_resources;
 
 public:
-	Factory();
-	T* Create(const string& name)
+	ResourceFactory();
+	T* Create(const string& name, std::function<T*()> creator)
 	{
 		u64 hash = StringHash64(name);
 		auto it = m_resources.find(hash);
 		if (it == m_resources.end())
 		{
-			T* resource = new T(name);
+			T* resource = creator();
 			m_resources.insert(std::pair<u64, T*>(hash, resource));
 
 			return resource;
 		}
 		it->second->IncRef();
 		return it->second;
+	}
+	T* Create(const string& name)
+	{
+		return Create(name, [name]()->T* { return new T(name); });
 	}
 	void Destroy(T* resource)
 	{

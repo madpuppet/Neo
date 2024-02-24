@@ -101,17 +101,6 @@ public:
 	void RenderText(const string& text, const rect& area, float z, Alignment align, const vec2& scale, const color& col, float dropShadowOffset);
 };
 
-// texture factory keeps a map of all the currently created textures
-class BitmapFontFactory : public Module<BitmapFontFactory>
-{
-	hashtable<u64, BitmapFont*> m_resources;
-
-public:
-	BitmapFontFactory();
-
-	BitmapFont* Create(const string& name);
-	void Destroy(BitmapFont* texture);
-};
-
+class BitmapFontFactory : public ResourceFactory<BitmapFont>, public Module<BitmapFontFactory> {};
 using BitmapFontRef = ResourceRef<BitmapFont, BitmapFontFactory>;
 

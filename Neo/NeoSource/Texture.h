@@ -9,6 +9,7 @@
 */
 
 #include "Resource.h"
+#include "ResourceFactory.h"
 #include "AssetManager.h"
 #include "ResourceRef.h"
 
@@ -114,17 +115,13 @@ public:
 };
 
 // texture factory keeps a map of all the currently created textures
-class TextureFactory : public Module<TextureFactory>
+class TextureFactory : public ResourceFactory<Texture>, public Module<TextureFactory>
 {
-	hashtable<u64, Texture*> m_resources;
-
 public:
-	TextureFactory();
-
-	Texture* Create(const string& name);
-	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format);
-
-	void Destroy(Texture* texture);
+	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
+	{
+		return Create(name, [name, width, height, format]()->Texture* { return new Texture(name, width, height, format); });
+	}
 };
 
 // texture references is a scoped pointer to a texture.  the texture will be destroyed with the TextureRef goes out of scope or is destroyed
@@ -138,7 +135,8 @@ class TextureRef : public ResourceRef<Texture, TextureFactory>
 public:
 	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
 	{
-		return TextureFactory::Instance().CreateRenderTarget(name, width, height, format);
+		TextureFactory& factory = TextureFactory::Instance();
+		return factory.CreateRenderTarget(name, width, height, format);
 	}
 };
 

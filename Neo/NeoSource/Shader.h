@@ -6,6 +6,7 @@
 */
 
 #include "Resource.h"
+#include "ResourceFactory.h"
 #include "AssetManager.h"
 #include "ResourceRef.h"
 #include "StringUtils.h"
@@ -83,17 +84,7 @@ public:
 	ShaderPlatformData* GetPlatformData() { return m_platformData; }
 };
 
-class ShaderFactory : public Module<ShaderFactory>
-{
-	hashtable<u64, Shader*> m_resources;
-
-public:
-	ShaderFactory();
-
-	Shader* Create(const string& name);
-	void Destroy(Shader* shader);
-};
-
+class ShaderFactory : public ResourceFactory<Shader>, public Module<ShaderFactory> {};
 using ShaderRef = ResourceRef<Shader, ShaderFactory>;
 
 

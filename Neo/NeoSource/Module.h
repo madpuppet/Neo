@@ -54,7 +54,7 @@ public:
 
 	virtual ~Module()
 	{
-		Assert(s_instance == this, "Multiple definitions of a single module??");
+		Assert(s_instance == (T*)this, "Multiple definitions of a single module??");
 		s_instance = NULL;
 	}
 
