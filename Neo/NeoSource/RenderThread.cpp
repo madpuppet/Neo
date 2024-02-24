@@ -40,7 +40,7 @@ RenderThread::~RenderThread()
 int RenderThread::Go()
 {
 	auto& gil = GIL::Instance();
-	gil.Startup();
+	gil.Initialize();
 	m_gilTaskThread.Start();
 	m_gilInitialized = true;
 

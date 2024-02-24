@@ -43,7 +43,7 @@ public:
 
 	// initial basic global rendering systems
 	// these run on the RenderThread
-	void Startup();
+	void Initialize();
 
 	// destroy all vulkan resources
 	void Shutdown();

@@ -8,7 +8,7 @@
 
 #define BITMAPFONT_VERSION 1
 
-CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", true);
+CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", false);
 
 DECLARE_MODULE(BitmapFontFactory, NeoModuleInitPri_BitmapFontFactory, NeoModulePri_None, NeoModulePri_None);
 
@@ -388,12 +388,12 @@ void BitmapFont::RenderText(const string& text, const rect& area, float z, Align
 			auto& chinfo = it->second;
 			float x1 = x + chinfo.offset.x;
 			float x2 = x1 + chinfo.size.x;
-			float y1 = y;
-			float y2 = y1 + chinfo.size.y;
+			float y2 = y + m_assetData->info.lineHeight - chinfo.offset.y;
+			float y1 = y2 - chinfo.size.y;
 			float u1 = chinfo.pos.x* scaleU;
 			float u2 = (chinfo.pos.x + chinfo.size.x)* scaleU;
-			float v2 = (chinfo.pos.y* scaleV);
-			float v1 = ((chinfo.pos.y + chinfo.size.y)* scaleV);
+			float v2 = ((chinfo.pos.y) * scaleV);
+			float v1 = (((chinfo.pos.y) + chinfo.size.y)* scaleV);
 			x = x + chinfo.xadvance;
 			x1 *= scale.x;
 			x2 *= scale.x;

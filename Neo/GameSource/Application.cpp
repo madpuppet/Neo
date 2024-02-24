@@ -12,7 +12,7 @@ const char* GAME_NAME = "TestGame";
 
 //TextureRef tex;
 
-Application::Application()
+Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "GameUpdateFarm", 4)
 {
 	// mount filesystems
 	m_vikingRoom.Create("viking_room");
@@ -46,7 +46,7 @@ Application::Application()
 
 	m_particleMat.Create("particles");
 	m_font.Create("c64");
-	m_beeRenderTarget.CreateRenderTarget("bee", 256, 256, PixFmt_R8G8B8A8_UNORM);
+//	m_beeRenderTarget.CreateRenderTarget("bee", 256, 256, PixFmt_R8G8B8A8_UNORM);
 	m_beeMat.Create("bee");
 	m_shader.Create("standard");
 
@@ -59,15 +59,22 @@ Application::Application()
 		bee.vel.y = (rand() & 0xffff) / 32768.0f - 1.0f;
 		bee.vel.z = (rand() & 0xffff) / 32768.0f - 1.0f;
 	}
+
+	m_workerFarm.StartWork();
 }
 
 Application::~Application()
 {
 }
 
+void Application::Shutdown()
+{
+	m_workerFarm.KillWorkers();
+}
+
 void Application::Update()
 {
-//	PROFILE_CPU("App::Update");
+	PROFILE_CPU("App::Update");
 
 	float dt = (float)NeoTimeDelta;
 	dt = Min(dt, 0.1f);
@@ -77,16 +84,18 @@ void Application::Update()
 	float yaw = GIL::Instance().GetJoystickAxis(2) * dt;
 	float pitch = GIL::Instance().GetJoystickAxis(3) * dt;
 
-	{
-		PROFILE_CPU("BEES");
-		for (auto& bee : m_bees)
+	m_workerFarm.AddTask([this, dt]()
 		{
-			bee.pos += bee.vel * dt;
-			float range = glm::length(bee.pos);
-			if (range > 20.0f)
-				bee.vel = -bee.pos * 0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
+			PROFILE_CPU("BEES");
+			for (auto& bee : m_bees)
+			{
+				bee.pos += bee.vel * dt;
+				float range = glm::length(bee.pos);
+				if (range > 20.0f)
+					bee.vel = -bee.pos * 0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
+			}
 		}
-	}
+	);
 
 	m_cameraPYR.x += pitch;
 	m_cameraPYR.y += yaw;
@@ -112,39 +121,43 @@ void Application::Update()
 	time += dt;
 	m_beeScale = sinf(time) * 0.1f + 0.11f;
 
-	{
-		PROFILE_CPU("PARTICLES");
-		auto& ddr = DefDynamicRenderer::Instance();
-		if (m_particleMat->IsLoaded())
+	m_workerFarm.AddTask([this, dt, camMatrix]()
 		{
-			ddr.BeginRender(0);
-			ddr.StartPrimitive(PrimType_TriangleList);
-			ddr.UseMaterial(m_particleMat);
-			float width = sinf(time) * 0.05f + 0.05f;
-			vec3 right = vec3(camMatrix[0] * width);
-			vec3 up = vec3(camMatrix[1] * width);
-			for (int i = 0; i < 20000; i++)
+			PROFILE_CPU("PARTICLES");
+			auto& ddr = DefDynamicRenderer::Instance();
+			if (m_particleMat->IsLoaded())
 			{
-				float rnd = (rand() & 0xff) / 2550.0f;
-				vec3 pos;
-				pos.x = sinf(time * 0.1f + i * 0.111f) + cosf(time * 0.1f + i * 0.111f) + rnd;
-				pos.y = sinf(time * 0.1f + i * 0.112f) + cosf(time * 0.1f + i * 0.112f) + rnd;
-				pos.z = sinf(time * 0.1f + i * 0.113f) + cosf(time * 0.1f + i * 0.113f) + rnd;
-				vec3 pos1 = pos + right;
-				vec3 pos2 = pos - right;
-				vec3 pos3 = pos + up;
-				vec2 uv1{ 0,0 };
-				vec2 uv2{ 1,0 };
-				vec2 uv3{ 0.5f,1.0f };
-				u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
-				ddr.AddVert(pos1, uv1, col);
-				ddr.AddVert(pos2, uv2, col);
-				ddr.AddVert(pos3, uv3, col);
+				ddr.BeginRender(0);
+				ddr.StartPrimitive(PrimType_TriangleList);
+				ddr.UseMaterial(m_particleMat);
+				float width = sinf(time) * 0.05f + 0.05f;
+				vec3 right = vec3(camMatrix[0] * width);
+				vec3 up = vec3(camMatrix[1] * width);
+				for (int i = 0; i < 20000; i++)
+				{
+					float rnd = (rand() & 0xff) / 2550.0f;
+					vec3 pos;
+					pos.x = sinf(time * 0.1f + i * 0.111f) + cosf(time * 0.1f + i * 0.111f) + rnd;
+					pos.y = sinf(time * 0.1f + i * 0.112f) + cosf(time * 0.1f + i * 0.112f) + rnd;
+					pos.z = sinf(time * 0.1f + i * 0.113f) + cosf(time * 0.1f + i * 0.113f) + rnd;
+					vec3 pos1 = pos + right;
+					vec3 pos2 = pos - right;
+					vec3 pos3 = pos + up;
+					vec2 uv1{ 0,0 };
+					vec2 uv2{ 1,0 };
+					vec2 uv3{ 0.5f,1.0f };
+					u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
+					ddr.AddVert(pos1, uv1, col);
+					ddr.AddVert(pos2, uv2, col);
+					ddr.AddVert(pos3, uv3, col);
+				}
+				ddr.EndPrimitive();
+				ddr.EndRender();
 			}
-			ddr.EndPrimitive();
-			ddr.EndRender();
 		}
-	}
+		);
+
+	while (!m_workerFarm.AllTasksComplete());
 }
 
 void Application::Draw()
@@ -169,7 +182,7 @@ void Application::Draw()
 		m_vikingRoomMat->SetUniform_vec4("blendColor", col1, true);
 		gil.RenderStaticMeshInstances(m_vikingRoom, m_roomInstances, roomGridSize * roomGridSize / 2);
 
-		vec4 col2{ 0.0f, 0.0f, 1.0f, 1.0f };
+		vec4 col2{ 1.0f, 1.0f, 1.0f, 1.0f };
 		m_vikingRoomMat->SetUniform_vec4("blendColor", col2, true);
 
 		gil.RenderStaticMeshInstances(m_vikingRoom, &m_roomInstances[roomGridSize * roomGridSize / 2], roomGridSize * roomGridSize / 2);
@@ -216,7 +229,7 @@ void Application::Draw()
 	{
 		int fps = (int)(1.0f / NeoTimeDelta);
 		int ms = (int)(1000.0f * NeoTimeDelta);
-		m_font->RenderText(STR("{}ms FPS {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
+		m_font->RenderText(STR("{}ms manager {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 	}
 }
 

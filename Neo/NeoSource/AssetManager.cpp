@@ -6,19 +6,19 @@
 
 DECLARE_MODULE(AssetManager, NeoModuleInitPri_AssetManager, NeoModulePri_None, NeoModulePri_None);
 
-AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, "AssetManager", 64)
+AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, "AssetManager", 16)
 {
 }
 
 void AssetManager::StartWork()
 {
-	m_assetTasks.Start();
+	m_assetTasks.StartWork();
 }
 
 
 void AssetManager::KillWorkerFarm()
 {
-	m_assetTasks.StopAndWait();
+	m_assetTasks.KillWorkers();
 }
 
 static int GetTime(const string name, const stringlist &extensions, u64& time)

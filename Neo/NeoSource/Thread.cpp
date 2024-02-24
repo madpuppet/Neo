@@ -164,6 +164,16 @@ int Thread::GetCurrentThreadGUID()
     return (it != s_threadRegistry.end()) ? it->second.guid : -1;
 }
 
+string Thread::GetThreadNameByGUID(int guid)
+{
+    for (auto& it : s_threadRegistry)
+    {
+        if (it.second.guid == guid)
+            return it.second.name;
+    }
+    return "";
+}
+
 string Thread::GetCurrentThreadName()
 {
     ScopedMutexLock lock(s_threadRegistryLock);
@@ -171,3 +181,91 @@ string Thread::GetCurrentThreadName()
     auto it = s_threadRegistry.find(Thread::CurrentThreadID());
     return (it != s_threadRegistry.end()) ? it->second.name : "";
 }
+
+int WorkerThread::Go()
+{
+    m_taskSignals.Wait();
+    while (!m_terminate)
+    {
+        m_tasks.Lock();
+        auto task = m_taskList.front();
+        m_taskList.pop_front();
+        m_tasks.Release();
+        task();
+        m_taskSignals.Wait();
+    }
+    LOG(Asset, STR("Worker Thread {} Go is exitting...", GetName()));
+    return 0;
+}
+
+int WorkerFarmWorker::Go()
+{
+    m_taskSignals.Wait();
+    while (!m_terminate)
+    {
+        m_taskLock.Lock();
+        auto task = m_tasks.front();
+        m_tasks.pop_front();
+        m_taskLock.Release();
+
+        task.first();
+        task.second();
+        m_taskSignals.Wait();
+    }
+    return 0;
+}
+
+WorkerFarm::WorkerFarm(int guid, const string& name, int maxThreads)
+{
+    for (int i = 0; i < maxThreads; i++)
+    {
+        m_workers.push_back(new WorkerFarmWorker(guid + i, name));
+    }
+}
+
+void WorkerFarm::KillWorkers()
+{
+    for (auto worker : m_workers)
+        delete worker;
+    m_workers.clear();
+}
+
+void WorkerFarm::StartWork()
+{
+    ScopedMutexLock lock(m_taskLock);
+    m_startWork = true;
+    for (auto& task : m_taskQueue)
+    {
+        AddTask(task);
+    }
+    m_taskQueue.clear();
+}
+
+void WorkerFarm::AddTask(GenericCallback task)
+{
+    if (!m_startWork)
+    {
+        ScopedMutexLock lock(m_taskLock);
+        m_taskQueue.emplace_back(task);
+    }
+    else
+    {
+        // find worker with least workload
+        int smallestTasks = 10000;
+        WorkerFarmWorker* bestWorker = nullptr;
+        for (auto worker : m_workers)
+        {
+            int taskSize = worker->TaskListSize();
+            if (!bestWorker || taskSize < smallestTasks)
+            {
+                smallestTasks = taskSize;
+                bestWorker = worker;
+            }
+        }
+        m_activeTasks++;
+        bestWorker->AddTask(task, m_onComplete);
+    }
+}
+
+
+

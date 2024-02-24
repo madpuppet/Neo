@@ -5,6 +5,12 @@
 #include "View.h"
 #include "BitmapFont.h"
 #include "Shader.h"
+#include "Thread.h"
+
+enum ApplicationThreads
+{
+	GameThreadGUID_UpdateWorkerThread = ThreadGUID_MAX
+};
 
 struct Bee
 {
@@ -20,8 +26,11 @@ public:
 
 	void Update();
 	void Draw();
+	void Shutdown();
 
 protected:
+	WorkerFarm m_workerFarm;
+
 	StaticMeshRef m_vikingRoom;
 	MaterialRef m_vikingRoomMat;
 	View m_view;

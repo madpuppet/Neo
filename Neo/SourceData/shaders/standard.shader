@@ -28,7 +28,7 @@ FRAGMENT_SHADER_CODE =============================
 
 void main() {
     outColor = texture(Albedo, fragTexCoord) * fragColor * Material.blendColor;
-//    if (outColor.a == 0.0)
-//        discard;
+    if (outColor.a == 0.0)
+        discard;
 }
 

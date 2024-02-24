@@ -61,7 +61,7 @@ VkFormat VertexFormatToVk(VertexFormat vf) { return s_VertexFormatToVk[vf]; }
 static string s_VertexFormatToString[] = { "vec4", "vec2", "vec3" };
 string VertexFormatToString(VertexFormat vf) { return s_VertexFormatToString[vf]; }
 
-void GIL::Startup()
+void GIL::Initialize()
 {
     createInstance();
     setupDebugMessenger();
@@ -1746,7 +1746,7 @@ void GIL::GetGpuTimeQueryResults(u64*& buffer, int& count)
 {
     if (m_queryIdx > 0)
     {
-        vkGetQueryPoolResults(m_device, m_queryPool, 0, m_queryIdx, sizeof(uint64_t) * m_queryIdx, m_queryResults, sizeof(uint64_t), VK_QUERY_RESULT_64_BIT);
+        vkGetQueryPoolResults(m_device, m_queryPool, 0, m_queryIdx, sizeof(uint64_t) * m_queryIdx, m_queryResults, sizeof(uint64_t), VK_QUERY_RESULT_WAIT_BIT | VK_QUERY_RESULT_64_BIT);
     }
     buffer = m_queryResults;
     count = m_queryIdx;

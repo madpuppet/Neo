@@ -33,6 +33,8 @@ void Profiler::FrameSync()
 	{
 		point.second.start = resultBuffer[point.second.start];
 		point.second.end = resultBuffer[point.second.end];
+
+		Assert(point.second.end >= point.second.start, "Bad GPU Time");
 	}
 
 	// start next frame
@@ -61,6 +63,15 @@ void Profiler::Render()
 	auto& gil = GIL::Instance();
 	auto& idr = ImmDynamicRenderer::Instance();
 
+	// sort the threads
+	vector<ThreadProfile*> sortedThreads;
+	for (auto& thread : frame.threads)
+	{
+		sortedThreads.push_back(thread.second);
+	}
+	std::sort(sortedThreads.begin(), sortedThreads.end(),
+		[](const ThreadProfile* a, const ThreadProfile* b) { return a->guid < b->guid; });
+
 	// draw row lines
 	float y = baseY;
 	idr.BeginRender();
@@ -70,7 +81,7 @@ void Profiler::Render()
 	idr.AddVert(vec3(right, y, 0), vec2(1, 1), lineCol);
 	y += lineHeight;
 
-	for (auto thread : frame.threads)
+	for (auto thread : sortedThreads)
 	{
 		idr.AddVert(vec3(left, y, 0), vec2(0, 0), lineCol);
 		idr.AddVert(vec3(right, y, 0), vec2(1, 1), lineCol);
@@ -125,9 +136,9 @@ void Profiler::Render()
 	}
 	y += lineHeight;
 
-	for (auto& thread : frame.threads)
+	for (auto thread : sortedThreads)
 	{
-		for (auto& point : thread.second->points)
+		for (auto& point : thread->points)
 		{
 			float x1 = CPU_TIME_TO_POS(point.start);
 			float x2 = CPU_TIME_TO_POS(point.end);
@@ -148,12 +159,17 @@ void Profiler::Render()
 	idr.EndPrimitive();
 	idr.EndRender();
 
-//	if (m_font->IsLoaded())
-//	{
-//		int fps = (int)(1.0f / NeoTimeDelta);
-//		int ms = (int)(1000.0f * NeoTimeDelta);
-//		m_font->RenderText(STR("{}ms FPS {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
-//	}
+	y = baseY;
+	if (m_font->IsLoaded())
+	{
+		m_font->RenderText("GPU", { left,y,right - left - 5,lineHeight }, 0, Alignment_CenterRight, { 1,1 }, { 1,1,1,1 }, 2.0f);
+		y += lineHeight;
+		for (auto thread : sortedThreads)
+		{
+			m_font->RenderText(thread->name, { left,y,right - left - 5,lineHeight }, 0, Alignment_CenterRight, { 1,1 }, { 1,1,1,1 }, 2.0f);
+			y += lineHeight;
+		}
+	}
 }
 
 void Profiler::AddProfileCPU(u64 thread, u64 start, u64 end, const string& label)
@@ -167,6 +183,8 @@ void Profiler::AddProfileCPU(u64 thread, u64 start, u64 end, const string& label
 	if (it == frame.threads.end())
 	{
 		tp = new ThreadProfile;
+		tp->name = Thread::GetThreadNameByGUID((int)thread);
+		tp->guid = (int)thread;
 		frame.threads[thread] = tp;
 	}
 	else

@@ -38,6 +38,9 @@ public:
 	virtual void Update() {};
 	virtual void Draw() {};
 	virtual ~ModuleBase() {};
+
+	virtual void Startup() {};		// called after constructor is complete
+	virtual void Shutdown() {};		// called before destructor is called
 };
 
 template<class T>

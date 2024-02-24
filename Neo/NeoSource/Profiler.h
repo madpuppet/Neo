@@ -16,6 +16,8 @@ class Profiler : public Module<Profiler>
 	};
 	struct ThreadProfile
 	{
+		string name;
+		int guid;
 		vector<ProfilePoint> points;
 	};
 	struct FrameInfo
@@ -52,8 +54,7 @@ struct ProfilerScopeCPU
 
 	~ProfilerScopeCPU()
 	{
-		auto tid = Thread::CurrentThreadID();
-		u64 threadID = *((u32*)&tid);
+		u64 threadID = Thread::GetCurrentThreadGUID();
 		u64 end = NeoTimeNowU64;
 		Profiler::Instance().AddProfileCPU(threadID, start, end, label);
 	}
@@ -74,8 +75,7 @@ struct ProfilerScopeGPU
 
 	~ProfilerScopeGPU()
 	{
-		auto tid = Thread::CurrentThreadID();
-		u64 threadID = *((u32*)&tid);
+		u64 threadID = Thread::GetCurrentThreadGUID();
 		u64 end = NeoTimeNowU64;
 		Profiler::Instance().AddProfileCPU(threadID, start, end, label);
 		Profiler::Instance().AddProfileGPU_End(uid);
