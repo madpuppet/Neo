@@ -760,7 +760,7 @@ VkSurfaceFormatKHR GIL::chooseSwapSurfaceFormat(const std::vector<VkSurfaceForma
 
 VkPresentModeKHR GIL::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>& availablePresentModes)
 {
-#if !PROFILING_ENABLED
+//#if !PROFILING_ENABLED
     for (const auto& availablePresentMode : availablePresentModes)
     {
         if (availablePresentMode == VK_PRESENT_MODE_MAILBOX_KHR)
@@ -768,7 +768,7 @@ VkPresentModeKHR GIL::chooseSwapPresentMode(const std::vector<VkPresentModeKHR>&
             return availablePresentMode;
         }
     }
-#endif
+//#endif
     return VK_PRESENT_MODE_FIFO_KHR;
 }
 

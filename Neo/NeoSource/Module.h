@@ -1,7 +1,7 @@
 #pragma once
 
 // priority of neo modules - lowest number gets initialised first
-// game should manage its own priorities and should be after the NeoModulePri_MAX
+// game should manage its own priorities and should be >= NeoModuleInitPri_Application
 enum NeoModuleInitPri
 {
 	NeoModuleInitPri_FileManager,
@@ -10,12 +10,10 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_ResourceLoadedManager,
 	NeoModuleInitPri_TextureFactory,
 	NeoModuleInitPri_ShaderFactory,
-	NeoModuleInitPri_VertexShaderFactory,
-	NeoModuleInitPri_PixelShaderFactory,
-	NeoModuleInitPri_ComputeShaderFactory,
 	NeoModuleInitPri_MaterialFactory,
 	NeoModuleInitPri_StaticMeshFactory,
 	NeoModuleInitPri_BitmapFontFactory,
+	NeoModuleInitPri_RenderPassFactory,
 	NeoModuleInitPri_GIL,
 	NeoModuleInitPri_RenderThread,
 	NeoModuleInitPri_ShaderManager,

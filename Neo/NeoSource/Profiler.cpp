@@ -1,7 +1,7 @@
 #include "Neo.h"
 #include "ImmDynamicRenderer.h"
 
-#if PROFILE_ENABLED
+#if PROFILING_ENABLED
 
 DECLARE_MODULE(Profiler, NeoModuleInitPri_Profiler, NeoModulePri_None, NeoModulePri_None);
 

@@ -656,6 +656,7 @@
     <ClInclude Include="NeoSource\Memory.h" />
     <ClInclude Include="NeoSource\DefDynamicRenderer.h" />
     <ClInclude Include="NeoSource\Profiler.h" />
+    <ClInclude Include="NeoSource\RenderPass.h" />
     <ClInclude Include="NeoSource\Shader.h" />
     <ClInclude Include="NeoSource\ShaderManager.h" />
     <ClInclude Include="NeoSource\StaticMesh.h" />
@@ -676,6 +677,7 @@
     <ClCompile Include="NeoSource\Log.cpp" />
     <ClCompile Include="NeoSource\DefDynamicRenderer.cpp" />
     <ClCompile Include="NeoSource\Profiler.cpp" />
+    <ClCompile Include="NeoSource\RenderPass.cpp" />
     <ClCompile Include="NeoSource\Shader.cpp" />
     <ClCompile Include="NeoSource\ShaderManager.cpp" />
     <ClCompile Include="NeoSource\TimeManager.cpp" />

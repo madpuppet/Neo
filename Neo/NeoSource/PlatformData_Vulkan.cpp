@@ -574,3 +574,10 @@ IADPlatformData* IADPlatformData_Create(InputAttributesDescription* iad)
     return platformData;
 }
 
+
+RenderPassPlatformData *RenderPassPlatformData_Create(struct RenderPassAssetData* assetData)
+{
+    auto platformData = new RenderPassPlatformData;
+    return platformData;
+}
+

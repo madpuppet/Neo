@@ -5,7 +5,7 @@
 #include "ResourceLoadedManager.h"
 #include "ShaderManager.h"
 
-#define MATERIAL_VERSION 4
+#define MATERIAL_VERSION 1
 
 DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
 

@@ -10,7 +10,7 @@
 #include <fstream>
 #include <cstdlib>
 
-#define SHADER_VERSION 5
+#define SHADER_VERSION 1
 
 hashtable<string, SROType> SROType_Lookup;
 hashtable<string, SROStage> SROStage_Lookup;

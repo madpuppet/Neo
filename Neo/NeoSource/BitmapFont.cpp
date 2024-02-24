@@ -6,7 +6,7 @@
 #include "ImmDynamicRenderer.h"
 #include <stb_image.h>
 
-#define BITMAPFONT_VERSION 2
+#define BITMAPFONT_VERSION 1
 
 CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", true);
 

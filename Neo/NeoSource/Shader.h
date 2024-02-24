@@ -85,7 +85,7 @@ public:
 
 class ShaderFactory : public Module<ShaderFactory>
 {
-	map<u64, Shader*> m_resources;
+	hashtable<u64, Shader*> m_resources;
 
 public:
 	ShaderFactory();

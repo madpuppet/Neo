@@ -27,7 +27,7 @@ public:
 // texture factory keeps a map of all the currently created textures
 class StaticMeshFactory : public Module<StaticMeshFactory>
 {
-	map<u64, StaticMesh*> m_resources;
+	hashtable<u64, StaticMesh*> m_resources;
 
 public:
 	StaticMeshFactory();

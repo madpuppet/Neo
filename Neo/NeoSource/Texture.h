@@ -116,7 +116,7 @@ public:
 // texture factory keeps a map of all the currently created textures
 class TextureFactory : public Module<TextureFactory>
 {
-	map<u64, Texture*> m_resources;
+	hashtable<u64, Texture*> m_resources;
 
 public:
 	TextureFactory();

@@ -1541,6 +1541,9 @@
     <ClInclude Include="NeoSource\Profiler.h">
       <Filter>NeoSource\Debugging</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\RenderPass.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1677,6 +1680,9 @@
     </ClCompile>
     <ClCompile Include="NeoSource\Profiler.cpp">
       <Filter>NeoSource\Debugging</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\RenderPass.cpp">
+      <Filter>NeoSource\Resources</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

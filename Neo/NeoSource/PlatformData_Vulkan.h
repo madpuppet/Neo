@@ -83,3 +83,8 @@ struct IADPlatformData
 };
 IADPlatformData* IADPlatformData_Create(struct InputAttributesDescription *iad);
 
+struct RenderPassPlatformData
+{
+};
+RenderPassPlatformData *RenderPassPlatformData_Create(struct RenderPassAssetData* assetData);
+

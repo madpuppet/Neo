@@ -26,7 +26,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/euler_angles.hpp>
 
-#define PROFILING_ENABLED 0
+#define PROFILING_ENABLED 1
 
 //===============================================================
 //========== WINDOWS ============================================
@@ -147,7 +147,7 @@ using ivolume = boundingVolume<ivec3>;
 // neo containers... some are renamed from STL for more legibility
 template<typename T> using vector = std::vector<T>;
 template<typename T, size_t S> using array = std::array<T, S>;
-template<typename K, typename D> using map = std::map<K, D>;
+template<typename K, typename D> using tree = std::map<K, D>;
 template<typename K, typename D> using hashtable = std::unordered_map<K, D>;
 template<typename D> using set = std::set<D>;
 template<typename D> using hashset = std::unordered_set<D>;

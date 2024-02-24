@@ -10,7 +10,7 @@
 #include <sstream>
 #include <streambuf>
 
-#define STATICMESH_VERSION 2
+#define STATICMESH_VERSION 1
 
 DECLARE_MODULE(StaticMeshFactory, NeoModuleInitPri_StaticMeshFactory, NeoModulePri_None, NeoModulePri_None);
 

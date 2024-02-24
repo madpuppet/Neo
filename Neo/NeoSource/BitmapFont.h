@@ -104,7 +104,7 @@ public:
 // texture factory keeps a map of all the currently created textures
 class BitmapFontFactory : public Module<BitmapFontFactory>
 {
-	map<u64, BitmapFont*> m_resources;
+	hashtable<u64, BitmapFont*> m_resources;
 
 public:
 	BitmapFontFactory();

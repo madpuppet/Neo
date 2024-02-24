@@ -103,7 +103,7 @@ public:
 // texture factory keeps a map of all the currently created textures
 class MaterialFactory : public Module<MaterialFactory>
 {
-	map<u64, Material*> m_resources;
+	hashtable<u64, Material*> m_resources;
 	Material* m_blank;
 
 public:
