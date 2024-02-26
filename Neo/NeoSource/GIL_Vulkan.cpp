@@ -48,7 +48,7 @@ void GIL::StartupMainThread()
         exit(0);
     }
 
-    m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_frameBufferSize.x, m_frameBufferSize.y, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
+    m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_swapChainImageSize.x, m_swapChainImageSize.y, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
     m_joystick = SDL_JoystickOpen(0);
 }
 
@@ -154,8 +154,8 @@ void GIL::Shutdown()
 
 void GIL::ResizeFrameBuffers(int width, int height)
 {
-    m_frameBufferSize.x = width;
-    m_frameBufferSize.y = height;
+    m_swapChainImageSize.x = width;
+    m_swapChainImageSize.y = height;
     recreateSwapChain();
 }
 
@@ -199,6 +199,9 @@ void GIL::BeginFrame()
 #if PROFILING_ENABLED
     vkCmdResetQueryPool(commandBuffer, m_queryPool, 0, MaxProfileTimestamps);
 #endif
+
+    m_swapChainColorLayout = TextureLayout_Undefined;
+    m_swapChainDepthLayout = TextureLayout_Undefined;
 
     // start render pass == TODO: this should be a specific "setup render pass" function
     VkRenderPassBeginInfo renderPassInfo{};
@@ -319,10 +322,10 @@ void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboS
 void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
 {
     VkViewport vp{};
-    vp.x = viewport.x * m_frameBufferSize.x;
-    vp.y = viewport.y * m_frameBufferSize.y;
-    vp.width = viewport.w * m_frameBufferSize.x;
-    vp.height = viewport.h * m_frameBufferSize.y;
+    vp.x = viewport.x * m_swapChainImageSize.x;
+    vp.y = viewport.y * m_swapChainImageSize.y;
+    vp.width = viewport.w * m_swapChainImageSize.x;
+    vp.height = viewport.h * m_swapChainImageSize.y;
     vp.minDepth = minDepth;
     vp.maxDepth = maxDepth;
     vkCmdSetViewport(m_commandBuffers[m_currentFrame], 0, 1, &vp);
@@ -331,10 +334,10 @@ void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
 void GIL::SetScissor(const rect& scissorRect)
 {
     VkRect2D scissor{};
-    scissor.offset.x = (u32)(scissorRect.x * m_frameBufferSize.x);
-    scissor.offset.y = (u32)(scissorRect.y * m_frameBufferSize.y);
-    scissor.extent.width = (u32)(scissorRect.w * m_frameBufferSize.x);
-    scissor.extent.height = (u32)(scissorRect.h * m_frameBufferSize.y);
+    scissor.offset.x = (u32)(scissorRect.x * m_swapChainImageSize.x);
+    scissor.offset.y = (u32)(scissorRect.y * m_swapChainImageSize.y);
+    scissor.extent.width = (u32)(scissorRect.w * m_swapChainImageSize.x);
+    scissor.extent.height = (u32)(scissorRect.h * m_swapChainImageSize.y);
     vkCmdSetScissor(m_commandBuffers[m_currentFrame], 0, 1, &scissor);
 }
 
@@ -864,13 +867,13 @@ void GIL::createRenderPass()
     subpass.pColorAttachments = &colorAttachmentRef;
     subpass.pDepthStencilAttachment = &depthAttachmentRef;
 
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+//    VkSubpassDependency dependency{};
+//    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+//    dependency.dstSubpass = 0;
+//    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+//    dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+//    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+//    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
 
     std::array<VkAttachmentDescription, 2> attachments = { colorAttachment, depthAttachment };
     VkRenderPassCreateInfo renderPassInfo{};
@@ -879,8 +882,8 @@ void GIL::createRenderPass()
     renderPassInfo.pAttachments = attachments.data();
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
+    renderPassInfo.dependencyCount = 0;
+    renderPassInfo.pDependencies = nullptr;// &dependency;
 
     if (vkCreateRenderPass(m_device, &renderPassInfo, nullptr, &m_renderPass) != VK_SUCCESS) 
     {
@@ -1374,12 +1377,28 @@ VkPipelineStageFlagBits s_textureLayoutToVkPipelineStageFlags[] =
     VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
 };
 
-void GIL::TransitionTexture(Texture *texture, TextureLayout currentLayout, TextureLayout newLayout)
+void GIL::TransitionSwapChainColorImage(TextureLayout newLayout)
+{
+    TransitionImageLayout(m_swapChainImages[m_currentFrame], false, m_swapChainColorLayout, newLayout);
+    m_swapChainColorLayout = newLayout;
+}
+
+void GIL::TransitionSwapChainDepthImage(TextureLayout newLayout)
+{
+    TransitionImageLayout(m_depthImage, true, m_swapChainDepthLayout, newLayout);
+    m_swapChainDepthLayout = newLayout;
+}
+
+void GIL::TransitionTexture(Texture* texture, TextureLayout currentLayout, TextureLayout newLayout)
 {
     auto textureAD = texture->GetAssetData();
     auto texturePD = texture->GetPlatformData();
     bool isDepth = (textureAD->format == PixFmt_D24_UNORM_S8_UINT) || (textureAD->format == PixFmt_D32_SFLOAT);
+    TransitionImageLayout(texturePD->textureImage, isDepth, currentLayout, newLayout);
+}
 
+void GIL::TransitionImageLayout(VkImage image, bool isDepth, TextureLayout currentLayout, TextureLayout newLayout)
+{
     auto commandBuffer = m_commandBuffers[m_currentFrame];
     VkImageLayout oldIL = s_textureLayoutToVkImageLayout[currentLayout];
     VkImageLayout newIL = s_textureLayoutToVkImageLayout[newLayout];
@@ -1390,7 +1409,7 @@ void GIL::TransitionTexture(Texture *texture, TextureLayout currentLayout, Textu
     barrier.newLayout = newIL;
     barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
     barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
-    barrier.image = texturePD->textureImage;
+    barrier.image = image;
     barrier.subresourceRange.aspectMask = isDepth ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
     barrier.subresourceRange.baseMipLevel = 0;
     barrier.subresourceRange.levelCount = 1;
@@ -1402,7 +1421,6 @@ void GIL::TransitionTexture(Texture *texture, TextureLayout currentLayout, Textu
     VkPipelineStageFlags destinationStage = s_textureLayoutToVkPipelineStageFlags[newLayout];
     vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
-
 
 void GIL::transitionImageLayout(VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout, uint32_t mipLevels)
 {
@@ -1791,68 +1809,58 @@ void GIL::UnmapGeometryBufferMemory(NeoGeometryBuffer* buffer)
 
 void GIL::SetRenderPass(RenderPass* renderPass)
 {
-    if ((m_activeRenderPass == renderPass) || (m_activeRenderPass == nullptr && renderPass->GetPlatformData()->useSwapChain))
+    if (m_activeRenderPass == renderPass)
         return;
 
     auto& commandBuffer = m_commandBuffers[m_currentFrame];
-    vkCmdEndRenderPass(commandBuffer);
+    auto renderPassPD = renderPass->GetPlatformData();
+    auto renderPassAD = renderPass->GetAssetData();
 
     // transition the old renderpass textures back to being shader textures
     if (m_activeRenderPass)
     {
+        vkCmdEndRenderPass(commandBuffer);
         auto oldAD = m_activeRenderPass->GetAssetData();
         for (auto& col : oldAD->colorAttachments)
         {
-            col.texture->SetLayout(TextureLayout_ShaderRead);
+            if (col.useSwapChain)
+                TransitionSwapChainColorImage(TextureLayout_ShaderRead);
+            else
+                col.texture->SetLayout(TextureLayout_ShaderRead);
         }
-        if (oldAD->depthAttachment.texture != nullptr)
+        if (oldAD->depthAttachment.useSwapChain)
+            TransitionSwapChainDepthImage(TextureLayout_ShaderRead);
+        else if (oldAD->depthAttachment.texture != nullptr)
             oldAD->depthAttachment.texture->SetLayout(TextureLayout_ShaderRead);
     }
 
-    auto renderPassPD = renderPass->GetPlatformData();
-    auto renderPassAD = renderPass->GetAssetData();
-    if (renderPassPD->useSwapChain)
-    {
-        // standard swap chain usage
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = m_renderPass;
-        renderPassInfo.framebuffer = m_swapChainFramebuffers[m_frameSwapImage];
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = m_swapChainExtent;
+    m_activeRenderPass = renderPass;
 
-        std::array<VkClearValue, 2> clearValues{};
-        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
-        clearValues[1].depthStencil = { 1.0f, 0 };
-
-        renderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
-        renderPassInfo.pClearValues = clearValues.data();
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-    }
-    else
+    // transition render pass textures to attachment layout
+    for (auto& col : renderPassAD->colorAttachments)
     {
-        // transition all textures to attachment layout
-        for (auto& col : renderPassAD->colorAttachments)
-        {
+        if (col.useSwapChain)
+            TransitionSwapChainColorImage(TextureLayout_ColorAttachment);
+        else
             col.texture->SetLayout(TextureLayout_ColorAttachment);
-        }
-        if (renderPassAD->depthAttachment.texture != nullptr)
-        {
-            renderPassAD->depthAttachment.texture->SetLayout(TextureLayout_DepthAttachment);
-        }
-
-        // start render pass == TODO: this should be a specific "setup render pass" function
-        VkRenderPassBeginInfo renderPassInfo{};
-        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-        renderPassInfo.renderPass = renderPassPD->renderPass;
-        renderPassInfo.framebuffer = renderPassPD->frameBuffer;
-        renderPassInfo.renderArea.offset = { 0, 0 };
-        renderPassInfo.renderArea.extent = { (u32)renderPassAD->size.x,  (u32)renderPassAD->size.y };
-
-        renderPassInfo.clearValueCount = static_cast<u32>(renderPassPD->clearValues.size());
-        renderPassInfo.pClearValues = renderPassPD->clearValues.data();
-        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
+    if (renderPassAD->depthAttachment.useSwapChain)
+        TransitionSwapChainDepthImage(TextureLayout_DepthAttachment);
+    else if (renderPassAD->depthAttachment.texture != nullptr)
+        renderPassAD->depthAttachment.texture->SetLayout(TextureLayout_DepthAttachment);
+
+    // start render pass
+    VkRenderPassBeginInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+    renderPassInfo.renderPass = renderPassPD->renderPass;
+    renderPassInfo.framebuffer = renderPassPD->useSwapChain ? renderPassPD->frameBuffers[m_currentFrame] : renderPassPD->frameBuffers[0];
+    ivec2 size = renderPassPD->useSwapChain ? GetSwapChainImageSize() : renderPassAD->size;
+    renderPassInfo.renderArea.offset = { 0, 0 };
+    renderPassInfo.renderArea.extent = { (u32)size.x, (u32)size.y };
+
+    renderPassInfo.clearValueCount = static_cast<u32>(renderPassPD->clearValues.size());
+    renderPassInfo.pClearValues = renderPassPD->clearValues.data();
+    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 }
 
 #if PROFILING_ENABLED

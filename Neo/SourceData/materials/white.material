@@ -1,12 +1,12 @@
-shader: standard
-blend: opaque
-cull: back
-zread: true
-zwrite: true
-sampler: Albedo
-	image: white
-	filter: nearest
-	wrap: repeat
-static_ubo: UBO_Material
-	blendColor: 1,1,1,1
-
+renderpass: main
+	shader: standard
+	blend: opaque
+	cull: back
+	zread: true
+	zwrite: true
+	sampler: Albedo
+		image: white
+		filter: nearest
+		wrap: repeat
+	static_ubo: UBO_Material
+		blendColor: 1,1,1,1

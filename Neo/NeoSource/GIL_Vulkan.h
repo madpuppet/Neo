@@ -108,8 +108,12 @@ public:
 	// change layout of a texture
 	void TransitionTexture(Texture *texture, TextureLayout currentLayout, TextureLayout newLayout);
 
+	// change layout of the swap chain images
+	void TransitionSwapChainColorImage(TextureLayout newLayout);
+	void TransitionSwapChainDepthImage(TextureLayout newLayout);
+
 	// query the current size of the frame buffer
-	ivec2 GetFrameBufferSize() { return m_frameBufferSize; }
+	ivec2 GetSwapChainImageSize() { return m_swapChainImageSize; }
 
 	// TODO: should do a Platform Interface Layer for misc services not graphics related
 	// show message box and return TRUE if user would like to break
@@ -133,7 +137,7 @@ protected:
 
 	SDL_Window* m_window;
 	SDL_Joystick* m_joystick;
-	ivec2 m_frameBufferSize{ 1280,720 };
+	ivec2 m_swapChainImageSize{ 1280,720 };
 
 	VkInstance m_instance;
 	VkDebugUtilsMessengerEXT m_debugMessenger;
@@ -151,6 +155,8 @@ protected:
 	vector<VkImageView> m_swapChainImageViews;
 	vector<VkFramebuffer> m_swapChainFramebuffers;
 	u32 m_frameSwapImage;
+	TextureLayout m_swapChainColorLayout = TextureLayout_Undefined;
+	TextureLayout m_swapChainDepthLayout = TextureLayout_Undefined;
 
 #if PROFILING_ENABLED
 	static const int MaxQueries = 5000;
@@ -259,9 +265,12 @@ public:
 	// these used by RenderPass
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
 	VkFormat GetSwapChainImageFormat() { return m_swapChainImageFormat; }
+	u32 GetSwapChainImageCount() { return (u32)m_swapChainImages.size(); }
 	VkFormat GetDepthFormat() { return m_depthFormat; }
+	VkImageView GetSwapChainImageView(int i) { return m_swapChainImageViews[i]; }
 	VkImageView GetDepthBufferImageView() { return m_depthImageView; }
 	void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+	void TransitionImageLayout(VkImage image, bool isDepth, TextureLayout currentLayout, TextureLayout newLayout);
 
 	// these used for UBO buffer creation
 	// dynamic UBOs just share shader memory over a frame and must copy over the entire UBO memory on any change,

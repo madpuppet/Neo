@@ -47,7 +47,6 @@ Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Up
 
 	m_particleMat.Create("particles");
 	m_font.Create("c64");
-//	m_beeRenderTarget.CreateRenderTarget("bee", 256, 256, PixFmt_R8G8B8A8_UNORM);
 	m_beeMat.Create("bee");
 	m_shader.Create("standard");
 
@@ -191,7 +190,7 @@ void Application::Draw()
 	modelData.model = mat4x4(1);
 	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
 
-//	GIL::Instance().SetRenderPass(nullptr);
+	GIL::Instance().SetRenderPass(nullptr);
 
 	{
 		PROFILE_GPU("PARTICLES");

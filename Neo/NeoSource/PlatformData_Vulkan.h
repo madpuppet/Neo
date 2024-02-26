@@ -86,9 +86,10 @@ IADPlatformData* IADPlatformData_Create(struct InputAttributesDescription *iad);
 
 struct RenderPassPlatformData
 {
+	// if this renderpass uses the swap chain, then bind the current_frame frameBuffer
 	bool useSwapChain = false;
 	VkRenderPass renderPass;
-	VkFramebuffer frameBuffer;
+	vector<VkFramebuffer> frameBuffers;
 	vector<VkClearValue> clearValues;
 };
 RenderPassPlatformData *RenderPassPlatformData_Create(struct RenderPassAssetData* assetData);

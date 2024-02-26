@@ -584,22 +584,30 @@ IADPlatformData* IADPlatformData_Create(InputAttributesDescription* iad)
 
 RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* assetData)
 {
-    auto gil = GIL::Instance();
+    auto &gil = GIL::Instance();
     auto platformData = new RenderPassPlatformData;
 
-    platformData->useSwapChain = assetData->colorAttachments.empty();
-    if (platformData->useSwapChain)
-        return platformData;
+    // check if any color attachments are the swapchain
+    for (auto& color : assetData->colorAttachments)
+    {
+        if (color.name == "swapchain")
+        {
+            platformData->useSwapChain = true;
+        }
+    }
+
+    int framebufferCount = platformData->useSwapChain ? gil.GetSwapChainImageCount() : 1;
+    vector<vector<VkImageView>> imageViewsList(framebufferCount);
 
     vector<VkAttachmentDescription> attachments;
     vector<VkAttachmentReference> colorAttachmentRefs;
-    vector<VkImageView> imageViews;
     VkAttachmentReference depthAttachmentRef{};
 
     for (auto& color : assetData->colorAttachments)
     {
-        VkFormat fmt = gil.FindVulkanFormat(color.fmt);
+        bool useSwapChain = color.name == "swapchain";
 
+        VkFormat fmt = useSwapChain ? gil.GetSwapChainImageFormat() : gil.FindVulkanFormat(color.fmt);
         VkAttachmentReference colorAttachmentRef{};
         colorAttachmentRef.attachment = (u32)attachments.size();
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -612,28 +620,30 @@ RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* asset
         colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
         colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
         colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
-        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
         attachments.emplace_back(colorAttachment);
 
-        imageViews.push_back(color.texture->GetPlatformData()->textureImageView);
-
         VkClearValue clear{};
-        clear.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+        clear.color = { color.clear.color.r, color.clear.color.g, color.clear.color.b, color.clear.color.a };
         platformData->clearValues.push_back(clear);
 
+        for (int i = 0; i < framebufferCount; i++)
+        {
+            imageViewsList[i].push_back(useSwapChain ? gil.GetSwapChainImageView(i) : color.texture->GetPlatformData()->textureImageView);
+        }
     }
 
     bool useDepth = !assetData->depthAttachment.name.empty();
     if (useDepth)
     {
-        bool useDefaultDepth = assetData->depthAttachment.name == "default";
+        bool useSwapChain = assetData->depthAttachment.name == "swapchain";
 
         depthAttachmentRef.attachment = (u32)attachments.size();
-        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = useDefaultDepth ? gil.GetDepthFormat() : gil.FindVulkanFormat(assetData->depthAttachment.fmt);
+        depthAttachment.format = useSwapChain ? gil.GetDepthFormat() : gil.FindVulkanFormat(assetData->depthAttachment.fmt);
         depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -643,10 +653,13 @@ RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* asset
         depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
         attachments.emplace_back(depthAttachment);
 
-        imageViews.push_back(useDefaultDepth ? gil.GetDepthBufferImageView() : assetData->depthAttachment.texture->GetPlatformData()->textureImageView);
+        for (int i = 0; i < framebufferCount; i++)
+        {
+            imageViewsList[i].push_back(useSwapChain ? gil.GetSwapChainImageView(i) : assetData->depthAttachment.texture->GetPlatformData()->textureImageView);
+        }
 
         VkClearValue clear{};
-        clear.depthStencil = { 1.0f, 0 };
+        clear.depthStencil = { assetData->depthAttachment.clear.depth.depth, assetData->depthAttachment.clear.depth.stencil };
         platformData->clearValues.push_back(clear);
     }
 
@@ -656,40 +669,38 @@ RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* asset
     subpass.pColorAttachments = colorAttachmentRefs.data();
     subpass.pDepthStencilAttachment = useDepth ? &depthAttachmentRef : nullptr;
 
-    VkSubpassDependency dependency{};
-    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
-    dependency.dstSubpass = 0;
-    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
-    dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
-    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
-
     VkRenderPassCreateInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
     renderPassInfo.attachmentCount = (u32)attachments.size();
     renderPassInfo.pAttachments = attachments.data();
     renderPassInfo.subpassCount = 1;
     renderPassInfo.pSubpasses = &subpass;
-    renderPassInfo.dependencyCount = 1;
-    renderPassInfo.pDependencies = &dependency;
+    renderPassInfo.dependencyCount = 0;
+    renderPassInfo.pDependencies = nullptr;
 
     if (vkCreateRenderPass(gil.Device(), &renderPassInfo, nullptr, &platformData->renderPass) != VK_SUCCESS)
     {
         Error("failed to create render pass!");
     }
 
-    VkFramebufferCreateInfo framebufferInfo{};
-    framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
-    framebufferInfo.renderPass = platformData->renderPass;
-    framebufferInfo.attachmentCount = (u32)imageViews.size();
-    framebufferInfo.pAttachments = imageViews.data();
-    framebufferInfo.width = assetData->size.x;
-    framebufferInfo.height = assetData->size.y;
-    framebufferInfo.layers = 1;
+    platformData->frameBuffers.resize(framebufferCount);
 
-    if (vkCreateFramebuffer(gil.Device(), &framebufferInfo, nullptr, &platformData->frameBuffer) != VK_SUCCESS)
+    ivec2 size = (platformData->useSwapChain) ? gil.GetSwapChainImageSize() : assetData->size;
+    for (int i = 0; i < framebufferCount; i++)
     {
-        Error("failed to create framebuffer!");
+        VkFramebufferCreateInfo framebufferInfo{};
+        framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+        framebufferInfo.renderPass = platformData->renderPass;
+        framebufferInfo.attachmentCount = (u32)imageViewsList[i].size();
+        framebufferInfo.pAttachments = imageViewsList[i].data();
+        framebufferInfo.width = size.x;
+        framebufferInfo.height = size.y;
+        framebufferInfo.layers = 1;
+
+        if (vkCreateFramebuffer(gil.Device(), &framebufferInfo, nullptr, &platformData->frameBuffers[i]) != VK_SUCCESS)
+        {
+            Error("failed to create framebuffer!");
+        }
     }
 
     return platformData;

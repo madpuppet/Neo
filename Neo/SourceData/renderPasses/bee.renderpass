@@ -1,4 +1,7 @@
 size: 256, 256
+viewport: 0, 0, 1, 1
+scissor: 0, 0, 1, 1
 color: bee
 	colorspace: linear
-depth: default
+
+

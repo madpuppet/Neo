@@ -71,7 +71,7 @@ void View::Apply()
 {
 	auto& gil = GIL::Instance();
 	UBO_View viewData;
-	ivec2 screenSize = gil.GetFrameBufferSize();
+	ivec2 screenSize = gil.GetSwapChainImageSize();
 	viewData.proj = glm::perspective(m_perspective.fov, (m_viewport.w * screenSize.x) / (m_viewport.h * screenSize.y), m_perspective.nearPlane, m_perspective.farPlane);
 	viewData.proj[1][1] *= -1.0f;
 	viewData.ortho = OrthoProj(m_orthographic.orthoRect, m_orthographic.nearPlane, m_orthographic.farPlane);

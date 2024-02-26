@@ -15,15 +15,28 @@ public:
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 	virtual bool SrcFilesToAsset(vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) override;
 
+	ivec2 size{ 0,0 };
+	rect viewportRect{ 0,0,1,1 };
+	rect scissorRect{ 0,0,1,1 };
+	struct DepthClear
+	{
+		f32 depth;
+		u32 stencil;
+	};
 	struct AttachmentInfo
 	{
+		bool useSwapChain;
 		string name;
 		TexturePixelFormat fmt;
+		union
+		{
+			vec4 color;
+			DepthClear depth;
+		} clear;
 		TextureRef texture;
 	};
 	vector<AttachmentInfo> colorAttachments;
 	AttachmentInfo depthAttachment;
-	ivec2 size;
 };
 
 // render pass is a set of color & depth attachments for outputting to

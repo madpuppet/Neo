@@ -315,6 +315,7 @@ protected:
 	int m_fileSize;
 	int m_fileParsed;
 
+	bool m_ownMemory = true;
 	u8 *m_heapMem;
 	int m_heapSize;
 	int m_heapUsage;

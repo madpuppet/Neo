@@ -289,6 +289,7 @@ SHADReader::SHADReader(const string &path)
 
 SHADReader::SHADReader(const string &name, const char *pMem, int memSize)
 {
+	m_ownMemory = false;
 	m_filename=name;
 	m_heapMem=0;
 	m_tokenizeBuffer = new char[256 * 1024];
@@ -297,7 +298,8 @@ SHADReader::SHADReader(const string &name, const char *pMem, int memSize)
 
 SHADReader::~SHADReader()
 {
-	delete[] m_heapMem;
+	if (m_ownMemory)
+		delete[] m_heapMem;
 	delete[] m_tokenizeBuffer;
 }
 

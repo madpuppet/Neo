@@ -31,10 +31,11 @@ void Profiler::FrameSync()
 	oldFrame.gpuStart = resultBuffer[0];
 	for (auto& point : oldFrame.gpuPoints)
 	{
-		point.second.start = resultBuffer[point.second.start];
-		point.second.end = resultBuffer[point.second.end];
-
-		Assert(point.second.end >= point.second.start, "Bad GPU Time");
+		if (point.second.end >= point.second.start)
+		{
+			point.second.start = resultBuffer[point.second.start];
+			point.second.end = resultBuffer[point.second.end];
+		}
 	}
 
 	// start next frame

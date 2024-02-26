@@ -1,11 +1,12 @@
-shader: standard_ortho
-blend: blend
-cull: back
-zread: false
-zwrite: false
-sampler: Albedo
-	image: c64_0
-	filter: nearest
-	wrap: repeat
-static_ubo: UBO_Material
-	blendColor: 1,1,1,1
+renderpass: ui
+	shader: standard_ortho
+	blend: blend
+	cull: back
+	zread: false
+	zwrite: false
+	sampler: Albedo
+		image: c64_0
+		filter: nearest
+		wrap: repeat
+	static_ubo: UBO_Material
+		blendColor: 1,1,1,1

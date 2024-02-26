@@ -1,11 +1,12 @@
-shader: standard
-blend: opaque
-cull: back
-zread: true
-zwrite: true
-sampler: Albedo
-	image: viking_room
-	filter: nearest
-	wrap: repeat
-ubo: UBO_Material
-	blendColor: 1,1,1,1
+renderpass: bee
+	shader: standard
+	blend: opaque
+	cull: back
+	zread: true
+	zwrite: true
+	sampler: Albedo
+		image: viking_room
+		filter: nearest
+		wrap: repeat
+	ubo: UBO_Material
+		blendColor: 1,1,1,1
