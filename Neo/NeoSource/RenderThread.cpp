@@ -17,7 +17,7 @@ GRAPHICS = > EndFrame
 
 */
 
-RenderThread::RenderThread() : m_gilTaskThread(ThreadGUID_GILTasks, "GILThread"), Thread(ThreadGUID_Render, "RenderThread")
+RenderThread::RenderThread() : m_gilTaskThread(ThreadGUID_GILTasks, "GILThread"), Thread(ThreadGUID_Render, "Render")
 {
 	// do this on main thread
 	auto& gil = GIL::Instance();

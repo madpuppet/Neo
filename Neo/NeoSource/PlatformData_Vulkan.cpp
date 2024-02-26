@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "StaticMesh.h"
 #include "ShaderManager.h"
+#include "RenderPass.h"
 
 VkSamplerAddressMode NeoAddressModeToVk[] = { VK_SAMPLER_ADDRESS_MODE_CLAMP_TO_EDGE, VK_SAMPLER_ADDRESS_MODE_REPEAT };
 VkCompareOp NeoCompareOpToVk[] = { VK_COMPARE_OP_NEVER, VK_COMPARE_OP_GREATER_OR_EQUAL, VK_COMPARE_OP_LESS_OR_EQUAL };
@@ -20,11 +21,17 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 
     Assert(assetData->format != PixFmt_Undefined, "Undefined pixel format!");
     VkFormat fmt = gil.FindVulkanFormat(assetData->format);
+    platformData->isDepth = (assetData->format == PixFmt_D32_SFLOAT || assetData->format == PixFmt_D24_UNORM_S8_UINT);
+
+    int usageBit = platformData->isDepth ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    int aspectBit = platformData->isDepth ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+    if (assetData->format == PixFmt_D24_UNORM_S8_UINT)
+        aspectBit |= VK_IMAGE_ASPECT_STENCIL_BIT;
 
     if (assetData->isRenderTarget)
     {
         gil.createImage(assetData->width, assetData->height, 1, fmt,
-            VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT,
+            VK_IMAGE_TILING_OPTIMAL, usageBit | VK_IMAGE_USAGE_SAMPLED_BIT,
             VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, platformData->textureImage, platformData->textureImageMemory);
 
         // Create image view
@@ -32,7 +39,7 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
         viewInfo.image = platformData->textureImage;
         viewInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
         viewInfo.format = fmt;
-        viewInfo.subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        viewInfo.subresourceRange.aspectMask = aspectBit;
         viewInfo.subresourceRange.baseMipLevel = 0;
         viewInfo.subresourceRange.levelCount = 1;
         viewInfo.subresourceRange.baseArrayLayer = 0;
@@ -62,7 +69,7 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
         vkFreeMemory(gil.Device(), stagingBufferMemory, nullptr);
 
         gil.generateMipmaps(platformData->textureImage, fmt, assetData->width, assetData->height, 1);
-        platformData->textureImageView = gil.createImageView(platformData->textureImage, fmt, VK_IMAGE_ASPECT_COLOR_BIT, 1);
+        platformData->textureImageView = gil.createImageView(platformData->textureImage, fmt, aspectBit, 1);
     }
 
     return platformData;
@@ -575,9 +582,116 @@ IADPlatformData* IADPlatformData_Create(InputAttributesDescription* iad)
 }
 
 
-RenderPassPlatformData *RenderPassPlatformData_Create(struct RenderPassAssetData* assetData)
+RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* assetData)
 {
+    auto gil = GIL::Instance();
     auto platformData = new RenderPassPlatformData;
+
+    platformData->useSwapChain = assetData->colorAttachments.empty();
+    if (platformData->useSwapChain)
+        return platformData;
+
+    vector<VkAttachmentDescription> attachments;
+    vector<VkAttachmentReference> colorAttachmentRefs;
+    vector<VkImageView> imageViews;
+    VkAttachmentReference depthAttachmentRef{};
+
+    for (auto& color : assetData->colorAttachments)
+    {
+        VkFormat fmt = gil.FindVulkanFormat(color.fmt);
+
+        VkAttachmentReference colorAttachmentRef{};
+        colorAttachmentRef.attachment = (u32)attachments.size();
+        colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+        colorAttachmentRefs.emplace_back(colorAttachmentRef);
+
+        VkAttachmentDescription colorAttachment{};
+        colorAttachment.format = fmt;
+        colorAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        colorAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        colorAttachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
+        colorAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        colorAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        colorAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
+        attachments.emplace_back(colorAttachment);
+
+        imageViews.push_back(color.texture->GetPlatformData()->textureImageView);
+
+        VkClearValue clear{};
+        clear.color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+        platformData->clearValues.push_back(clear);
+
+    }
+
+    bool useDepth = !assetData->depthAttachment.name.empty();
+    if (useDepth)
+    {
+        bool useDefaultDepth = assetData->depthAttachment.name == "default";
+
+        depthAttachmentRef.attachment = (u32)attachments.size();
+        depthAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
+
+        VkAttachmentDescription depthAttachment{};
+        depthAttachment.format = useDefaultDepth ? gil.GetDepthFormat() : gil.FindVulkanFormat(assetData->depthAttachment.fmt);
+        depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
+        depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
+        depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
+        depthAttachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
+        depthAttachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;
+        depthAttachment.finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
+        attachments.emplace_back(depthAttachment);
+
+        imageViews.push_back(useDefaultDepth ? gil.GetDepthBufferImageView() : assetData->depthAttachment.texture->GetPlatformData()->textureImageView);
+
+        VkClearValue clear{};
+        clear.depthStencil = { 1.0f, 0 };
+        platformData->clearValues.push_back(clear);
+    }
+
+    VkSubpassDescription subpass{};
+    subpass.pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS;
+    subpass.colorAttachmentCount = (u32)colorAttachmentRefs.size();
+    subpass.pColorAttachments = colorAttachmentRefs.data();
+    subpass.pDepthStencilAttachment = useDepth ? &depthAttachmentRef : nullptr;
+
+    VkSubpassDependency dependency{};
+    dependency.srcSubpass = VK_SUBPASS_EXTERNAL;
+    dependency.dstSubpass = 0;
+    dependency.srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_LATE_FRAGMENT_TESTS_BIT;
+    dependency.srcAccessMask = VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+    dependency.dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT | VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT;
+    dependency.dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT | VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT;
+
+    VkRenderPassCreateInfo renderPassInfo{};
+    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO;
+    renderPassInfo.attachmentCount = (u32)attachments.size();
+    renderPassInfo.pAttachments = attachments.data();
+    renderPassInfo.subpassCount = 1;
+    renderPassInfo.pSubpasses = &subpass;
+    renderPassInfo.dependencyCount = 1;
+    renderPassInfo.pDependencies = &dependency;
+
+    if (vkCreateRenderPass(gil.Device(), &renderPassInfo, nullptr, &platformData->renderPass) != VK_SUCCESS)
+    {
+        Error("failed to create render pass!");
+    }
+
+    VkFramebufferCreateInfo framebufferInfo{};
+    framebufferInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+    framebufferInfo.renderPass = platformData->renderPass;
+    framebufferInfo.attachmentCount = (u32)imageViews.size();
+    framebufferInfo.pAttachments = imageViews.data();
+    framebufferInfo.width = assetData->size.x;
+    framebufferInfo.height = assetData->size.y;
+    framebufferInfo.layers = 1;
+
+    if (vkCreateFramebuffer(gil.Device(), &framebufferInfo, nullptr, &platformData->frameBuffer) != VK_SUCCESS)
+    {
+        Error("failed to create framebuffer!");
+    }
+
     return platformData;
 }
 

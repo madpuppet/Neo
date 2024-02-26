@@ -15,11 +15,15 @@ public:
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 	virtual bool SrcFilesToAsset(vector<MemBlock>& srcBlocks, struct AssetCreateParams* params) override;
 
-	vector<string> colorAttachments;
-	string depthAttachment;
-
-	// resolved textures
-	vector<TextureRef> textures;
+	struct AttachmentInfo
+	{
+		string name;
+		TexturePixelFormat fmt;
+		TextureRef texture;
+	};
+	vector<AttachmentInfo> colorAttachments;
+	AttachmentInfo depthAttachment;
+	ivec2 size;
 };
 
 // render pass is a set of color & depth attachments for outputting to
@@ -34,6 +38,8 @@ public:
 	virtual const string& GetType() const { return AssetType; }
 	virtual ~RenderPass() {}
 	void OnAssetDeliver(struct AssetData* data);
+
+	void Apply();
 
 	RenderPassAssetData* GetAssetData() { return m_assetData; }
 	RenderPassPlatformData* GetPlatformData() { return m_platformData; }

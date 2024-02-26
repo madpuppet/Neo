@@ -46,7 +46,7 @@ public:
 	}
 
 	// move operator - just clear current reference and copy over the ptr
-	ResourceRef<T, F>& operator =(const ResourceRef<T, F>&& o) noexcept
+	ResourceRef<T, F>& operator =(ResourceRef<T, F>&& o) noexcept
 	{
 		Destroy();
 		m_ptr = o.m_ptr;

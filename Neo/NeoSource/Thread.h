@@ -27,8 +27,8 @@ typedef std::thread::id ThreadID;
 enum ThreadGUID
 {
     ThreadGUID_Main,
-    ThreadGUID_AssetManager,
     ThreadGUID_GILTasks,
+    ThreadGUID_AssetManager,
     ThreadGUID_Render,
 
     ThreadGUID_MAX
@@ -229,7 +229,9 @@ class WorkerFarm
     GenericCallback m_onComplete = [this]() { m_activeTasks--; };
 
 public:
-    WorkerFarm(int guid, const string& name, int maxThreads);
+    // individual Guids -> if set, each thread gets a unique guid (range is guid..guid+maxThreads)
+    // this is useful if you want the profiler to have a unique row for each thread
+    WorkerFarm(int guid, const string& name, int maxThreads, bool individualGuids);
     ~WorkerFarm() { KillWorkers(); }
     bool AllTasksComplete() { return m_activeTasks.load() == 0; }
 

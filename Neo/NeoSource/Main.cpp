@@ -33,7 +33,7 @@ CmdLineVar<stringlist> CLV_LogFilter("log", "select log filters to show", { "" }
 
 int main(int argc, char* argv[])
 {
-    Thread::RegisterThread(ThreadGUID_Main, "MainThread");
+    Thread::RegisterThread(ThreadGUID_Main, "Main");
 
     gMemoryTracker.EnableTracking(true);
     NeoParseCommandLine(argc, argv);

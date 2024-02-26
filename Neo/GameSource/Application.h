@@ -6,6 +6,7 @@
 #include "BitmapFont.h"
 #include "Shader.h"
 #include "Thread.h"
+#include "RenderPass.h"
 
 enum ApplicationThreads
 {
@@ -40,7 +41,7 @@ protected:
 	BitmapFontRef m_font;
 	MaterialRef m_beeMat;
 	ShaderRef m_shader;
-	TextureRef m_beeRenderTarget;
+	RenderPassRef m_beeRender;
 
 	mat4x4 m_cameraMatrix;
 	float m_beeScale;

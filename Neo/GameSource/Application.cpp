@@ -12,9 +12,10 @@ const char* GAME_NAME = "TestGame";
 
 //TextureRef tex;
 
-Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "GameUpdateFarm", 4)
+Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Update Worker", 4, true)
 {
-	// mount filesystems
+//	m_beeRender.Create("bee");
+
 	m_vikingRoom.Create("viking_room");
 	m_vikingRoomMat.Create("viking_room");
 
@@ -166,9 +167,8 @@ void Application::Draw()
 	if (!m_vikingRoom->IsLoaded())
 		return;
 
-//	PROFILE_GPU("App::Draw");
-
 	m_view.Apply();
+//	m_beeRender->Apply();
 
 	auto& gil = GIL::Instance();
 	UBO_Model modelData;
@@ -190,6 +190,8 @@ void Application::Draw()
 
 	modelData.model = mat4x4(1);
 	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
+
+//	GIL::Instance().SetRenderPass(nullptr);
 
 	{
 		PROFILE_GPU("PARTICLES");
@@ -229,7 +231,7 @@ void Application::Draw()
 	{
 		int fps = (int)(1.0f / NeoTimeDelta);
 		int ms = (int)(1000.0f * NeoTimeDelta);
-		m_font->RenderText(STR("{}ms manager {}", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
+		m_font->RenderText(STR("{}ms {}fps", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 	}
 }
 

@@ -17,7 +17,8 @@ enum TextureLayout
 {
 	TextureLayout_Undefined,		// initial undefined layout
 	TextureLayout_TransferDest,		// destination of a copy command
-	TextureLayout_Attachment,		// render pass attachment
+	TextureLayout_ColorAttachment,	// render pass attachment
+	TextureLayout_DepthAttachment,
 	TextureLayout_ShaderRead		// shader sampling resource
 };
 
@@ -55,6 +56,12 @@ enum TexturePixelFormat
 	PixFmt_R8G8B8A8_SINT,
 	PixFmt_R8G8B8A8_SRGB,
 
+	PixFmt_B8G8R8A8_UNORM,
+	PixFmt_B8G8R8A8_SNORM,
+	PixFmt_B8G8R8A8_UINT,
+	PixFmt_B8G8R8A8_SINT,
+	PixFmt_B8G8R8A8_SRGB,
+
 	PixFmt_R16_UNORM,
 	PixFmt_R16_SNORM,
 	PixFmt_R16_UINT,
@@ -71,6 +78,8 @@ enum TexturePixelFormat
 	PixFmt_D32_SFLOAT,
 	PixFmt_D24_UNORM_S8_UINT
 };
+TexturePixelFormat StringToTexturePixelFormat(const string& str);
+
 
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk
@@ -105,6 +114,7 @@ class Texture : public Resource
 public:
 	void OnAssetDeliver(struct AssetData* data);
 	void InitRenderTarget(const string& name, int width, int height, TexturePixelFormat format);
+	void SetLayout(TextureLayout newLayout);
 
 	static const string AssetType;
 	virtual const string& GetType() const { return AssetType; }
@@ -121,18 +131,13 @@ public:
 	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format);
 };
 
-// texture references is a scoped pointer to a texture.  the texture will be destroyed with the TextureRef goes out of scope or is destroyed
-// you can create differnet types of textures through this using
-//
-// TextureRef myTex;
-// myTex->Create("name");
-//
 class TextureRef : public ResourceRef<Texture, TextureFactory>
 {
 public:
-	Texture* CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
+	void CreateRenderTarget(const string& name, int width, int height, TexturePixelFormat format)
 	{
-		return TextureFactory::Instance().CreateRenderTarget(name, width, height, format);
+		Destroy();
+		m_ptr = TextureFactory::Instance().CreateRenderTarget(name, width, height, format);
 	}
 };
 

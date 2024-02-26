@@ -11,12 +11,6 @@
 #include "nn/profiler.h"
 #endif
 
-void ThreadFunc(void *threadPtr)
-{
-    auto thread = (Thread *)threadPtr;
-    thread->Begin();
-}
-
 Thread::Thread(int guid, const string &name)
 {
     m_guid = guid;
@@ -33,7 +27,7 @@ Thread::~Thread()
 
 void Thread::Start(bool lowPriority)
 {
-    m_thread = std::thread(ThreadFunc, this);
+    m_thread = std::thread(&Thread::Begin, this);
 }
 
 void Thread::WaitForThreadCompletion()
@@ -41,7 +35,7 @@ void Thread::WaitForThreadCompletion()
     if (m_thread.joinable())
         m_thread.join();
 }
-
+ 
 void Thread::StopAndWait()
 {
     Terminate();
@@ -152,13 +146,14 @@ Mutex s_threadRegistryLock;
 void Thread::RegisterThread(int guid, const string& name)
 {
     ScopedMutexLock lock(s_threadRegistryLock);
-    s_threadRegistry.emplace(std::pair<ThreadID, ThreadInfo>(CurrentThreadID(), { guid, name }));
+    auto threadID = CurrentThreadID();
+    Assert(!s_threadRegistry.contains(threadID), "Register of thread ID twice!");
+    s_threadRegistry[threadID] = { guid,name };
 }
 
 int Thread::GetCurrentThreadGUID()
 {
     ScopedMutexLock lock(s_threadRegistryLock);
-
     auto threadID = Thread::CurrentThreadID();
     auto it = s_threadRegistry.find(threadID);
     return (it != s_threadRegistry.end()) ? it->second.guid : -1;
@@ -188,13 +183,12 @@ int WorkerThread::Go()
     while (!m_terminate)
     {
         m_tasks.Lock();
-        auto task = m_taskList.front();
+        auto task = std::move(m_taskList.front());
         m_taskList.pop_front();
         m_tasks.Release();
         task();
         m_taskSignals.Wait();
     }
-    LOG(Asset, STR("Worker Thread {} Go is exitting...", GetName()));
     return 0;
 }
 
@@ -215,11 +209,12 @@ int WorkerFarmWorker::Go()
     return 0;
 }
 
-WorkerFarm::WorkerFarm(int guid, const string& name, int maxThreads)
+WorkerFarm::WorkerFarm(int guid, const string& name, int maxThreads, bool individualGuids)
 {
     for (int i = 0; i < maxThreads; i++)
     {
-        m_workers.push_back(new WorkerFarmWorker(guid + i, name));
+        int useGuid = individualGuids ? guid + i : guid;
+        m_workers.push_back(new WorkerFarmWorker(useGuid, name));
     }
 }
 

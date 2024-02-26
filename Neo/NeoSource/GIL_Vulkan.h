@@ -19,6 +19,7 @@
 #include "Texture.h"
 #include "MathUtils.h"
 #include "ShaderManager.h"
+#include "RenderPass.h"
 
 VkFormat VertexFormatToVk(VertexFormat vf);
 string VertexFormatToString(VertexFormat vf);
@@ -87,8 +88,6 @@ public:
 	// render an array of static mesh instances
 	void RenderStaticMeshInstances(class StaticMesh* mesh, mat4x4 *ltw, u32 ltwCount);
 
-	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
-
 	// update the entire memory for a single ubo instance
 	void UpdateUBOInstance(UBOInfoInstance* uboInstance, void* uboMem, u32 uboSize, bool updateBoundMaterial);
 
@@ -101,6 +100,13 @@ public:
 
 	// override current graphics pipeline scissor rectangle
 	void SetScissor(const rect &scissorRect);
+
+	// set the current render pass
+	// transition all the textures to the appropriate layout
+	void SetRenderPass(RenderPass *renderPass);
+
+	// change layout of a texture
+	void TransitionTexture(Texture *texture, TextureLayout currentLayout, TextureLayout newLayout);
 
 	// query the current size of the frame buffer
 	ivec2 GetFrameBufferSize() { return m_frameBufferSize; }
@@ -140,6 +146,7 @@ protected:
 	VkSwapchainKHR m_swapChain;
 	vector<VkImage> m_swapChainImages;
 	VkFormat m_swapChainImageFormat;
+	VkFormat m_depthFormat;
 	VkExtent2D m_swapChainExtent;
 	vector<VkImageView> m_swapChainImageViews;
 	vector<VkFramebuffer> m_swapChainFramebuffers;
@@ -157,6 +164,8 @@ protected:
 	// all these probably get replaced by per-resource data once I replace more systems with resources like renderTargets, shaders and samplers
 	VkRenderPass m_renderPass;
 	VkCommandPool m_commandPool;
+
+	RenderPass* m_activeRenderPass = nullptr;
 
 	VkImage m_depthImage;
 	VkDeviceMemory m_depthImageMemory;
@@ -241,11 +250,18 @@ protected:
 	void recreateSwapChain();
 	u32 findMemoryType(u32 typeFilter, VkMemoryPropertyFlags properties);
 
-	// these methods are used by external functions like Texture Platform creation
+	// these methods expose Vulkan internals and are used by PlatformData functions like Texture Platform creation
 public:
 	VkDevice Device() { return m_device; }
 	VkCommandPool CommandPool() { return m_commandPool; }
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
+
+	// these used by RenderPass
+	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }
+	VkFormat GetSwapChainImageFormat() { return m_swapChainImageFormat; }
+	VkFormat GetDepthFormat() { return m_depthFormat; }
+	VkImageView GetDepthBufferImageView() { return m_depthImageView; }
+	void transitionImageLayout(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 	// these used for UBO buffer creation
 	// dynamic UBOs just share shader memory over a frame and must copy over the entire UBO memory on any change,

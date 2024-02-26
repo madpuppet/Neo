@@ -1,0 +1,4 @@
+size: 256, 256
+color: bee
+	colorspace: linear
+depth: default

@@ -172,7 +172,7 @@ void Profiler::Render()
 	}
 }
 
-void Profiler::AddProfileCPU(u64 thread, u64 start, u64 end, const string& label)
+void Profiler::AddProfileCPU(int thread, u64 start, u64 end, const string& label)
 {
 	u32 color = s_colors[StringHash64(label) & 15];
 	auto& frame = m_frames[m_currentFrame];
@@ -182,10 +182,13 @@ void Profiler::AddProfileCPU(u64 thread, u64 start, u64 end, const string& label
 	ThreadProfile* tp = nullptr;
 	if (it == frame.threads.end())
 	{
+
 		tp = new ThreadProfile;
 		tp->name = Thread::GetThreadNameByGUID((int)thread);
 		tp->guid = (int)thread;
 		frame.threads[thread] = tp;
+
+		LOG(Any, STR("FRAME {} Add Thread {} = guid {}", m_currentFrame, tp->name, (int)thread));
 	}
 	else
 	{

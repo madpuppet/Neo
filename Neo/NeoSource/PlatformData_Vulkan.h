@@ -5,6 +5,7 @@ const int MAX_FRAMES_IN_FLIGHT = 2;
 
 struct TexturePlatformData
 {
+	bool isDepth = false;
 	VkImage textureImage = nullptr;
 	VkDeviceMemory textureImageMemory = nullptr;
 	VkImageView textureImageView = nullptr;
@@ -85,6 +86,10 @@ IADPlatformData* IADPlatformData_Create(struct InputAttributesDescription *iad);
 
 struct RenderPassPlatformData
 {
+	bool useSwapChain = false;
+	VkRenderPass renderPass;
+	VkFramebuffer frameBuffer;
+	vector<VkClearValue> clearValues;
 };
 RenderPassPlatformData *RenderPassPlatformData_Create(struct RenderPassAssetData* assetData);
 

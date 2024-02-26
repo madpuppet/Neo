@@ -149,3 +149,15 @@ bool TextureAssetData::MemoryToAsset(const MemBlock& block)
 	}
 	return true;
 }
+
+void Texture::SetLayout(TextureLayout newLayout)
+{
+	if (newLayout == m_currentLayout)
+		return;
+
+	Assert(Thread::GetCurrentThreadGUID() == ThreadGUID_Render, "Must run on render thread!");
+	GIL::Instance().TransitionTexture(this, m_currentLayout, newLayout);
+	m_currentLayout = newLayout;
+}
+
+

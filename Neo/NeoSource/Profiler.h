@@ -22,7 +22,7 @@ class Profiler : public Module<Profiler>
 	};
 	struct FrameInfo
 	{
-		hashtable<u64, ThreadProfile*> threads;
+		hashtable<int, ThreadProfile*> threads;
 		hashtable<u32, ProfilePoint> gpuPoints;
 		u64 start = 0;
 		u64 gpuStart = 0;
@@ -37,7 +37,7 @@ public:
 	void FrameSync();
 	void Render();
 
-	void AddProfileCPU(u64 thread, u64 start, u64 end, const string& label);
+	void AddProfileCPU(int thread, u64 start, u64 end, const string& label);
 	void AddProfileGPU_Start(u32 uid, const string& label);
 	void AddProfileGPU_End(u32 uid);
 };
@@ -54,7 +54,7 @@ struct ProfilerScopeCPU
 
 	~ProfilerScopeCPU()
 	{
-		u64 threadID = Thread::GetCurrentThreadGUID();
+		int threadID = Thread::GetCurrentThreadGUID();
 		u64 end = NeoTimeNowU64;
 		Profiler::Instance().AddProfileCPU(threadID, start, end, label);
 	}
@@ -75,7 +75,7 @@ struct ProfilerScopeGPU
 
 	~ProfilerScopeGPU()
 	{
-		u64 threadID = Thread::GetCurrentThreadGUID();
+		int threadID = Thread::GetCurrentThreadGUID();
 		u64 end = NeoTimeNowU64;
 		Profiler::Instance().AddProfileCPU(threadID, start, end, label);
 		Profiler::Instance().AddProfileGPU_End(uid);

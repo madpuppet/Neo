@@ -4,6 +4,7 @@
 #include "Material.h"
 #include "StaticMesh.h"
 #include "ShaderManager.h"
+#include "RenderPass.h"
 
 DECLARE_MODULE(GIL, NeoModuleInitPri_GIL, NeoModulePri_None, NeoModulePri_None);
 
@@ -110,6 +111,12 @@ void GIL::createFormatMappings()
     m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SINT] = VK_FORMAT_R8G8B8A8_SINT;
     m_neoFormatToVulkanFormat[PixFmt_R8G8B8A8_SRGB] = VK_FORMAT_R8G8B8A8_SRGB;
 
+    m_neoFormatToVulkanFormat[PixFmt_B8G8R8A8_UNORM] = VK_FORMAT_B8G8R8A8_UNORM;
+    m_neoFormatToVulkanFormat[PixFmt_B8G8R8A8_SNORM] = VK_FORMAT_B8G8R8A8_SNORM;
+    m_neoFormatToVulkanFormat[PixFmt_B8G8R8A8_UINT] = VK_FORMAT_B8G8R8A8_UINT;
+    m_neoFormatToVulkanFormat[PixFmt_B8G8R8A8_SINT] = VK_FORMAT_B8G8R8A8_SINT;
+    m_neoFormatToVulkanFormat[PixFmt_B8G8R8A8_SRGB] = VK_FORMAT_B8G8R8A8_SRGB;
+
     m_neoFormatToVulkanFormat[PixFmt_R16_UNORM] = VK_FORMAT_R16_UNORM;
     m_neoFormatToVulkanFormat[PixFmt_R16_SNORM] = VK_FORMAT_R16_SNORM;
     m_neoFormatToVulkanFormat[PixFmt_R16_UINT] = VK_FORMAT_R16_UINT;
@@ -211,6 +218,7 @@ void GIL::BeginFrame()
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
 
     m_boundMaterial = nullptr;
+    m_activeRenderPass = nullptr;
 }
 
 mat4x4 InverseSimple(const mat4x4 & m)
@@ -743,6 +751,7 @@ void GIL::createSwapChain()
 
     m_swapChainImageFormat = surfaceFormat.format;
     m_swapChainExtent = extent;
+    m_depthFormat = findDepthFormat();
 }
 
 VkSurfaceFormatKHR GIL::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats) 
@@ -832,7 +841,7 @@ void GIL::createRenderPass()
     colorAttachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;
 
     VkAttachmentDescription depthAttachment{};
-    depthAttachment.format = findDepthFormat();
+    depthAttachment.format = m_depthFormat;
     depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
     depthAttachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
     depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -964,7 +973,6 @@ VkShaderModule GIL::createShaderModule(const std::vector<char>& code)
 
     return shaderModule;
 }
-
 
 void GIL::createDepthResources()
 {
@@ -1337,6 +1345,62 @@ void GIL::cleanupSwapChain() {
     }
 
     vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
+}
+
+VkImageLayout s_textureLayoutToVkImageLayout[] =
+{
+    VK_IMAGE_LAYOUT_UNDEFINED,
+    VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+    VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+};
+
+VkAccessFlags s_textureLayoutToVkAccessFlags[] =
+{
+    VK_ACCESS_NONE,
+    VK_ACCESS_TRANSFER_WRITE_BIT,
+    VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+    VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
+    VK_ACCESS_SHADER_READ_BIT
+};
+
+VkPipelineStageFlagBits s_textureLayoutToVkPipelineStageFlags[] =
+{
+    VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+    VK_PIPELINE_STAGE_TRANSFER_BIT,
+    VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+    VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
+    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+};
+
+void GIL::TransitionTexture(Texture *texture, TextureLayout currentLayout, TextureLayout newLayout)
+{
+    auto textureAD = texture->GetAssetData();
+    auto texturePD = texture->GetPlatformData();
+    bool isDepth = (textureAD->format == PixFmt_D24_UNORM_S8_UINT) || (textureAD->format == PixFmt_D32_SFLOAT);
+
+    auto commandBuffer = m_commandBuffers[m_currentFrame];
+    VkImageLayout oldIL = s_textureLayoutToVkImageLayout[currentLayout];
+    VkImageLayout newIL = s_textureLayoutToVkImageLayout[newLayout];
+
+    VkImageMemoryBarrier barrier{};
+    barrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+    barrier.oldLayout = oldIL;
+    barrier.newLayout = newIL;
+    barrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+    barrier.image = texturePD->textureImage;
+    barrier.subresourceRange.aspectMask = isDepth ? VK_IMAGE_ASPECT_DEPTH_BIT : VK_IMAGE_ASPECT_COLOR_BIT;
+    barrier.subresourceRange.baseMipLevel = 0;
+    barrier.subresourceRange.levelCount = 1;
+    barrier.subresourceRange.baseArrayLayer = 0;
+    barrier.subresourceRange.layerCount = 1;
+    barrier.srcAccessMask = s_textureLayoutToVkAccessFlags[currentLayout];
+    barrier.dstAccessMask = s_textureLayoutToVkAccessFlags[newLayout];
+    VkPipelineStageFlags sourceStage = s_textureLayoutToVkPipelineStageFlags[currentLayout];
+    VkPipelineStageFlags destinationStage = s_textureLayoutToVkPipelineStageFlags[newLayout];
+    vkCmdPipelineBarrier(commandBuffer, sourceStage, destinationStage, 0, 0, nullptr, 0, nullptr, 1, &barrier);
 }
 
 
@@ -1725,6 +1789,72 @@ void GIL::UnmapGeometryBufferMemory(NeoGeometryBuffer* buffer)
         vkUnmapMemory(m_device, buffer->indexBufferMemory);
 }
 
+void GIL::SetRenderPass(RenderPass* renderPass)
+{
+    if ((m_activeRenderPass == renderPass) || (m_activeRenderPass == nullptr && renderPass->GetPlatformData()->useSwapChain))
+        return;
+
+    auto& commandBuffer = m_commandBuffers[m_currentFrame];
+    vkCmdEndRenderPass(commandBuffer);
+
+    // transition the old renderpass textures back to being shader textures
+    if (m_activeRenderPass)
+    {
+        auto oldAD = m_activeRenderPass->GetAssetData();
+        for (auto& col : oldAD->colorAttachments)
+        {
+            col.texture->SetLayout(TextureLayout_ShaderRead);
+        }
+        if (oldAD->depthAttachment.texture != nullptr)
+            oldAD->depthAttachment.texture->SetLayout(TextureLayout_ShaderRead);
+    }
+
+    auto renderPassPD = renderPass->GetPlatformData();
+    auto renderPassAD = renderPass->GetAssetData();
+    if (renderPassPD->useSwapChain)
+    {
+        // standard swap chain usage
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = m_renderPass;
+        renderPassInfo.framebuffer = m_swapChainFramebuffers[m_frameSwapImage];
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = m_swapChainExtent;
+
+        std::array<VkClearValue, 2> clearValues{};
+        clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
+        clearValues[1].depthStencil = { 1.0f, 0 };
+
+        renderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
+        renderPassInfo.pClearValues = clearValues.data();
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    }
+    else
+    {
+        // transition all textures to attachment layout
+        for (auto& col : renderPassAD->colorAttachments)
+        {
+            col.texture->SetLayout(TextureLayout_ColorAttachment);
+        }
+        if (renderPassAD->depthAttachment.texture != nullptr)
+        {
+            renderPassAD->depthAttachment.texture->SetLayout(TextureLayout_DepthAttachment);
+        }
+
+        // start render pass == TODO: this should be a specific "setup render pass" function
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPassPD->renderPass;
+        renderPassInfo.framebuffer = renderPassPD->frameBuffer;
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = { (u32)renderPassAD->size.x,  (u32)renderPassAD->size.y };
+
+        renderPassInfo.clearValueCount = static_cast<u32>(renderPassPD->clearValues.size());
+        renderPassInfo.pClearValues = renderPassPD->clearValues.data();
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    }
+}
+
 #if PROFILING_ENABLED
 void GIL::createTimeQueries()
 {
@@ -1753,3 +1883,5 @@ void GIL::GetGpuTimeQueryResults(u64*& buffer, int& count)
     m_queryIdx = 0;
 }
 #endif
+
+
