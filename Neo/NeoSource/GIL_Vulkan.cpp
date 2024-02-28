@@ -328,9 +328,12 @@ void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboS
                     }
                 }
 
-                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mprp->pipelineLayout, startedSet,
-                    (u32)mprp->descriptorSets[m_currentFrame].size() - startedSet, &mprp->descriptorSets[m_currentFrame][startedSet],
-                    idx, dynamicOffsets);
+                if (startedSet != -1)
+                {
+                    vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mprp->pipelineLayout, startedSet,
+                        (u32)mprp->descriptorSets[m_currentFrame].size() - startedSet, &mprp->descriptorSets[m_currentFrame][startedSet],
+                        idx, dynamicOffsets);
+                }
             }
         }
     }

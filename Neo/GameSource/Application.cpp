@@ -6,6 +6,7 @@
 #include "ImmDynamicRenderer.h"
 #include "Shader.h"
 #include "ResourceLoadedManager.h"
+#include "Profiler.h"
 
 DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early, NeoModulePri_Early);
 
@@ -21,9 +22,11 @@ Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Up
 	m_rpMain.Create("main");
 	m_rpMain->AddTask([this]() {RenderBees(); });
 	m_rpMain->AddTask([this]() {RenderParticles(); });
+	m_rpMain->AddTask([this]() {RenderRooms(); });
 
 	m_rpUI.Create("ui");
 	m_rpUI->AddTask([this]() {RenderUI(); });
+	PROFILE_ADD_RENDER(m_rpUI);
 
 	// ensure the render passes complete before any materials are created that will bind to render pass targets
 	AssetManager::Instance().AddBarrier();
@@ -193,7 +196,7 @@ void Application::RenderRooms()
 	UBO_Model modelData;
 	auto modelUBOInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
 	modelData.model = mat4x4(1);
-	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
+	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), false);
 
 	{
 		PROFILE_GPU("ROOMS");
@@ -206,6 +209,9 @@ void Application::RenderRooms()
 
 		gil.RenderStaticMeshInstances(m_vikingRoom, &m_roomInstances[roomGridSize * roomGridSize / 2], roomGridSize * roomGridSize / 2);
 	}
+
+	modelData.model = mat4x4(1);
+	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), false);
 }
 
 void Application::RenderBees()

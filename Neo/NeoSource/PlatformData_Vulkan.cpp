@@ -281,7 +281,7 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
         depthStencil.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
         depthStencil.depthTestEnable = mrpi->zread ? VK_TRUE : VK_FALSE;
         depthStencil.depthWriteEnable = mrpi->zwrite ? VK_TRUE : VK_FALSE;
-        depthStencil.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+        depthStencil.depthCompareOp = mrpi->zread ? VK_COMPARE_OP_LESS_OR_EQUAL : VK_COMPARE_OP_ALWAYS;
         depthStencil.depthBoundsTestEnable = VK_FALSE;
         depthStencil.stencilTestEnable = VK_FALSE;
 

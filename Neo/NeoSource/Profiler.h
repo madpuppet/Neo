@@ -85,11 +85,11 @@ struct ProfilerScopeGPU
 #define PROFILE_CPU(str) ProfilerScopeCPU __tempProfCPU##__LINE__(str)
 #define PROFILE_GPU(str) ProfilerScopeGPU __tempProfGPU##__LINE__(str)
 #define PROFILE_FRAME_SYNC() Profiler::Instance().FrameSync();
-#define PROFILE_RENDER() Profiler::Instance().Render();
+#define PROFILE_ADD_RENDER(renderPass) renderPass->AddTask([this]() {Profiler::Instance().Render(); });     
 
 #else
 #define PROFILE_FRAME_SYNC() {}
-#define PROFILE_RENDER() {}
+#define PROFILE_ADD_RENDER() {}
 #define PROFILE_CPU(str) {}
 #define PROFILE_GPU(str) {}
 #endif

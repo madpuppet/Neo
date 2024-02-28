@@ -94,8 +94,6 @@ int RenderThread::Go()
 			item.task();
 		}
 
-		PROFILE_RENDER();
-
 		gil.EndFrame();
 	}
 

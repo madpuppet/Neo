@@ -10,3 +10,7 @@ renderpass: bee
 		wrap: repeat
 	ubo: UBO_Material
 		blendColor: 1,1,1,1
+renderpass: main
+	copy: bee
+	zread: true
+	zwrite: true
