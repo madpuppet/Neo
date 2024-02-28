@@ -2,8 +2,8 @@ renderpass: bee
 	shader: standard
 	blend: opaque
 	cull: back
-	zread: true
-	zwrite: true
+	zread: false
+	zwrite: false
 	sampler: Albedo
 		image: viking_room
 		filter: nearest

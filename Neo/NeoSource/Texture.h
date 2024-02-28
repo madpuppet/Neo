@@ -17,9 +17,10 @@ enum TextureLayout
 {
 	TextureLayout_Undefined,		// initial undefined layout
 	TextureLayout_TransferDest,		// destination of a copy command
-	TextureLayout_ColorAttachment,	// render pass attachment
-	TextureLayout_DepthAttachment,
-	TextureLayout_ShaderRead		// shader sampling resource
+	TextureLayout_ColorAttachment,	// render pass color attachment
+	TextureLayout_DepthAttachment,	// render pass depth attachment
+	TextureLayout_ShaderRead,		// shader sampling resource
+	TextureLayout_Present			// presentation (for swapchain images)
 };
 
 enum TextureType

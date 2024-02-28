@@ -1,4 +1,4 @@
-renderPass: main
+renderpass: main
 	shader: standard
 	blend: opaque
 	cull: back

@@ -20,12 +20,14 @@ void RenderPass::OnAssetDeliver(AssetData* data)
 		{
 			if (!colorAttach.useSwapChain)
 			{
+				LOG(RenderPass, STR("Create Color Render Target {} - {}x{} - format {}", colorAttach.name, assetData->size.x, assetData->size.y, (int)colorAttach.fmt));
 				colorAttach.texture.CreateRenderTarget(colorAttach.name, assetData->size.x, assetData->size.y, colorAttach.fmt);
 				dependantResources.emplace_back(colorAttach.texture);
 			}
 		}
 		if (assetData->depthAttachment.name.empty() && !assetData->depthAttachment.useSwapChain)
 		{
+			LOG(RenderPass, STR("Create Depth Render Target {} - {}x{} - format {}", assetData->depthAttachment.name, assetData->size.x, assetData->size.y, (int)assetData->depthAttachment.fmt));
 			assetData->depthAttachment.texture.CreateRenderTarget(assetData->depthAttachment.name, assetData->size.x, assetData->size.y, assetData->depthAttachment.fmt);
 			dependantResources.emplace_back(assetData->depthAttachment.texture);
 		}
@@ -84,6 +86,7 @@ bool RenderPassAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 		{
 			bool linear = false;
 			vec4 clearColor{ 0,0,0,1 };
+			bool doClear = false;
 			for (int i = 0; i < fieldNode->GetChildCount(); i++)
 			{
 				auto paramsNode = fieldNode->GetChild(i);
@@ -94,6 +97,7 @@ bool RenderPassAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 				else if (paramsNode->IsName("clear"))
 				{
 					clearColor = paramsNode->GetVector4();
+					doClear = true;
 				}
 			}
 
@@ -106,12 +110,14 @@ bool RenderPassAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 			ai.name = name;
 			ai.fmt = fmt;
 			ai.clear.color = clearColor;
+			ai.doClear = doClear;
 			colorAttachments.push_back(ai);
 		}
 		else if (fieldNode->IsName("depth"))
 		{
 			TexturePixelFormat fmt = PixFmt_D24_UNORM_S8_UINT;
 			DepthClear depthClear{ 1, 0 };
+			bool doClear = false;
 			for (int i = 0; i < fieldNode->GetChildCount(); i++)
 			{
 				auto paramsNode = fieldNode->GetChild(i);
@@ -119,12 +125,14 @@ bool RenderPassAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 				{
 					depthClear.depth = paramsNode->GetF32(0);
 					depthClear.stencil = (u32)paramsNode->GetI32(1);
+					doClear = true;
 				}
 			}
 			depthAttachment.name = fieldNode->GetString();
 			depthAttachment.useSwapChain = depthAttachment.name == "swapchain";
 			depthAttachment.fmt = fmt;
 			depthAttachment.clear.depth = depthClear;
+			depthAttachment.doClear = doClear;
 		}
 	}
 	delete shad;
@@ -146,12 +154,14 @@ MemBlock RenderPassAssetData::AssetToMemory()
 		stream.WriteBool(attach.useSwapChain);
 		stream.WriteU32(attach.fmt);
 		stream.WriteVec4(attach.clear.color);
+		stream.WriteBool(attach.doClear);
 	}
 	stream.WriteString(depthAttachment.name);
 	stream.WriteBool(depthAttachment.useSwapChain);
 	stream.WriteU32(depthAttachment.fmt);
 	stream.WriteF32(depthAttachment.clear.depth.depth);
 	stream.WriteU32(depthAttachment.clear.depth.stencil);
+	stream.WriteBool(depthAttachment.doClear);
 
 	return MemBlock::CloneMem(stream.DataStart(), stream.DataSize());
 }
@@ -177,11 +187,14 @@ bool RenderPassAssetData::MemoryToAsset(const MemBlock& block)
 		bool useSwapChain = stream.ReadBool();
 		TexturePixelFormat fmt = (TexturePixelFormat)stream.ReadU32();
 		vec4 color = stream.ReadVec4();
+		bool doClear = stream.ReadBool();
+
 		AttachmentInfo ai;
 		ai.name = name;
 		ai.useSwapChain = useSwapChain;
 		ai.clear.color = color;
 		ai.fmt = fmt;
+		ai.doClear = doClear;
 		colorAttachments.push_back(ai);
 	}
 
@@ -189,6 +202,7 @@ bool RenderPassAssetData::MemoryToAsset(const MemBlock& block)
 	depthAttachment.useSwapChain = stream.ReadBool();
 	depthAttachment.fmt = (TexturePixelFormat)stream.ReadU32();
 	depthAttachment.clear.depth = { stream.ReadF32(),  stream.ReadU32() };
+	depthAttachment.doClear = stream.ReadBool();
 	return true;
 }
 

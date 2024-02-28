@@ -35,7 +35,8 @@ struct ShaderPlatformData
 ShaderPlatformData* ShaderPlatformData_Create(struct ShaderAssetData* assetData);
 void ShaderPlatformData_Destroy(ShaderPlatformData* platformData);
 
-struct MaterialPlatformData
+
+struct MaterialPlatformRenderPassData
 {
 	VkPipelineLayout pipelineLayout = nullptr;
 	VkPipeline polygonPipeline = nullptr;
@@ -49,7 +50,12 @@ struct MaterialPlatformData
 	vector<VkDescriptorSet> descriptorSets[MAX_FRAMES_IN_FLIGHT];
 
 	// all ubo instances flattened (set, instance) pairs
-	vector<std::pair<int, UBOInfoInstance*>> uboInstances;		
+	vector<std::pair<int, UBOInfoInstance*>> uboInstances;
+};
+
+struct MaterialPlatformData
+{
+	vector<MaterialPlatformRenderPassData*> renderPasses;
 };
 MaterialPlatformData* MaterialPlatformData_Create(struct MaterialAssetData* assetData);
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData);

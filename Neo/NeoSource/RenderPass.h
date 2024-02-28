@@ -33,6 +33,7 @@ public:
 			vec4 color;
 			DepthClear depth;
 		} clear;
+		bool doClear;
 		TextureRef texture;
 	};
 	vector<AttachmentInfo> colorAttachments;

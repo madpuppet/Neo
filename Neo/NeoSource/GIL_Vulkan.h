@@ -105,6 +105,9 @@ public:
 	// transition all the textures to the appropriate layout
 	void SetRenderPass(RenderPass *renderPass);
 
+	// get active render pass
+	RenderPass* GetActiveRenderPass() { return m_activeRenderPass; }
+
 	// change layout of a texture
 	void TransitionTexture(Texture *texture, TextureLayout currentLayout, TextureLayout newLayout);
 

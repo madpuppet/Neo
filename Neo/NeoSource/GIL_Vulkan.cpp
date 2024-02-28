@@ -203,6 +203,7 @@ void GIL::BeginFrame()
     m_swapChainColorLayout = TextureLayout_Undefined;
     m_swapChainDepthLayout = TextureLayout_Undefined;
 
+#if 0
     // start render pass == TODO: this should be a specific "setup render pass" function
     VkRenderPassBeginInfo renderPassInfo{};
     renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
@@ -219,9 +220,12 @@ void GIL::BeginFrame()
     renderPassInfo.pClearValues = clearValues.data();
 
     vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+#endif
 
     m_boundMaterial = nullptr;
     m_activeRenderPass = nullptr;
+
+    TransitionSwapChainColorImage(TextureLayout_ColorAttachment);
 }
 
 mat4x4 InverseSimple(const mat4x4 & m)
@@ -255,6 +259,8 @@ void GIL::UpdateUBOInstanceMember(UBOInfoInstance* uboInstance, u32 memberOffset
 
 void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboSize, bool updateBoundMaterial)
 {
+    Assert(Thread::GetCurrentThreadGUID() == ThreadGUID_Render, "This needs to run on render thread because it access the active render pass");
+
     auto uboPD = uboInstance->platformData;
     if (uboInstance->isDynamic)
     {
@@ -264,51 +270,68 @@ void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboS
         memcpy((u8*)m_dynamicUniformBufferMemoryMapped[m_currentFrame] + m_dynamicUniformBufferMemoryUsed, uboMem, uboSize);
         m_dynamicUniformBufferMemoryUsed += size;
 
+        // update bound material if its applicable to the current render pass
         if (m_boundMaterial && updateBoundMaterial)
         {
             auto materialAD = m_boundMaterial->GetAssetData();
             auto materialPD = m_boundMaterial->GetPlatformData();
-            auto shaderAD = materialAD->shader->GetAssetData();
-            auto shaderPD = materialAD->shader->GetPlatformData();
-            auto commandBuffer = m_commandBuffers[m_currentFrame];
 
-            // check if bound material references this UBO
-            // we need to update any sets after this UBO
-            u32 dynamicOffsets[16]; // maximum of 16 should be enough for any shader
-            int idx = 0;
-            int set = -1;
-            bool started = false;
-            int startedSet = -1;
-            for (auto& it : materialPD->uboInstances)
+            MaterialRenderPassInfo* mrpi = nullptr;
+            MaterialPlatformRenderPassData* mprp = nullptr;
+            for (int i=0; i<materialAD->renderPasses.size(); i++)
             {
-                if (it.first != set && !started)
+                if (materialAD->renderPasses[i]->renderPass == m_activeRenderPass)
                 {
-                    idx = 0;
-                    set = it.first;
-                }
-
-                if (it.second == uboInstance)
-                {
-                    started = true;
-                    startedSet = set;
-                }
-
-                //if this ubo hasn't had its dymamic 
-                if (it.second->isDynamic)
-                {
-                    if (it.second->platformData->memOffset == (u32)-1)
-                    {
-                        Assert(it.second != uboInstance, "internal logic error - memoffset should have been set above");
-                        UpdateUBOInstance(it.second, it.second->platformData->data, it.second->ubo->size, false);
-                        Assert(it.second->platformData->memOffset != (u32)-1, "update instance didn't work!");
-                    }
-                    dynamicOffsets[idx++] = it.second->platformData->memOffset;
+                    mrpi = materialAD->renderPasses[i];
+                    mprp = materialPD->renderPasses[i];
+                    break;
                 }
             }
 
-            vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, startedSet,
-                (u32)materialPD->descriptorSets[m_currentFrame].size() - startedSet, &materialPD->descriptorSets[m_currentFrame][startedSet],
-                idx, dynamicOffsets);
+            if (mrpi && mprp)
+            {
+                auto shaderAD = mrpi->shader->GetAssetData();
+                auto shaderPD = mrpi->shader->GetPlatformData();
+                auto commandBuffer = m_commandBuffers[m_currentFrame];
+
+                // check if bound material references this UBO
+                // we need to update any sets after this UBO
+                u32 dynamicOffsets[16]; // maximum of 16 should be enough for any shader
+                int idx = 0;
+                int set = -1;
+                bool started = false;
+                int startedSet = -1;
+                for (auto& it : mprp->uboInstances)
+                {
+                    if (it.first != set && !started)
+                    {
+                        idx = 0;
+                        set = it.first;
+                    }
+
+                    if (it.second == uboInstance)
+                    {
+                        started = true;
+                        startedSet = set;
+                    }
+
+                    //if this ubo hasn't had its dymamic 
+                    if (it.second->isDynamic)
+                    {
+                        if (it.second->platformData->memOffset == (u32)-1)
+                        {
+                            Assert(it.second != uboInstance, "internal logic error - memoffset should have been set above");
+                            UpdateUBOInstance(it.second, it.second->platformData->data, it.second->ubo->size, false);
+                            Assert(it.second->platformData->memOffset != (u32)-1, "update instance didn't work!");
+                        }
+                        dynamicOffsets[idx++] = it.second->platformData->memOffset;
+                    }
+                }
+
+                vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mprp->pipelineLayout, startedSet,
+                    (u32)mprp->descriptorSets[m_currentFrame].size() - startedSet, &mprp->descriptorSets[m_currentFrame][startedSet],
+                    idx, dynamicOffsets);
+            }
         }
     }
     else // just a static instance - it only updates once per frame and always points to the same memory, so no need to rebind materials, etc
@@ -345,7 +368,11 @@ void GIL::EndFrame()
 {
     auto commandBuffer = m_commandBuffers[m_currentFrame];
 
-    vkCmdEndRenderPass(commandBuffer);
+    if (m_activeRenderPass)
+        SetRenderPass(nullptr);
+    
+    // transition swapchain image to present layout
+    TransitionSwapChainColorImage(TextureLayout_Present);
 
     if (vkEndCommandBuffer(commandBuffer) != VK_SUCCESS)
     {
@@ -722,7 +749,7 @@ void GIL::createSwapChain()
     createInfo.imageColorSpace = surfaceFormat.colorSpace;
     createInfo.imageExtent = extent;
     createInfo.imageArrayLayers = 1;
-    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+    createInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
 
     QueueFamilyIndices indices = findQueueFamilies(m_physicalDevice);
     uint32_t queueFamilyIndices[] = { indices.graphicsFamily.value(), indices.presentFamily.value() };
@@ -981,7 +1008,7 @@ void GIL::createDepthResources()
 {
     VkFormat depthFormat = findDepthFormat();
 
-    createImage(m_swapChainExtent.width, m_swapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_depthImage, m_depthImageMemory);
+    createImage(m_swapChainExtent.width, m_swapChainExtent.height, 1, depthFormat, VK_IMAGE_TILING_OPTIMAL, VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT | VK_IMAGE_USAGE_SAMPLED_BIT, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT, m_depthImage, m_depthImageMemory);
     m_depthImageView = createImageView(m_depthImage, depthFormat, VK_IMAGE_ASPECT_DEPTH_BIT, 1);
 }
 
@@ -1356,7 +1383,8 @@ VkImageLayout s_textureLayoutToVkImageLayout[] =
     VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
     VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL,
     VK_IMAGE_LAYOUT_DEPTH_ATTACHMENT_OPTIMAL,
-    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+    VK_IMAGE_LAYOUT_PRESENT_SRC_KHR
 };
 
 VkAccessFlags s_textureLayoutToVkAccessFlags[] =
@@ -1365,7 +1393,8 @@ VkAccessFlags s_textureLayoutToVkAccessFlags[] =
     VK_ACCESS_TRANSFER_WRITE_BIT,
     VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
     VK_ACCESS_DEPTH_STENCIL_ATTACHMENT_WRITE_BIT,
-    VK_ACCESS_SHADER_READ_BIT
+    VK_ACCESS_SHADER_READ_BIT,
+    VK_ACCESS_MEMORY_READ_BIT
 };
 
 VkPipelineStageFlagBits s_textureLayoutToVkPipelineStageFlags[] =
@@ -1374,12 +1403,13 @@ VkPipelineStageFlagBits s_textureLayoutToVkPipelineStageFlags[] =
     VK_PIPELINE_STAGE_TRANSFER_BIT,
     VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
     VK_PIPELINE_STAGE_EARLY_FRAGMENT_TESTS_BIT,
-    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT
+    VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+    VK_PIPELINE_STAGE_BOTTOM_OF_PIPE_BIT
 };
 
 void GIL::TransitionSwapChainColorImage(TextureLayout newLayout)
 {
-    TransitionImageLayout(m_swapChainImages[m_currentFrame], false, m_swapChainColorLayout, newLayout);
+    TransitionImageLayout(m_swapChainImages[m_frameSwapImage], false, m_swapChainColorLayout, newLayout);
     m_swapChainColorLayout = newLayout;
 }
 
@@ -1588,20 +1618,33 @@ void GIL::BindMaterial(Material* material, bool lines)
     Assert(Thread::IsOnThread(ThreadGUID_Render), STR("{} must be run on render thread,  currently on thread {}", __FUNCTION__, Thread::GetCurrentThreadGUID()));
 
     auto materialPD = material->GetPlatformData();
+    auto materialAD = material->GetAssetData();
     if (materialPD)
     {
+        MaterialPlatformRenderPassData *mprpd = nullptr;
+        MaterialRenderPassInfo* mrpi = nullptr;
+        for (int i = 0; i < materialAD->renderPasses.size(); i++)
+        {
+            if (materialAD->renderPasses[i]->renderPass == m_activeRenderPass)
+            {
+                mrpi = materialAD->renderPasses[i];
+                mprpd = materialPD->renderPasses[i];
+                break;
+            }
+        }
+
         auto commandBuffer = m_commandBuffers[m_currentFrame];
         if (lines)
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->linePipeline);
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mprpd->linePipeline);
         else
-            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->polygonPipeline);
+            vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mprpd->polygonPipeline);
 
         u32 dynamicOffsets[16]; // maximum of 16 should be enough for any shader
         int dynamicOffsetCount = 0;
-        auto shader = material->GetAssetData()->shader;
+        auto shader = mrpi->shader;
         auto shaderPD = shader->GetPlatformData();
         auto shaderAD = shader->GetAssetData();
-        for (auto &it : materialPD->uboInstances)
+        for (auto &it : mprpd->uboInstances)
         {
             auto uboInstance = it.second;
             if (uboInstance->isDynamic)
@@ -1615,8 +1658,8 @@ void GIL::BindMaterial(Material* material, bool lines)
             }
         }
 
-        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, materialPD->pipelineLayout, 0,
-            (u32)materialPD->descriptorSets[m_currentFrame].size(), materialPD->descriptorSets[m_currentFrame].data(),
+        vkCmdBindDescriptorSets(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, mprpd->pipelineLayout, 0,
+            (u32)mprpd->descriptorSets[m_currentFrame].size(), mprpd->descriptorSets[m_currentFrame].data(),
             dynamicOffsetCount, dynamicOffsets);
         m_boundMaterial = material;
     }
@@ -1813,8 +1856,6 @@ void GIL::SetRenderPass(RenderPass* renderPass)
         return;
 
     auto& commandBuffer = m_commandBuffers[m_currentFrame];
-    auto renderPassPD = renderPass->GetPlatformData();
-    auto renderPassAD = renderPass->GetAssetData();
 
     // transition the old renderpass textures back to being shader textures
     if (m_activeRenderPass)
@@ -1836,31 +1877,40 @@ void GIL::SetRenderPass(RenderPass* renderPass)
 
     m_activeRenderPass = renderPass;
 
-    // transition render pass textures to attachment layout
-    for (auto& col : renderPassAD->colorAttachments)
+    if (renderPass)
     {
-        if (col.useSwapChain)
-            TransitionSwapChainColorImage(TextureLayout_ColorAttachment);
-        else
-            col.texture->SetLayout(TextureLayout_ColorAttachment);
+        auto renderPassPD = renderPass->GetPlatformData();
+        auto renderPassAD = renderPass->GetAssetData();
+
+        // transition render pass textures to attachment layout
+        for (auto& col : renderPassAD->colorAttachments)
+        {
+            if (col.useSwapChain)
+                TransitionSwapChainColorImage(TextureLayout_ColorAttachment);
+            else
+                col.texture->SetLayout(TextureLayout_ColorAttachment);
+        }
+        if (renderPassAD->depthAttachment.useSwapChain)
+            TransitionSwapChainDepthImage(TextureLayout_DepthAttachment);
+        else if (renderPassAD->depthAttachment.texture != nullptr)
+            renderPassAD->depthAttachment.texture->SetLayout(TextureLayout_DepthAttachment);
+
+        // start render pass
+        VkRenderPassBeginInfo renderPassInfo{};
+        renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+        renderPassInfo.renderPass = renderPassPD->renderPass;
+        renderPassInfo.framebuffer = renderPassPD->useSwapChain ? renderPassPD->frameBuffers[m_frameSwapImage] : renderPassPD->frameBuffers[0];
+        ivec2 size = renderPassPD->useSwapChain ? GetSwapChainImageSize() : renderPassAD->size;
+        renderPassInfo.renderArea.offset = { 0, 0 };
+        renderPassInfo.renderArea.extent = { (u32)size.x, (u32)size.y };
+
+        renderPassInfo.clearValueCount = static_cast<u32>(renderPassPD->clearValues.size());
+        renderPassInfo.pClearValues = renderPassPD->clearValues.data();
+        vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
     }
-    if (renderPassAD->depthAttachment.useSwapChain)
-        TransitionSwapChainDepthImage(TextureLayout_DepthAttachment);
-    else if (renderPassAD->depthAttachment.texture != nullptr)
-        renderPassAD->depthAttachment.texture->SetLayout(TextureLayout_DepthAttachment);
 
-    // start render pass
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = renderPassPD->renderPass;
-    renderPassInfo.framebuffer = renderPassPD->useSwapChain ? renderPassPD->frameBuffers[m_currentFrame] : renderPassPD->frameBuffers[0];
-    ivec2 size = renderPassPD->useSwapChain ? GetSwapChainImageSize() : renderPassAD->size;
-    renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = { (u32)size.x, (u32)size.y };
-
-    renderPassInfo.clearValueCount = static_cast<u32>(renderPassPD->clearValues.size());
-    renderPassInfo.pClearValues = renderPassPD->clearValues.data();
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+    // no bound materials at the start of a render pass
+    m_boundMaterial = nullptr;
 }
 
 #if PROFILING_ENABLED

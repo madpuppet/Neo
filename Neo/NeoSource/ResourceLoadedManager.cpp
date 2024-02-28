@@ -73,3 +73,7 @@ void ResourceLoadedManager::AddDependancyList(Resource *resource, vector<Resourc
 		RenderThread::Instance().AddPreDrawTask(cb);
 	}
 }
+
+
+
+

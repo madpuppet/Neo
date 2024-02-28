@@ -41,7 +41,10 @@ protected:
 	BitmapFontRef m_font;
 	MaterialRef m_beeMat;
 	ShaderRef m_shader;
-	RenderPassRef m_beeRender;
+	
+	RenderPassRef m_rpMain;
+	RenderPassRef m_rpBee;
+	RenderPassRef m_rpUI;
 
 	mat4x4 m_cameraMatrix;
 	float m_beeScale;

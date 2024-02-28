@@ -5,6 +5,7 @@
 #include "DefDynamicRenderer.h"
 #include "ImmDynamicRenderer.h"
 #include "Shader.h"
+#include "ResourceLoadedManager.h"
 
 DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early, NeoModulePri_Early);
 
@@ -14,7 +15,12 @@ const char* GAME_NAME = "TestGame";
 
 Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Update Worker", 4, true)
 {
-//	m_beeRender.Create("bee");
+	m_rpBee.Create("bee");
+	m_rpMain.Create("main");
+	m_rpUI.Create("ui");
+
+	// ensure the render passes complete before any materials are created that will bind to render pass targets
+	AssetManager::Instance().AddBarrier();
 
 	m_vikingRoom.Create("viking_room");
 	m_vikingRoomMat.Create("viking_room");
@@ -166,8 +172,8 @@ void Application::Draw()
 	if (!m_vikingRoom->IsLoaded())
 		return;
 
+	m_rpBee->Apply();
 	m_view.Apply();
-//	m_beeRender->Apply();
 
 	auto& gil = GIL::Instance();
 	UBO_Model modelData;
@@ -187,10 +193,10 @@ void Application::Draw()
 		gil.RenderStaticMeshInstances(m_vikingRoom, &m_roomInstances[roomGridSize * roomGridSize / 2], roomGridSize * roomGridSize / 2);
 	}
 
+	m_rpMain->Apply();
+
 	modelData.model = mat4x4(1);
 	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
-
-	GIL::Instance().SetRenderPass(nullptr);
 
 	{
 		PROFILE_GPU("PARTICLES");
@@ -225,6 +231,8 @@ void Application::Draw()
 		idr.EndPrimitive();
 		idr.EndRender();
 	}
+
+	m_rpUI->Apply();
 
 	if (m_font->IsLoaded())
 	{

@@ -162,3 +162,8 @@ AssetTypeInfo* AssetManager::FindAssetTypeInfo(const string &type)
 	return (it != m_assetTypeInfoMap.end()) ? it->second : nullptr;
 }
 
+void AssetManager::AddBarrier()
+{
+	m_assetTasks.AddBarrier();
+}
+

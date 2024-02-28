@@ -29,6 +29,8 @@ public:
 	}
 	T* Create(const string& name)
 	{
+		Assert(!name.empty(), "Empty asset name!");
+
 		auto creator = [name]()->T*
 		{
 			auto resource = new T;

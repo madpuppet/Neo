@@ -114,6 +114,20 @@ class MaterialRef : public ResourceRef<Material, MaterialFactory>
 	}
 };
 
+struct MaterialRenderPassInfo
+{
+	string renderPassName;
+	string shaderName;
+	MaterialBlendMode blendMode = MaterialBlendMode_Opaque;
+	MaterialCullMode cullMode = MaterialCullMode_None;
+	vector<MaterialBufferObject*> buffers;
+	vector<MaterialSampler*> samplers;
+	bool zread = false;
+	bool zwrite = false;
+	ShaderRef shader;
+	RenderPassRef renderPass;
+};
+
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk
 struct MaterialAssetData : public AssetData
@@ -125,16 +139,9 @@ public:
 	virtual bool MemoryToAsset(const MemBlock& block) override;
 	virtual bool SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateParams* params);
 
-	string shaderName;
-	MaterialBlendMode blendMode = MaterialBlendMode_Opaque;
-	MaterialCullMode cullMode = MaterialCullMode_None;
-	vector<MaterialBufferObject*> buffers;
-	vector<MaterialSampler*> samplers;
-	bool zread = false;
-	bool zwrite = false;
+	vector<MaterialRenderPassInfo*> renderPasses;
 
-	ShaderRef shader;
-
+	// for instanced materials
 	MaterialRef m_parent;
 };
 

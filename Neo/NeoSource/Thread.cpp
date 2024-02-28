@@ -227,40 +227,120 @@ void WorkerFarm::KillWorkers()
 
 void WorkerFarm::StartWork()
 {
+    // if no barriers, then just kick off all the work now
     ScopedMutexLock lock(m_taskLock);
-    m_startWork = true;
-    for (auto& task : m_taskQueue)
+    if (m_taskBarriers.empty())
     {
-        AddTask(task);
+        m_startWork = true;
+        for (auto& task : m_taskQueue)
+        {
+            auto bestWorker = FindBestWorker();
+            m_activeTasks++;
+            bestWorker->AddTask(task, m_onComplete);
+        }
+        m_taskQueue.clear();
     }
-    m_taskQueue.clear();
+
+    // we have some barriers, so just kick off work up to the first barrier
+    else
+    {
+        int barrier = m_taskBarriers.front();
+        m_taskBarriers.pop_front();
+        for (int i = 0; i < barrier; i++)
+        {
+            auto bestWorker = FindBestWorker();
+            m_activeTasks++;
+            bestWorker->AddTask(m_taskQueue[i], m_onComplete);
+        }
+
+        // remove the tasks we've launched
+        m_taskQueue.erase(m_taskQueue.begin(), m_taskQueue.begin() + barrier);
+
+        // update indexes of remaining barriers since we've removed tasks from the start of the list
+        for (auto& b : m_taskBarriers)
+            b = b - barrier;
+
+        // launch the barrier task which will kick off the next lot once the tasks are finished
+        LaunchBarrierTask();
+
+        m_startWork = true;
+    }
+}
+
+WorkerFarmWorker* WorkerFarm::FindBestWorker()
+{
+    // find worker with least workload
+    int smallestTasks = 10000;
+    WorkerFarmWorker* bestWorker = nullptr;
+    for (auto worker : m_workers)
+    {
+        int taskSize = worker->TaskListSize();
+        if (taskSize == 0)
+            return worker;
+
+        if (!bestWorker || taskSize < smallestTasks)
+        {
+            smallestTasks = taskSize;
+            bestWorker = worker;
+        }
+    }
+    return bestWorker;
 }
 
 void WorkerFarm::AddTask(GenericCallback task)
 {
-    if (!m_startWork)
+    ScopedMutexLock lock(m_taskLock);
+    if (!m_startWork || m_barrierActive)
     {
-        ScopedMutexLock lock(m_taskLock);
         m_taskQueue.emplace_back(task);
     }
     else
     {
         // find worker with least workload
-        int smallestTasks = 10000;
-        WorkerFarmWorker* bestWorker = nullptr;
-        for (auto worker : m_workers)
-        {
-            int taskSize = worker->TaskListSize();
-            if (!bestWorker || taskSize < smallestTasks)
-            {
-                smallestTasks = taskSize;
-                bestWorker = worker;
-            }
-        }
+        auto bestWorker = FindBestWorker();
         m_activeTasks++;
         bestWorker->AddTask(task, m_onComplete);
     }
 }
 
+void WorkerFarm::WaitOnBarrier()
+{
+    LOG(WorkerFarm, "==> Waiting on barrier");
+
+    // first we wait till all active tasks are completed
+    m_activeTasks--;
+    while (!AllTasksComplete());
+
+    LOG(WorkerFarm, "==> Continuing after barrier");
+
+    // we can start work again.. which will run all tasks up to the next barrier
+    m_barrierActive = false;
+
+    StartWork();
+}
+
+void WorkerFarm::LaunchBarrierTask()
+{
+    // NOTE: assume the caller has already locked the queue mutex
+    m_barrierActive = true;
+    auto bestWorker = FindBestWorker();
+    auto nullTask = []() {};
+    auto waitOnBarrier = [this]() { WaitOnBarrier(); };
+    bestWorker->AddTask(nullTask, waitOnBarrier);
+    m_activeTasks++;
+}
+
+void WorkerFarm::AddBarrier()
+{
+    ScopedMutexLock lock(m_taskLock);
+    if (!m_startWork || m_barrierActive)
+    {
+        m_taskBarriers.push_back((int)m_taskQueue.size());
+    }
+    else
+    {
+        LaunchBarrierTask();
+    }
+}
 
 

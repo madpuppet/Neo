@@ -223,11 +223,15 @@ class WorkerFarm
     std::atomic<int> m_activeTasks;
 
     bool m_startWork = false;
+    bool m_barrierActive = false;
     vector<GenericCallback> m_taskQueue;
+    fifo<int> m_taskBarriers;
     Mutex m_taskLock;
 
     GenericCallback m_onComplete = [this]() { m_activeTasks--; };
-
+    WorkerFarmWorker* FindBestWorker();
+    void WaitOnBarrier();
+    void LaunchBarrierTask();
 public:
     // individual Guids -> if set, each thread gets a unique guid (range is guid..guid+maxThreads)
     // this is useful if you want the profiler to have a unique row for each thread
@@ -245,6 +249,9 @@ public:
     // send a task to one of the workers. If StartWork hasn't been called, just queue the task locally
     // tasks are not guaranteed to finish in order, since there can be multiple workers
     void AddTask(GenericCallback task);
+
+    // this creates a barrier to ensure all currently added tasks are completed before new tasks are commences
+    void AddBarrier();
 };
 
 

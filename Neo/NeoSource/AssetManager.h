@@ -62,6 +62,11 @@ public:
 	// start worker farm
 	void StartWork();
 
+	// add barrier to ensure all previous assets complete before others start
+	// this is important for renderPasses to complete first since they must create all the render targets before materials try to access them
+	// if a material runs first, it will try to load the texture since it didn't find the render target
+	void AddBarrier();
+
 	// kill the worker farm
 	void KillWorkerFarm();
 
