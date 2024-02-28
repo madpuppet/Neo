@@ -16,8 +16,14 @@ const char* GAME_NAME = "TestGame";
 Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Update Worker", 4, true)
 {
 	m_rpBee.Create("bee");
+	m_rpBee->AddTask([this]() {RenderRooms(); });
+
 	m_rpMain.Create("main");
+	m_rpMain->AddTask([this]() {RenderBees(); });
+	m_rpMain->AddTask([this]() {RenderParticles(); });
+
 	m_rpUI.Create("ui");
+	m_rpUI->AddTask([this]() {RenderUI(); });
 
 	// ensure the render passes complete before any materials are created that will bind to render pass targets
 	AssetManager::Instance().AddBarrier();
@@ -166,15 +172,23 @@ void Application::Update()
 	while (!m_workerFarm.AllTasksComplete());
 }
 
-void Application::Draw()
+void Application::RenderParticles()
 {
-	// wait till our resources are loaded...
-	if (!m_vikingRoom->IsLoaded())
-		return;
+	auto& gil = GIL::Instance();
+	UBO_Model modelData;
+	auto modelUBOInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
+	modelData.model = mat4x4(1);
+	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
 
-	m_rpBee->Apply();
-	m_view.Apply();
+	{
+		PROFILE_GPU("PARTICLES");
+		auto& ddr = DefDynamicRenderer::Instance();
+		ddr.Render(0xffff);
+	}
+}
 
+void Application::RenderRooms()
+{
 	auto& gil = GIL::Instance();
 	UBO_Model modelData;
 	auto modelUBOInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
@@ -192,54 +206,62 @@ void Application::Draw()
 
 		gil.RenderStaticMeshInstances(m_vikingRoom, &m_roomInstances[roomGridSize * roomGridSize / 2], roomGridSize * roomGridSize / 2);
 	}
+}
 
-	m_rpMain->Apply();
-
-	modelData.model = mat4x4(1);
-	gil.UpdateUBOInstance(modelUBOInstance, &modelData, sizeof(modelData), true);
-
+void Application::RenderBees()
+{
+	PROFILE_GPU("BEES");
+	auto& idr = ImmDynamicRenderer::Instance();
+	idr.BeginRender();
+	idr.StartPrimitive(PrimType_TriangleList);
+	idr.UseMaterial(m_beeMat);
+	vec3 right = m_cameraMatrix[0] * m_beeScale;
+	vec3 up = m_cameraMatrix[1] * m_beeScale;
+	u32 beeCol = 0xffffffff;
+	for (auto& bee : m_bees)
 	{
-		PROFILE_GPU("PARTICLES");
-		auto& ddr = DefDynamicRenderer::Instance();
-		ddr.Render(0xffff);
+		vec3 bl = bee.pos - right - up;
+		vec3 br = bee.pos + right - up;
+		vec3 tl = bee.pos - right + up;
+		vec3 tr = bee.pos + right + up;
+
+		idr.AddVert(br, { 1,1 }, beeCol);
+		idr.AddVert(bl, { 0,1 }, beeCol);
+		idr.AddVert(tl, { 0,0 }, beeCol);
+
+		idr.AddVert(br, { 1,1 }, beeCol);
+		idr.AddVert(tl, { 0,0 }, beeCol);
+		idr.AddVert(tr, { 1,0 }, beeCol);
 	}
+	idr.EndPrimitive();
+	idr.EndRender();
+}
 
-	{
-		PROFILE_GPU("BEES");
-		auto& idr = ImmDynamicRenderer::Instance();
-		idr.BeginRender();
-		idr.StartPrimitive(PrimType_TriangleList);
-		idr.UseMaterial(m_beeMat);
-		vec3 right = m_cameraMatrix[0] * m_beeScale;
-		vec3 up = m_cameraMatrix[1] * m_beeScale;
-		u32 beeCol = 0xffffffff;
-		for (auto& bee : m_bees)
-		{
-			vec3 bl = bee.pos - right - up;
-			vec3 br = bee.pos + right - up;
-			vec3 tl = bee.pos - right + up;
-			vec3 tr = bee.pos + right + up;
-
-			idr.AddVert(br, { 1,1 }, beeCol);
-			idr.AddVert(bl, { 0,1 }, beeCol);
-			idr.AddVert(tl, { 0,0 }, beeCol);
-
-			idr.AddVert(br, { 1,1 }, beeCol);
-			idr.AddVert(tl, { 0,0 }, beeCol);
-			idr.AddVert(tr, { 1,0 }, beeCol);
-		}
-		idr.EndPrimitive();
-		idr.EndRender();
-	}
-
-	m_rpUI->Apply();
-
+void Application::RenderUI()
+{
 	if (m_font->IsLoaded())
 	{
 		int fps = (int)(1.0f / NeoTimeDelta);
 		int ms = (int)(1000.0f * NeoTimeDelta);
 		m_font->RenderText(STR("{}ms {}fps", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 	}
+}
+
+void Application::Draw()
+{
+	// wait till our resources are loaded...
+	if (!m_vikingRoom->IsLoaded())
+		return;
+
+	m_rpBee->Apply();
+	m_view.Apply();
+
+	m_rpMain->Apply();
+	m_view.Apply();
+
+	m_rpUI->Apply();
+	m_view.Apply();
+
 }
 
 

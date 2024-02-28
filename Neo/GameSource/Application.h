@@ -29,6 +29,11 @@ public:
 	void Draw();
 	void Shutdown();
 
+	void RenderParticles();
+	void RenderRooms();
+	void RenderBees();
+	void RenderUI();
+
 protected:
 	WorkerFarm m_workerFarm;
 

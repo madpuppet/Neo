@@ -74,6 +74,8 @@ bool RenderPassAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreat
 			viewportRect.y = fieldNode->GetF32(1);
 			viewportRect.w = fieldNode->GetF32(2);
 			viewportRect.h = fieldNode->GetF32(3);
+			viewportMinDepth = fieldNode->GetF32(4);
+			viewportMaxDepth = fieldNode->GetF32(5);
 		}
 		else if (fieldNode->IsName("scissor"))
 		{
@@ -209,6 +211,38 @@ bool RenderPassAssetData::MemoryToAsset(const MemBlock& block)
 void RenderPass::Apply()
 {
 	GIL::Instance().SetRenderPass(this);
+	ExecuteTasks();
 }
 
+int RenderPass::AddTask(GenericCallback task, int priority)
+{
+	ScopedMutexLock lock(m_taskLock);
+	int handle = m_nextTaskHandle++;
+	auto taskBundle = new TaskBundle{ handle, priority, task };
+	m_tasks.push_back(taskBundle);
+	return handle;
+}
+
+void RenderPass::RemoveTask(int handle)
+{
+	ScopedMutexLock lock(m_taskLock);
+	for (auto it = m_tasks.begin(); it != m_tasks.end(); ++it)
+	{
+		if ((*it)->handle == handle)
+		{
+			delete *it;
+			m_tasks.erase(it);
+		}
+	}
+}
+
+void RenderPass::ExecuteTasks()
+{
+	m_taskLock.Lock();
+	vector<TaskBundle*> doTasks = m_tasks;
+	m_taskLock.Release();
+
+	for (auto task : doTasks)
+		task->task();
+}
 

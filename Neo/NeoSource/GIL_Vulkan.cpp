@@ -344,6 +344,7 @@ void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboS
 
 void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
 {
+#if 0
     VkViewport vp{};
     vp.x = viewport.x * m_swapChainImageSize.x;
     vp.y = viewport.y * m_swapChainImageSize.y;
@@ -352,16 +353,19 @@ void GIL::SetViewport(const rect& viewport, float minDepth, float maxDepth)
     vp.minDepth = minDepth;
     vp.maxDepth = maxDepth;
     vkCmdSetViewport(m_commandBuffers[m_currentFrame], 0, 1, &vp);
+#endif
 }
 
 void GIL::SetScissor(const rect& scissorRect)
 {
+#if 0
     VkRect2D scissor{};
     scissor.offset.x = (u32)(scissorRect.x * m_swapChainImageSize.x);
     scissor.offset.y = (u32)(scissorRect.y * m_swapChainImageSize.y);
     scissor.extent.width = (u32)(scissorRect.w * m_swapChainImageSize.x);
     scissor.extent.height = (u32)(scissorRect.h * m_swapChainImageSize.y);
     vkCmdSetScissor(m_commandBuffers[m_currentFrame], 0, 1, &scissor);
+#endif
 }
 
 void GIL::EndFrame()

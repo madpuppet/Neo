@@ -235,6 +235,22 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
         viewportState.viewportCount = 1;
         viewportState.scissorCount = 1;
 
+        auto renderPassPD = mrpi->renderPass->GetPlatformData();
+        auto renderPassAD = mrpi->renderPass->GetAssetData();
+        ivec2 size = (renderPassPD->useSwapChain) ? gil.GetSwapChainImageSize() : renderPassAD->size;
+        VkViewport vp{};
+        vp.x = renderPassAD->viewportRect.x * size.x;
+        vp.y = renderPassAD->viewportRect.y * size.x;
+        vp.width = renderPassAD->viewportRect.w * size.x;
+        vp.height = renderPassAD->viewportRect.h * size.y;
+        vp.minDepth = 0;
+        vp.maxDepth = 1;
+        viewportState.pViewports = &vp;
+
+        VkRect2D scissor{ (i32)(renderPassAD->scissorRect.x * size.x), (i32)(renderPassAD->scissorRect.y * size.y),
+            (u32)(renderPassAD->scissorRect.w * size.x), (u32)(renderPassAD->scissorRect.h * size.y) };
+        viewportState.pScissors = &scissor;
+
         VkPipelineRasterizationStateCreateInfo rasterizer{};
         rasterizer.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
         rasterizer.depthClampEnable = VK_FALSE;
@@ -327,8 +343,6 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
         colorBlending.blendConstants[3] = 0.0f;
 
         std::vector<VkDynamicState> dynamicStates = {
-            VK_DYNAMIC_STATE_VIEWPORT,
-            VK_DYNAMIC_STATE_SCISSOR,
             VK_DYNAMIC_STATE_PRIMITIVE_TOPOLOGY
         };
         VkPipelineDynamicStateCreateInfo dynamicState{};

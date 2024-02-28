@@ -17,6 +17,8 @@ public:
 
 	ivec2 size{ 0,0 };
 	rect viewportRect{ 0,0,1,1 };
+	f32 viewportMinDepth;
+	f32 viewportMaxDepth;
 	rect scissorRect{ 0,0,1,1 };
 	struct DepthClear
 	{
@@ -46,6 +48,9 @@ class RenderPass : public Resource
 	virtual void Reload() override;
 	RenderPassAssetData* m_assetData;
 	struct RenderPassPlatformData* m_platformData;
+	Mutex m_taskLock;
+	int m_nextTaskHandle = 0;
+	vector<TaskBundle*> m_tasks;
 
 public:
 	static const string AssetType;
@@ -54,6 +59,12 @@ public:
 	void OnAssetDeliver(struct AssetData* data);
 
 	void Apply();
+
+	// add task - returns a handle
+	int AddTask(GenericCallback task, int priority=0);
+	void RemoveTask(int handle);
+
+	void ExecuteTasks();
 
 	RenderPassAssetData* GetAssetData() { return m_assetData; }
 	RenderPassPlatformData* GetPlatformData() { return m_platformData; }
