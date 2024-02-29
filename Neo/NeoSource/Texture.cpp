@@ -6,7 +6,7 @@
 
 #define TEXTURE_VERSION 1
 
-DECLARE_MODULE(TextureFactory, NeoModuleInitPri_TextureFactory, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(TextureFactory, NeoModuleInitPri_TextureFactory, NeoModulePri_None);
 
 const string Texture::AssetType = "Texture";
 
@@ -117,6 +117,8 @@ MemBlock TextureAssetData::AssetToMemory()
 	stream.WriteU16(TEXTURE_VERSION);
 	stream.WriteString(name);
 
+	LOG(Texture, STR("name {} images {}", name, images.size()));
+
 	stream.WriteU16(width);
 	stream.WriteU16(height);
 	stream.WriteU16((u16)format);
@@ -143,6 +145,9 @@ bool TextureAssetData::MemoryToAsset(const MemBlock& block)
 	height = stream.ReadU16();
 	format = (TexturePixelFormat)stream.ReadU16();
 	int miplevels = stream.ReadU16();
+
+	LOG(Texture, STR("Load {} mips {}", name, miplevels));
+
 	for (int i = 0; i < miplevels; i++)
 	{
 		images.push_back(stream.ReadMemory());

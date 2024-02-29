@@ -12,7 +12,7 @@
 
 #define STATICMESH_VERSION 1
 
-DECLARE_MODULE(StaticMeshFactory, NeoModuleInitPri_StaticMeshFactory, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(StaticMeshFactory, NeoModuleInitPri_StaticMeshFactory, NeoModulePri_None);
 
 const string StaticMesh::AssetType = "StaticMesh";
 

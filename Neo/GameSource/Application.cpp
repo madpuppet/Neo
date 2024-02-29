@@ -8,7 +8,7 @@
 #include "ResourceLoadedManager.h"
 #include "Profiler.h"
 
-DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early, NeoModulePri_Early);
+DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early);
 
 const char* GAME_NAME = "TestGame";
 
@@ -140,7 +140,6 @@ void Application::Update()
 			auto& ddr = DefDynamicRenderer::Instance();
 			if (m_particleMat->IsLoaded())
 			{
-				ddr.BeginFrame();
 				ddr.BeginRender(0);
 				ddr.StartPrimitive(PrimType_TriangleList);
 				ddr.UseMaterial(m_particleMat);
@@ -167,7 +166,6 @@ void Application::Update()
 				}
 				ddr.EndPrimitive();
 				ddr.EndRender();
-				ddr.EndFrame();
 			}
 		}
 		);

@@ -54,7 +54,7 @@ protected:
 
 	mat4x4 m_cameraMatrix;
 	float m_beeScale;
-	array<Bee, 20000> m_bees;
+	array<Bee, 10000> m_bees;
 
 	static const int roomGridSize = 5;
 	mat4x4 m_roomInstances[roomGridSize * roomGridSize];

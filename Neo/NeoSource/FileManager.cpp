@@ -7,7 +7,7 @@
 #include "Thread.h"
 #include "StringUtils.h"
 
-DECLARE_MODULE(FileManager, NeoModuleInitPri_FileManager, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(FileManager, NeoModuleInitPri_FileManager, NeoModulePri_None);
 
 #define SCOPED_MUTEX 	ScopedMutexLock critical(m_accessMutex)
 

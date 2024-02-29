@@ -2,7 +2,7 @@
 #include "ShaderManager.h"
 #include "RenderThread.h"
 
-DECLARE_MODULE(ShaderManager, NeoModuleInitPri_ShaderManager, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(ShaderManager, NeoModuleInitPri_ShaderManager, NeoModulePri_None);
 
 hashtable<string, VertAttribType> VertAttribType_Lookup;
 hashtable<VertAttribType, string> VertAttribTypeToString_Lookup;

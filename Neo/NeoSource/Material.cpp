@@ -7,7 +7,7 @@
 
 #define MATERIAL_VERSION 1
 
-DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_None);
 
 const string Material::AssetType = "Material";
 

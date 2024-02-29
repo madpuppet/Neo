@@ -2,7 +2,7 @@
 #include "DefDynamicRenderer.h"
 #include "RenderThread.h"
 
-DECLARE_MODULE(DefDynamicRenderer, NeoModuleInitPri_DefDynamicRenderer, NeoModulePri_Early, NeoModulePri_Early);
+DECLARE_MODULE(DefDynamicRenderer, NeoModuleInitPri_DefDynamicRenderer, NeoModulePri_Early);
 
 DefDynamicRenderer::DefDynamicRenderer()
 {

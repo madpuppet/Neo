@@ -2,7 +2,7 @@
 #include "ResourceLoadedManager.h"
 #include "RenderThread.h"
 
-DECLARE_MODULE(ResourceLoadedManager, NeoModuleInitPri_ResourceLoadedManager, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(ResourceLoadedManager, NeoModuleInitPri_ResourceLoadedManager, NeoModulePri_None);
 
 void ResourceLoadedManager::SignalResourceLoaded(Resource* resource)
 {

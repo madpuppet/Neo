@@ -15,7 +15,7 @@
 hashtable<string, SROType> SROType_Lookup;
 hashtable<string, SROStage> SROStage_Lookup;
 
-DECLARE_MODULE(ShaderFactory, NeoModuleInitPri_ShaderFactory, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(ShaderFactory, NeoModuleInitPri_ShaderFactory, NeoModulePri_None);
 
 const string Shader::AssetType = "Shader";
 

@@ -3,7 +3,7 @@
 #include "ImmDynamicRenderer.h"
 #include "ShaderManager.h"
 
-DECLARE_MODULE(RenderThread, NeoModuleInitPri_RenderThread, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(RenderThread, NeoModuleInitPri_RenderThread, NeoModulePri_None);
 
 /*
 
@@ -51,13 +51,13 @@ int RenderThread::Go()
 	// main draw loop - starts after the first Update() is finished
 	while (!m_terminate)
 	{
-		// clear out any queued pre draw tasks before we wait
-		m_preDrawTasks.ExecuteAndClear();
-
 		WaitUpdateDone();
 
 		if (m_terminate)
 			break;
+
+		// clear out any queued pre draw tasks before we wait
+		m_preDrawTasks.ExecuteAndClear();
 
 		// wait for draw fences to come in
 		gil.FrameWait();

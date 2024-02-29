@@ -7,7 +7,7 @@
 
 #define RENDERPASS_VERSION 1
 
-DECLARE_MODULE(RenderPassFactory, NeoModuleInitPri_RenderPassFactory, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(RenderPassFactory, NeoModuleInitPri_RenderPassFactory, NeoModulePri_None);
 
 const string RenderPass::AssetType = "RenderPass";
 

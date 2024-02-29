@@ -1,7 +1,7 @@
 #include "Neo.h"
 #include "TimeManager.h"
 
-DECLARE_MODULE(TimeManager, NeoModuleInitPri_TimeManager, NeoModulePri_Early, NeoModulePri_None);
+DECLARE_MODULE(TimeManager, NeoModuleInitPri_TimeManager, NeoModulePri_Early);
 
 void TimeManager::Update()
 {

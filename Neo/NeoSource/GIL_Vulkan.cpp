@@ -6,7 +6,7 @@
 #include "ShaderManager.h"
 #include "RenderPass.h"
 
-DECLARE_MODULE(GIL, NeoModuleInitPri_GIL, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(GIL, NeoModuleInitPri_GIL, NeoModulePri_None);
 
 #include <tiny_obj_loader.h>
 

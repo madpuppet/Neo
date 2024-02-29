@@ -2,7 +2,7 @@
 #include "ImmDynamicRenderer.h"
 #include "RenderThread.h"
 
-DECLARE_MODULE(ImmDynamicRenderer, NeoModuleInitPri_ImmDynamicRenderer, NeoModulePri_Early, NeoModulePri_Early);
+DECLARE_MODULE(ImmDynamicRenderer, NeoModuleInitPri_ImmDynamicRenderer, NeoModulePri_Early);
 
 ImmDynamicRenderer::ImmDynamicRenderer()
 {

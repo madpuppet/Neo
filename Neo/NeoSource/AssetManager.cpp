@@ -4,7 +4,7 @@
 #include "Thread.h"
 #include "Serializer.h"
 
-DECLARE_MODULE(AssetManager, NeoModuleInitPri_AssetManager, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(AssetManager, NeoModuleInitPri_AssetManager, NeoModulePri_None);
 
 AssetManager::AssetManager() : m_assetTasks(ThreadGUID_AssetManager, "AssetManager", 16, false)
 {

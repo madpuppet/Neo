@@ -3,7 +3,7 @@
 
 #if PROFILING_ENABLED
 
-DECLARE_MODULE(Profiler, NeoModuleInitPri_Profiler, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(Profiler, NeoModuleInitPri_Profiler, NeoModulePri_None);
 
 u32 ProfilerScopeGPU::s_uniqueID = 0;
 

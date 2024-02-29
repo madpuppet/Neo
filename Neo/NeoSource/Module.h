@@ -28,9 +28,11 @@ enum NeoModuleInitPri
 enum NeoModulePri
 {
 	NeoModulePri_None,
-	NeoModulePri_Early = 10,
-	NeoModulePri_Mid = 20,
-	NeoModulePri_Late = 30
+	NeoModulePri_First = 100,
+	NeoModulePri_Early = 200,
+	NeoModulePri_Mid = 300,
+	NeoModulePri_Late = 400,
+	NeoModulePri_Last = 500
 };
 
 class ModuleBase
@@ -78,18 +80,17 @@ template<class T> T* Module<T>::s_instance = nullptr;
 
 typedef std::function<ModuleBase*(void)> ModuleCreateFunc;
 typedef std::function<void(void)> ModuleDestroyFunc;
-#define DECLARE_MODULE(x, initPri, updatePri, drawPri) \
+#define DECLARE_MODULE(x, initPri, updatePri) \
 class __RegisterModule##x  \
 {  \
 public:  \
 	__RegisterModule##x()  \
 	{  \
-		NeoRegisterModule([]() -> ModuleBase* { return new x(); }, []() { delete& x::Instance(); }, #x, initPri, updatePri, drawPri);  \
+		NeoRegisterModule([]() -> ModuleBase* { return new x(); }, []() { delete& x::Instance(); }, #x, initPri, updatePri);  \
 	}  \
 } __registerModule##x;
 
-void NeoRegisterModule(ModuleCreateFunc, ModuleDestroyFunc, string name, int initPri, int updatePri, int drawPri);
+void NeoRegisterModule(ModuleCreateFunc, ModuleDestroyFunc, string name, int initPri, int updatePri);
 void NeoStartupModules();
 void NeoShutdownModules();
 void NeoUpdateModules();
-void NeoDrawModules();

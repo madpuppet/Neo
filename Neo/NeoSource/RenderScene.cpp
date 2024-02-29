@@ -6,7 +6,7 @@
 
 #define RENDERSCENE_VERSION 1
 
-DECLARE_MODULE(RenderSceneFactory, NeoModuleInitPri_RenderSceneFactory, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(RenderSceneFactory, NeoModuleInitPri_RenderSceneFactory, NeoModulePri_None);
 
 const string RenderScene::AssetType = "RenderScene";
 

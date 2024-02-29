@@ -10,7 +10,7 @@
 
 CmdLineVar<bool> CLV_ShowFontBorders("showFontBorders", "draw a white border around font draw areas", false);
 
-DECLARE_MODULE(BitmapFontFactory, NeoModuleInitPri_BitmapFontFactory, NeoModulePri_None, NeoModulePri_None);
+DECLARE_MODULE(BitmapFontFactory, NeoModuleInitPri_BitmapFontFactory, NeoModulePri_None);
 
 const string BitmapFont::AssetType = "BitmapFont";
 
