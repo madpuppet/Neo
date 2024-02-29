@@ -163,6 +163,64 @@ protected:
     Mutex *m_mutex;
 };
 
+// thread safe task list
+typedef std::function<void(void)> GenericCallback;		// generic callback that takes a void* and returns void
+struct TaskBundle
+{
+    int handle;
+    int priority;
+    GenericCallback task;
+};
+class TaskList
+{
+    int m_uniqueHandle = 0;
+    Mutex m_taskLock;
+    vector<TaskBundle*> m_tasks;
+public:
+    int Add(GenericCallback task, int priority)
+    {
+        ScopedMutexLock lock(m_taskLock);
+        int handle = m_uniqueHandle++;
+        auto bundle = new TaskBundle{ handle, priority, task };
+        m_tasks.push_back(bundle);
+        return handle;
+    }
+    void Remove(int handle)
+    {
+        ScopedMutexLock lock(m_taskLock);
+        for (auto it = m_tasks.begin(); it != m_tasks.end(); ++it)
+        {
+            if ((*it)->handle == handle)
+            {
+                delete* it;
+                m_tasks.erase(it);
+                break;
+            }
+        }
+    }
+    void Execute()
+    {
+        m_taskLock.Lock();
+        vector<TaskBundle*> doTasks = m_tasks;
+        m_taskLock.Release();
+        for (auto task : doTasks)
+            task->task();
+    }
+    void ExecuteAndClear()
+    {
+        m_taskLock.Lock();
+        vector<TaskBundle*> doTasks = std::move(m_tasks);
+        m_taskLock.Release();
+        for (auto it = doTasks.begin(); it != doTasks.end(); ++it)
+        {
+            (*it)->task();
+            delete (*it);
+        }
+    }
+};
+
+
+
 // a worker thread that executes one off tasks
 class WorkerThread : public Thread
 {

@@ -6,8 +6,8 @@ DECLARE_MODULE(ImmDynamicRenderer, NeoModuleInitPri_ImmDynamicRenderer, NeoModul
 
 ImmDynamicRenderer::ImmDynamicRenderer()
 {
-	RenderThread::Instance().AddDrawTask([this]() {BeginFrame(); }, DrawTaskPri_StartFrame);
-	RenderThread::Instance().AddDrawTask([this]() {EndFrame(); }, DrawTaskPri_EndFrame);
+	RenderThread::Instance().AddBeginFrameTask([this]() {BeginFrame(); });
+	RenderThread::Instance().AddEndFrameTask([this]() {EndFrame(); });
 
 	// this will execute before the first module update, so our buffers should be ready
 	RenderThread::Instance().AddPreDrawTask(

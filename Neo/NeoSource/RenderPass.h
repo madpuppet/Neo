@@ -4,6 +4,8 @@
 #include "AssetManager.h"
 #include "ResourceRef.h"
 
+class View;
+
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk
 struct RenderPassAssetData : public AssetData
@@ -51,6 +53,7 @@ class RenderPass : public Resource
 	Mutex m_taskLock;
 	int m_nextTaskHandle = 0;
 	vector<TaskBundle*> m_tasks;
+	View* m_view = nullptr;
 
 public:
 	static const string AssetType;
@@ -58,6 +61,7 @@ public:
 	virtual ~RenderPass() {}
 	void OnAssetDeliver(struct AssetData* data);
 
+	void SetView(View* view) { m_view = view; }
 	void Apply();
 
 	// add task - returns a handle

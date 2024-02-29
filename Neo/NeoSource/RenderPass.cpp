@@ -3,6 +3,7 @@
 #include "RenderThread.h"
 #include "SHAD.h"
 #include "ResourceLoadedManager.h"
+#include "View.h"
 
 #define RENDERPASS_VERSION 1
 
@@ -211,6 +212,14 @@ bool RenderPassAssetData::MemoryToAsset(const MemBlock& block)
 void RenderPass::Apply()
 {
 	GIL::Instance().SetRenderPass(this);
+
+	if (m_view)
+	{
+		ivec2 screenSize = m_platformData->useSwapChain ? GIL::Instance().GetSwapChainImageSize() : m_assetData->size;
+		float aspectRatio = (m_assetData->viewportRect.w * screenSize.x) / (m_assetData->viewportRect.h * screenSize.y);
+		m_view->Apply(aspectRatio);
+	}
+
 	ExecuteTasks();
 }
 

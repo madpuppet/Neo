@@ -2,6 +2,7 @@
 
 #include "Module.h"
 #include "Thread.h"
+#include "RenderScene.h"
 
 // use these when deciding when to draw something
 enum DrawTaskPri
@@ -26,29 +27,19 @@ class RenderThread : public Module<RenderThread>, public Thread
 	Semaphore m_doStartupTasks;
 	Semaphore m_startupTasksComplete;
 
-	Mutex m_preDrawTaskLock;
-	vector<GenericCallback> m_preDrawTasks;
-
-	// list of tasks to run during the render draw - general these add items to the render command queue
-	struct RenderTask
-	{
-		CallbackHandle handle;
-		int priority;
-		GenericCallback task;
-	};
-	Mutex m_drawTaskLock;
-	vector<RenderTask> m_drawTasks;
+	TaskList m_preDrawTasks;
+	TaskList m_beginFrameTasks;
+	TaskList m_endFrameTasks;
 
 	// set when GIL is initialised
 	volatile bool m_gilInitialized = false;
 
+	// active render scene to drive the render passes
+	RenderSceneRef m_activeRenderScene;
+
 public:
 	RenderThread();
 	~RenderThread();
-
-	// add a recurring draw task - gets called every draw
-	// if this is called during a draw, it will stall till the draw is over
-	CallbackHandle AddDrawTask(const GenericCallback& task, int priority);
 
 	// add a task that needs to run on the GIL to create gil resources
 	// cannot use command queue or other resources that must be done on the main thread
@@ -59,7 +50,16 @@ public:
 
 	// tasks that will execute before the main draw loop (after all previous frame work is complete)
 	// note that any pre draw tasks added during module startup will execute before the first module update
-	void AddPreDrawTask(const GenericCallback& task);
+	int AddPreDrawTask(const GenericCallback& task) { return m_preDrawTasks.Add(task, 0); }
+	void RemovePreDrawTask(int handle) { m_preDrawTasks.Remove(handle); }
+
+	// add a task that will run immediate at start of frame, before any render passes are set
+	int AddBeginFrameTask(const GenericCallback& task) { return m_beginFrameTasks.Add(task, 0); }
+	void RemoveBeginFrameTask(int handle) { m_beginFrameTasks.Remove(handle); }
+
+	// add a task that will run at end of frame, after the last render apss
+	int AddEndFrameTask(const GenericCallback& task) { return m_endFrameTasks.Add(task, 0); }
+	void RemoveEndFrameTask(int handle) { m_endFrameTasks.Remove(handle); }
 
 	// execute startup tasks - waits until they are finished before it returns
 	// this should be called by main thread before the first Update() loop,  after module startups are finished
@@ -68,6 +68,9 @@ public:
 		m_doStartupTasks.Signal();
 		m_startupTasksComplete.Wait();
 	}
+
+	// set what render scene we should use to drive the render passes
+	void SetRenderScene(RenderScene* rs) { m_activeRenderScene = rs; }
 
 	// internal GO
 	virtual int Go() override;

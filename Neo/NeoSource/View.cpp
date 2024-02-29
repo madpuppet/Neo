@@ -2,6 +2,7 @@
 #include "View.h"
 #include "RenderThread.h"
 #include "ShaderManager.h"
+#include "RenderPass.h"
 
 View::View()
 {
@@ -27,25 +28,9 @@ void View::SetLookAt(const vec3& eye, const vec3& target, const vec3& up)
 	m_cameraMatrix = LookAt(eye, target, up);
 }
 
-void View::SetViewport(const rect& viewport)
-{
-	m_viewport = viewport;
-}
-
 void View::SetCameraMatrix(const mat4x4& camMatrix)
 {
 	m_cameraMatrix = camMatrix;
-}
-
-void View::SetDepthRange(float minDepth, float maxDepth)
-{
-	m_minDepth = minDepth;
-	m_maxDepth = maxDepth;
-}
-
-void View::SetScissorRect(const rect& scissorRect)
-{
-	m_scissor = scissorRect;
 }
 
 struct vector3
@@ -67,19 +52,15 @@ struct vector3
 	};
 };
 
-void View::Apply()
+void View::Apply(float aspectRatio)
 {
-	auto& gil = GIL::Instance();
 	UBO_View viewData;
-	ivec2 screenSize = gil.GetSwapChainImageSize();
-	viewData.proj = glm::perspective(m_perspective.fov, (m_viewport.w * screenSize.x) / (m_viewport.h * screenSize.y), m_perspective.nearPlane, m_perspective.farPlane);
+
+	viewData.proj = glm::perspective(m_perspective.fov, aspectRatio, m_perspective.nearPlane, m_perspective.farPlane);
 	viewData.proj[1][1] *= -1.0f;
 	viewData.ortho = OrthoProj(m_orthographic.orthoRect, m_orthographic.nearPlane, m_orthographic.farPlane);
 	viewData.view = glm::inverse(m_cameraMatrix);
 	
 	auto viewUBOInstance = ShaderManager::Instance().FindUBO("UBO_View")->dynamicInstance;
-	gil.UpdateUBOInstance(viewUBOInstance, &viewData, sizeof(viewData), true);
-
-	gil.SetViewport(m_viewport, m_minDepth, m_maxDepth);
-	gil.SetScissor(m_scissor);
+	GIL::Instance().UpdateUBOInstance(viewUBOInstance, &viewData, sizeof(viewData), true);
 }

@@ -36,25 +36,16 @@ public:
 		float farPlane = 1.0f;
 	};
 
-	void SetViewport(const rect& viewPort);
 	void SetOrthographic(const OrthographicInfo& info);
 	void SetPerspective(const PerspectiveInfo& info);
 	void SetLookAt(const vec3& eye, const vec3& target, const vec3& up);
 	void SetCameraMatrix(const mat4x4& camMatrix);
-	void SetDepthRange(float minDepth, float maxDepth);
 
-	// set scissor rect - top-left == 0,0,   bottom-right == 1,1
-	void SetScissorRect(const rect& scissorRect);
-
-	void Apply();
+	void Apply(float aspectRatio);
 
 protected:
 	PerspectiveInfo m_perspective;
 	OrthographicInfo m_orthographic;
 
 	mat4x4 m_cameraMatrix = { mat4x4(1) };
-	rect m_viewport;
-	rect m_scissor;
-	float m_minDepth = 0.0f;
-	float m_maxDepth = 1.0f;
 };

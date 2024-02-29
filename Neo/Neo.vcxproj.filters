@@ -1544,6 +1544,9 @@
     <ClInclude Include="NeoSource\RenderPass.h">
       <Filter>NeoSource\Resources</Filter>
     </ClInclude>
+    <ClInclude Include="NeoSource\RenderScene.h">
+      <Filter>NeoSource\Resources</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="NeoSource\Main.cpp">
@@ -1682,6 +1685,9 @@
       <Filter>NeoSource\Debugging</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\RenderPass.cpp">
+      <Filter>NeoSource\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="NeoSource\RenderScene.cpp">
       <Filter>NeoSource\Resources</Filter>
     </ClCompile>
   </ItemGroup>

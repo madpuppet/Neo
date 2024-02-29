@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include "Thread.h"
 #include "RenderPass.h"
+#include "RenderScene.h"
 
 enum ApplicationThreads
 {
@@ -26,7 +27,6 @@ public:
 	virtual ~Application();
 
 	void Update();
-	void Draw();
 	void Shutdown();
 
 	void RenderParticles();
@@ -50,6 +50,7 @@ protected:
 	RenderPassRef m_rpMain;
 	RenderPassRef m_rpBee;
 	RenderPassRef m_rpUI;
+	RenderSceneRef m_renderScene;
 
 	mat4x4 m_cameraMatrix;
 	float m_beeScale;

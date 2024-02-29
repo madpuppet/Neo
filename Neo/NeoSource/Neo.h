@@ -102,14 +102,6 @@ typedef glm::ivec4      ivec4;
 typedef glm::mat4x4     mat4x4;
 typedef glm::vec4       color;
 
-typedef std::function<void(void)> GenericCallback;		// generic callback that takes a void* and returns void
-struct TaskBundle
-{
-	int handle;
-	int priority;
-	GenericCallback task;
-};
-
 template <typename T>
 struct rectangle
 {

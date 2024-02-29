@@ -16,7 +16,16 @@ const char* GAME_NAME = "TestGame";
 
 Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Update Worker", 4, true)
 {
+	View::PerspectiveInfo persp;
+	persp.fov = DegToRad(70.0f);
+	persp.nearPlane = 0.25f;
+	persp.farPlane = 100.0f;
+	m_view.SetPerspective(persp);
+	m_cameraPYR = { DegToRad(45.0f), 0, 0 };
+	m_cameraPos = { 0, 1.5f, -1.0f };
+
 	m_rpBee.Create("bee");
+	m_rpBee->SetView(&m_view);
 	m_rpBee->AddTask([this]() {RenderRooms(); });
 
 	m_rpMain.Create("main");
@@ -26,28 +35,17 @@ Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Up
 
 	m_rpUI.Create("ui");
 	m_rpUI->AddTask([this]() {RenderUI(); });
+
+	m_renderScene.Create("standard");
 	PROFILE_ADD_RENDER(m_rpUI);
 
-	// ensure the render passes complete before any materials are created that will bind to render pass targets
+	// ensure the render scene creation (and renderpasses) complete before any materials are created that might bind to render pass targets
 	AssetManager::Instance().AddBarrier();
 
 	m_vikingRoom.Create("viking_room");
 	m_vikingRoomMat.Create("viking_room");
 
-	RenderThread::Instance().AddDrawTask([this]() {Draw(); }, DrawTaskPri_BasePixel);
-
-	View::PerspectiveInfo persp;
-	persp.fov = DegToRad(70.0f);
-	persp.nearPlane = 0.25f;
-	persp.farPlane = 100.0f;
-	m_view.SetPerspective(persp);
-
-	m_view.SetViewport({ 0,0,1,1 });
-	m_view.SetDepthRange(0.1f, 1.0f);
-	m_view.SetScissorRect({ 0,0,1,1 });
-
-	m_cameraPYR = { DegToRad(45.0f), 0, 0};
-	m_cameraPos = { 0, 1.5f, -1.0f };
+	m_renderScene->Apply();
 
 	for (int x = 0; x < roomGridSize; x++)
 	{
@@ -142,6 +140,7 @@ void Application::Update()
 			auto& ddr = DefDynamicRenderer::Instance();
 			if (m_particleMat->IsLoaded())
 			{
+				ddr.BeginFrame();
 				ddr.BeginRender(0);
 				ddr.StartPrimitive(PrimType_TriangleList);
 				ddr.UseMaterial(m_particleMat);
@@ -168,6 +167,7 @@ void Application::Update()
 				}
 				ddr.EndPrimitive();
 				ddr.EndRender();
+				ddr.EndFrame();
 			}
 		}
 		);
@@ -177,6 +177,9 @@ void Application::Update()
 
 void Application::RenderParticles()
 {
+	if (!m_particleMat->IsLoaded())
+		return;
+
 	auto& gil = GIL::Instance();
 	UBO_Model modelData;
 	auto modelUBOInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
@@ -192,6 +195,9 @@ void Application::RenderParticles()
 
 void Application::RenderRooms()
 {
+	if (!m_vikingRoom->IsLoaded())
+		return;
+
 	auto& gil = GIL::Instance();
 	UBO_Model modelData;
 	auto modelUBOInstance = ShaderManager::Instance().FindUBO("UBO_Model")->dynamicInstance;
@@ -216,6 +222,9 @@ void Application::RenderRooms()
 
 void Application::RenderBees()
 {
+	if (!m_beeMat->IsLoaded())
+		return;
+
 	PROFILE_GPU("BEES");
 	auto& idr = ImmDynamicRenderer::Instance();
 	idr.BeginRender();
@@ -245,29 +254,12 @@ void Application::RenderBees()
 
 void Application::RenderUI()
 {
-	if (m_font->IsLoaded())
-	{
-		int fps = (int)(1.0f / NeoTimeDelta);
-		int ms = (int)(1000.0f * NeoTimeDelta);
-		m_font->RenderText(STR("{}ms {}fps", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
-	}
-}
-
-void Application::Draw()
-{
-	// wait till our resources are loaded...
-	if (!m_vikingRoom->IsLoaded())
+	if (!m_font->IsLoaded())
 		return;
 
-	m_rpBee->Apply();
-	m_view.Apply();
-
-	m_rpMain->Apply();
-	m_view.Apply();
-
-	m_rpUI->Apply();
-	m_view.Apply();
-
+	int fps = (int)(1.0f / NeoTimeDelta);
+	int ms = (int)(1000.0f * NeoTimeDelta);
+	m_font->RenderText(STR("{}ms {}fps", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 }
 
 
