@@ -3,7 +3,14 @@
 #include "ImmDynamicRenderer.h"
 #include "ShaderManager.h"
 
-DECLARE_MODULE(RenderThread, NeoModuleInitPri_RenderThread, NeoModulePri_None);
+//DECLARE_MODULE(RenderThread, NeoModuleInitPri_RenderThread, NeoModulePri_None);
+
+__RegisterModuleRenderThread::__RegisterModuleRenderThread()
+{
+	printf("Module Linked\n");
+	NeoRegisterModule([]() -> ModuleBase* { return new RenderThread(); }, []() { delete& RenderThread::Instance(); }, "RenderThread", NeoModuleInitPri_RenderThread, NeoModulePri_None);
+} 
+__RegisterModuleRenderThread __registerModuleRenderThread;
 
 /*
 

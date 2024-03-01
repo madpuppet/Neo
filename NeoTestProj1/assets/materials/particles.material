@@ -1,4 +1,4 @@
-renderpass: main
+renderpass: particles_to_texture
 	shader: standard
 	blend: opaque
 	cull: back
@@ -7,7 +7,7 @@ renderpass: main
 	sampler: Albedo
 		image: texture
 		filter: nearest
-		wrap: repeat
+		wrap: clamp
 	static_ubo: UBO_Material
 		blendColor: 1,1,1,1
 

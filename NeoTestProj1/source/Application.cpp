@@ -24,13 +24,12 @@ Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Up
 	m_cameraPYR = { DegToRad(45.0f), 0, 0 };
 	m_cameraPos = { 0, 1.5f, -1.0f };
 
-	m_rpBee.Create("bee");
-	m_rpBee->SetView(&m_view);
-	m_rpBee->AddTask([this]() {RenderRooms(); });
+	m_rpParticlesToTexture.Create("particles_to_texture");
+	m_rpParticlesToTexture->SetView(&m_view);
+	m_rpParticlesToTexture->AddTask([this]() {RenderParticles(); });
 
 	m_rpMain.Create("main");
 	m_rpMain->AddTask([this]() {RenderBees(); });
-	m_rpMain->AddTask([this]() {RenderParticles(); });
 	m_rpMain->AddTask([this]() {RenderRooms(); });
 
 	m_rpUI.Create("ui");
@@ -146,7 +145,7 @@ void Application::Update()
 				float width = sinf(time) * 0.05f + 0.05f;
 				vec3 right = vec3(camMatrix[0] * width);
 				vec3 up = vec3(camMatrix[1] * width);
-				for (int i = 0; i < 20000; i++)
+				for (int i = 0; i < 2000; i++)
 				{
 					float rnd = (rand() & 0xff) / 2550.0f;
 					vec3 pos;

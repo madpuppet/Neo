@@ -40,13 +40,13 @@
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v143</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -79,6 +79,8 @@
     <LinkIncremental>true</LinkIncremental>
     <IncludePath>$(ProjectDir)include;$(ProjectDir)NeoSource;$(ProjectDir)GameSource;$(ProjectDir)NeoSource\zlib;C:\VulkanSDK\1.3.268.0\Include;$(VC_IncludePath);$(WindowsSDK_IncludePath)</IncludePath>
     <LibraryPath>..\Neo\libs;$(VC_LibraryPath_x64);$(WindowsSDK_LibraryPath_x64);$(NETFXKitsDir)Lib\um\x64;C:\VulkanSDK\1.3.268.0\Lib</LibraryPath>
+    <OutDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -128,7 +130,8 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)$(Platform)\$(Configuration)\Neo.exe $(SolutionDir)Neo\Neo.exe</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -182,7 +185,8 @@
       </Command>
     </PreBuildEvent>
     <PostBuildEvent>
-      <Command>copy $(SolutionDir)$(Platform)\$(Configuration)\Neo.exe $(SolutionDir)Neo\Neo.exe</Command>
+      <Command>
+      </Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -298,7 +302,6 @@
     <None Include="SourceData\shaders\standard_ortho.shader" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="GameSource\Application.h" />
     <ClInclude Include="glm\common.hpp" />
     <ClInclude Include="glm\exponential.hpp" />
     <ClInclude Include="glm\ext.hpp" />
@@ -703,7 +706,6 @@
     <ClInclude Include="NeoSource\zlib\zutil.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="GameSource\Application.cpp" />
     <ClCompile Include="NeoSource\AssetManager.cpp" />
     <ClCompile Include="NeoSource\FileExcludes.cpp" />
     <ClCompile Include="NeoSource\FileManager.cpp" />

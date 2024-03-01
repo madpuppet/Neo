@@ -7,9 +7,6 @@
     <Filter Include="NeoSource">
       <UniqueIdentifier>{b87829a2-9fc5-4301-8d35-f268bf701640}</UniqueIdentifier>
     </Filter>
-    <Filter Include="GameSource">
-      <UniqueIdentifier>{8f26388f-4592-4d2c-bf70-10e1a4ab860c}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Includes">
       <UniqueIdentifier>{f6001354-2fa8-4bf8-ac6f-eaa107f5191d}</UniqueIdentifier>
     </Filter>
@@ -697,9 +694,6 @@
     </ClInclude>
     <ClInclude Include="NeoSource\TimeManager.h">
       <Filter>NeoSource</Filter>
-    </ClInclude>
-    <ClInclude Include="GameSource\Application.h">
-      <Filter>GameSource</Filter>
     </ClInclude>
     <ClInclude Include="glm\common.hpp">
       <Filter>Includes\glm</Filter>
@@ -1599,9 +1593,6 @@
     </ClCompile>
     <ClCompile Include="NeoSource\Memory.cpp">
       <Filter>NeoSource</Filter>
-    </ClCompile>
-    <ClCompile Include="GameSource\Application.cpp">
-      <Filter>GameSource</Filter>
     </ClCompile>
     <ClCompile Include="NeoSource\Texture.cpp">
       <Filter>NeoSource\Resources</Filter>

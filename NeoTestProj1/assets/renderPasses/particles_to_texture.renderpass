@@ -4,5 +4,5 @@ scissor: 0, 0, 1, 1
 zread: 0
 zwrite: 0
 color: bee
-	clear: 0,0,1,1
-	colorspace: linear
+	clear: 0,0,0,0
+

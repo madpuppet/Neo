@@ -48,7 +48,7 @@ protected:
 	ShaderRef m_shader;
 	
 	RenderPassRef m_rpMain;
-	RenderPassRef m_rpBee;
+	RenderPassRef m_rpParticlesToTexture;
 	RenderPassRef m_rpUI;
 	RenderSceneRef m_renderScene;
 

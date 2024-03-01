@@ -1,16 +1,12 @@
-renderpass: bee
+renderpass: main
 	shader: standard
 	blend: opaque
 	cull: back
-	zread: false
-	zwrite: false
+	zread: true
+	zwrite: true
 	sampler: Albedo
 		image: viking_room
 		filter: nearest
 		wrap: repeat
 	ubo: UBO_Material
 		blendColor: 1,1,1,1
-renderpass: main
-	copy: bee
-	zread: true
-	zwrite: true

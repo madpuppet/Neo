@@ -25,7 +25,6 @@
 #include "FileManager.h"
 #include "AssetManager.h"
 
-#include "Application.h"  //TODO: we shouldn't know about Application - it should just itself to a generic update callback
 #include "RenderThread.h"
 #include "DefDynamicRenderer.h"
 

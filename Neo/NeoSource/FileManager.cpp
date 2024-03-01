@@ -3,7 +3,6 @@
 #include "FileSystem_FlatFolder.h"
 #include "FileSystem_FlatArchive.h"
 #include "FileSystem_RawAccess.h"
-#include "Application.h"
 #include "Thread.h"
 #include "StringUtils.h"
 
@@ -18,12 +17,12 @@ FileManager::FileManager() : m_nextUniqueFileHandle(0)
 	s_excludes = new FileExcludes("all.exclude");
 
 	// mount flat data filesystem (no paths)
-	FileSystem_FlatFolder* dataFS = new FileSystem_FlatFolder("data", "./GameData", 1, true, s_excludes);
+	FileSystem_FlatFolder* dataFS = new FileSystem_FlatFolder("data", "./data", 1, true, s_excludes);
 	dataFS->EnableMonitorFileChanges(true);
 	Mount(dataFS);
 
 	// mount flat data filesystem (no paths)
-	FileSystem_FlatFolder* srcFS = new FileSystem_FlatFolder("src", "./SourceData", 1, true, s_excludes);
+	FileSystem_FlatFolder* srcFS = new FileSystem_FlatFolder("src", "./assets", 1, true, s_excludes);
 	srcFS->EnableMonitorFileChanges(true);
 	Mount(srcFS);
 
