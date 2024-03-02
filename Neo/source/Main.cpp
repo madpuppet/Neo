@@ -27,6 +27,11 @@
 
 #include "RenderThread.h"
 #include "DefDynamicRenderer.h"
+#include "RenderPass.h"
+#include "Material.h"
+
+u32 NeoUpdateFrameIdx = 0;
+u32 NeoDrawFrameIdx = 0;
 
 CmdLineVar<stringlist> CLV_LogFilter("log", "select log filters to show", { "" });
 
@@ -56,13 +61,25 @@ int main(int argc, char* argv[])
                     break;
 
                 case SDL_WINDOWEVENT:
-                    if (e.window.event == SDL_WINDOWEVENT_RESIZED) 
+                    if (e.window.event == SDL_WINDOWEVENT_RESIZED)
                     {
-                        int newWidth = e.window.data1;
-                        int newHeight = e.window.data2;
-                        if (GIL::Exists())
+                        ivec2 newSize{ e.window.data1,e.window.data2 };
+                        if (RenderThread::Exists())
                         {
-                            GIL::Instance().ResizeFrameBuffers(newWidth, newHeight);
+                            // at the start fo the next render frame, we will recreate everything
+                            RenderThread::Instance().AddPreDrawTask([newSize]()
+                            {
+                                    // need to wait for gpu to be idle so its not using any resources we are about to recreate
+                                    GIL::Instance().WaitForGPU();
+                                    // destroy the render pass first since it references the swap chain in its framebuffers
+                                    RenderPassFactory::Instance().DestroyPlatformData();
+                                    // destroy and recreate the swapchain
+                                    GIL::Instance().ResizeSwapChain(newSize);
+                                    // create the render passes
+                                    RenderPassFactory::Instance().CreatePlatformData();
+                                    // finally recreate all the graphics pipelines since they reference viewport sizes of the render passes
+                                    MaterialFactory::Instance().OnSwapChainResize();
+                            });
                         }
                     }
                     break;
@@ -77,6 +94,8 @@ int main(int argc, char* argv[])
 
         RenderThread::Instance().SignalUpdateDone();
         RenderThread::Instance().WaitDrawStarted();
+
+        NeoUpdateFrameIdx = 1 - NeoUpdateFrameIdx;
     }
     
     gMemoryTracker.Dump();

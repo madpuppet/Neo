@@ -9,8 +9,8 @@ class StaticMesh : public Resource
 {
 	virtual void Reload() override;
 
-	struct StaticMeshAssetData* m_assetData;
-	struct StaticMeshPlatformData* m_platformData;
+	struct StaticMeshAssetData* m_assetData = nullptr;
+	struct StaticMeshPlatformData* m_platformData = nullptr;
 
 public:
 	static const string AssetType;

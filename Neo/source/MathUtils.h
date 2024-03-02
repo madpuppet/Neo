@@ -298,6 +298,14 @@ public:
 	T endMax;
 };
 
+#include <random>
+inline float Random(u32 seed, float min, float max)
+{
+	std::mt19937 generator(seed);
+	std::uniform_real_distribution<float> distribution(min, max);
+	return distribution(generator);
+}
+
 template<class T>
 class MinMax
 {

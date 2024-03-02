@@ -10,7 +10,7 @@ struct RenderSceneAssetData;
 class RenderScene : public Resource
 {
 	virtual void Reload() override;
-	RenderSceneAssetData* m_assetData;
+	RenderSceneAssetData* m_assetData = nullptr;
 
 public:
 	static const string AssetType;

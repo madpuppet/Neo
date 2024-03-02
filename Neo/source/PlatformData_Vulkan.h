@@ -89,6 +89,7 @@ struct IADPlatformData
 	vector<VkVertexInputAttributeDescription> attributeDescriptions;
 };
 IADPlatformData* IADPlatformData_Create(struct InputAttributesDescription *iad);
+void IADPlatformData_Destroy(IADPlatformData* platformData);
 
 struct RenderPassPlatformData
 {
@@ -99,4 +100,4 @@ struct RenderPassPlatformData
 	vector<VkClearValue> clearValues;
 };
 RenderPassPlatformData *RenderPassPlatformData_Create(struct RenderPassAssetData* assetData);
-
+void RenderPassPlatformData_Destroy(RenderPassPlatformData *platformData);

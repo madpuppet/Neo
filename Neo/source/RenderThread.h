@@ -4,15 +4,6 @@
 #include "Thread.h"
 #include "RenderScene.h"
 
-class __RegisterModuleRenderThread
-{
-public:
-	__RegisterModuleRenderThread();
-	void test();
-};
-extern __RegisterModuleRenderThread __registerModuleRenderThread;
-
-
 // use these when deciding when to draw something
 enum DrawTaskPri
 {

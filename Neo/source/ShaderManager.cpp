@@ -7,6 +7,11 @@ DECLARE_MODULE(ShaderManager, NeoModuleInitPri_ShaderManager, NeoModulePri_None)
 hashtable<string, VertAttribType> VertAttribType_Lookup;
 hashtable<VertAttribType, string> VertAttribTypeToString_Lookup;
 
+// 	UBOMemberInfo mi_view{ "view", UniformType_mat4x4, offsetof(UBO_View, view), 1, sizeof(mat4x4) };
+//  UBOMemberInfo mi_proj{ "proj", UniformType_mat4x4, offsetof(UBO_View, proj), 1, sizeof(mat4x4) };
+//  UBOMemberStructInfo mi_struct_ubo_view{ "UBO_View", {"mi_view","mi_proj"} };
+//  UBOMemberInfo mi_view{ "views", UniformType_struct, offsetof(UBO_Views, view), 4, sizeof(UBO_View), &mi_struct_ubo_view };
+
 ShaderManager::ShaderManager() 
 {
 	UBOMemberInfo mi_view{ "view", UniformType_mat4x4, offsetof(UBO_View, view), 1, sizeof(mat4x4) };

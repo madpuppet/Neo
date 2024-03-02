@@ -424,4 +424,18 @@ bool MaterialAssetData::MemoryToAsset(const MemBlock& block)
 	return true;
 }
 
+void MaterialFactory::OnSwapChainResize()
+{
+	for (auto [hash, material] : m_resources)
+	{
+		material->RecreatePlatformData();
+	}
+}
+
+void Material::RecreatePlatformData()
+{
+	MaterialPlatformData_Destroy(m_platformData);
+	m_platformData = MaterialPlatformData_Create(m_assetData);
+}
+
 

@@ -21,6 +21,7 @@ TexturePlatformData* TexturePlatformData_Create(TextureAssetData* assetData)
 
     Assert(assetData->format != PixFmt_Undefined, "Undefined pixel format!");
     VkFormat fmt = gil.FindVulkanFormat(assetData->format);
+    Assert(fmt != VK_FORMAT_UNDEFINED, "unknown format!");
     platformData->isDepth = (assetData->format == PixFmt_D32_SFLOAT || assetData->format == PixFmt_D24_UNORM_S8_UINT);
 
     int usageBit = platformData->isDepth ? VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT : VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
@@ -516,6 +517,28 @@ MaterialPlatformData* MaterialPlatformData_Create(MaterialAssetData* assetData)
 
 void MaterialPlatformData_Destroy(MaterialPlatformData* platformData)
 {
+    //vkAllocateDescriptorSets(gil.Device(), &allocInfo, rp->descriptorSets[i].data()) != VK_SUCCESS)
+    //gil.createTextureSampler(minFilter, maxFilter, mipMapFilter, addressModeU, addressModeV, compareOp, imageInfo.sampler);
+
+    auto device = GIL::Instance().Device();
+    auto descPool = GIL::Instance().DescriptorPool();
+    for (auto rp : platformData->renderPasses)
+    {
+        vkDestroyPipeline(device, rp->linePipeline, nullptr);
+        rp->linePipeline = nullptr;
+
+        vkDestroyPipeline(device, rp->polygonPipeline, nullptr);
+        rp->polygonPipeline = nullptr;
+
+        vkDestroyPipelineLayout(device, rp->pipelineLayout, nullptr);
+        rp->pipelineLayout = nullptr;
+
+        for (auto setLayout : rp->dsSetLayouts)
+            vkDestroyDescriptorSetLayout(device, setLayout, nullptr);
+
+        for (size_t i = 0; i < MAX_FRAMES_IN_FLIGHT; i++)
+            vkFreeDescriptorSets(device, descPool, (u32)rp->dsSetLayouts.size(), rp->descriptorSets[i].data());
+    }
     delete platformData;
 }
 
@@ -571,6 +594,7 @@ UniformBufferPlatformData* UniformBufferPlatformData_Create(const UBOInfo &uboIn
 }
 void UniformBufferPlatformData_Destroy(UniformBufferPlatformData* platformData)
 {
+
 }
 
 IADPlatformData* IADPlatformData_Create(InputAttributesDescription* iad)
@@ -599,6 +623,11 @@ IADPlatformData* IADPlatformData_Create(InputAttributesDescription* iad)
     return platformData;
 }
 
+void IADPlatformData_Destroy(IADPlatformData* platformData)
+{
+    delete platformData;
+}
+
 
 RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* assetData)
 {
@@ -623,9 +652,7 @@ RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* asset
 
     for (auto& color : assetData->colorAttachments)
     {
-        bool useSwapChain = color.name == "swapchain";
-
-        VkFormat fmt = useSwapChain ? gil.GetSwapChainImageFormat() : gil.FindVulkanFormat(color.fmt);
+        VkFormat fmt = color.useSwapChain ? gil.GetSwapChainImageFormat() : gil.FindVulkanFormat(color.fmt);
         VkAttachmentReference colorAttachmentRef{};
         colorAttachmentRef.attachment = (u32)attachments.size();
         colorAttachmentRef.layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL;
@@ -648,20 +675,18 @@ RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* asset
 
         for (int i = 0; i < framebufferCount; i++)
         {
-            imageViewsList[i].push_back(useSwapChain ? gil.GetSwapChainImageView(i) : color.texture->GetPlatformData()->textureImageView);
+            imageViewsList[i].push_back(color.useSwapChain ? gil.GetSwapChainImageView(i) : color.texture->GetPlatformData()->textureImageView);
         }
     }
 
     bool useDepth = !assetData->depthAttachment.name.empty();
     if (useDepth)
     {
-        bool useSwapChain = assetData->depthAttachment.name == "swapchain";
-
         depthAttachmentRef.attachment = (u32)attachments.size();
         depthAttachmentRef.layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL;
 
         VkAttachmentDescription depthAttachment{};
-        depthAttachment.format = useSwapChain ? gil.GetDepthFormat() : gil.FindVulkanFormat(assetData->depthAttachment.fmt);
+        depthAttachment.format = assetData->depthAttachment.useSwapChain ? gil.GetDepthFormat() : gil.FindVulkanFormat(assetData->depthAttachment.fmt);
         depthAttachment.samples = VK_SAMPLE_COUNT_1_BIT;
         depthAttachment.loadOp = assetData->depthAttachment.doClear ? VK_ATTACHMENT_LOAD_OP_CLEAR : VK_ATTACHMENT_LOAD_OP_LOAD;
         depthAttachment.storeOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
@@ -673,7 +698,8 @@ RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* asset
 
         for (int i = 0; i < framebufferCount; i++)
         {
-            imageViewsList[i].push_back(useSwapChain ? gil.GetDepthBufferImageView() : assetData->depthAttachment.texture->GetPlatformData()->textureImageView);        }
+            imageViewsList[i].push_back(assetData->depthAttachment.useSwapChain ? gil.GetDepthBufferImageView() : assetData->depthAttachment.texture->GetPlatformData()->textureImageView);
+        }
 
         VkClearValue clear{};
         clear.depthStencil = { assetData->depthAttachment.clear.depth.depth, assetData->depthAttachment.clear.depth.stencil };
@@ -721,5 +747,14 @@ RenderPassPlatformData *RenderPassPlatformData_Create(RenderPassAssetData* asset
     }
 
     return platformData;
+}
+
+void RenderPassPlatformData_Destroy(RenderPassPlatformData* platformData)
+{
+    auto device = GIL::Instance().Device();
+    vkDestroyRenderPass(device, platformData->renderPass, nullptr);
+    for (auto fb : platformData->frameBuffers)
+        vkDestroyFramebuffer(device, fb, nullptr);
+    delete platformData;
 }
 

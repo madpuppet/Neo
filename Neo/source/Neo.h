@@ -113,12 +113,12 @@ struct rectangle
 		return x < o.x2() && x2() >= o.x && y < o.y2() && y2() >= o.y;
 	}
 	void translate(const T& offset) { x += offset.x; y += offset.y; };
-	auto x2() const { return x + w; }
-	auto y2() const { return y + h; }
-	auto centrePos() const { return { x + w / 2, y + h / 2 }; }
-	auto minPos() const { return { x,y }; }
-	auto maxPos() const { return { x+w,y+h }; }
-	auto size() const { return { w,h }; }
+	T x2() const { return x + w; }
+	T y2() const { return y + h; }
+	T centrePos() const { return { x + w / 2, y + h / 2 }; }
+	glm::vec<2,T> minPos() const { return { x,y }; }
+	glm::vec<2,T> maxPos() const { return { x+w,y+h }; }
+	glm::vec<2,T> size() const { return { w,h }; }
 };
 using rect = rectangle<f32>;
 using irect = rectangle<i32>;
@@ -177,3 +177,7 @@ inline void Error(const string& msg) {}
 #include "Profiler.h"
 
 extern const char* GAME_NAME;
+
+// global double buffering management
+extern u32 NeoUpdateFrameIdx;		//(0 or 1)
+extern u32 NeoDrawFrameIdx;			//(0 or 1)

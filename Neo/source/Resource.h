@@ -31,6 +31,6 @@ protected:
 	bool m_failedToLoad = false;
 	friend class ResourceLoadedManager;
 
-	double m_creationStartTime;
+	double m_creationStartTime = 0.0;
 };
 

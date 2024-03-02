@@ -94,6 +94,8 @@ public:
 	void SetUniform_i32(const string& name, i32 value, bool flush) { SetUniform(name, UniformType_ivec4, &value, flush); }
 	void SetUniform_mat4x4(const string& name, const mat4x4& value, bool flush) { SetUniform(name, UniformType_mat4x4, &value, flush); }
 
+	void RecreatePlatformData();
+
 	MaterialAssetData* GetAssetData() { return m_assetData; }
 	MaterialPlatformData* GetPlatformData() { return m_platformData; }
 };
@@ -103,6 +105,7 @@ class MaterialFactory : public ResourceFactory<Material>, public Module<Material
 {
 public:
 	Material* CreateInstance(const string& name, const string& original);
+	void OnSwapChainResize();
 };
 
 class MaterialRef : public ResourceRef<Material, MaterialFactory>

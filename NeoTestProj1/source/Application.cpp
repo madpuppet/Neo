@@ -21,14 +21,21 @@ Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Up
 	persp.nearPlane = 0.25f;
 	persp.farPlane = 100.0f;
 	m_view.SetPerspective(persp);
+	m_renderTargetView.SetPerspective(persp);
+
+	mat4x4 camMat(1);
+	camMat[3].z = -5.0f;
+	m_renderTargetView.SetCameraMatrix(camMat);
+
 	m_cameraPYR = { DegToRad(45.0f), 0, 0 };
 	m_cameraPos = { 0, 1.5f, -1.0f };
 
 	m_rpParticlesToTexture.Create("particles_to_texture");
-	m_rpParticlesToTexture->SetView(&m_view);
+	m_rpParticlesToTexture->SetView(&m_renderTargetView);
 	m_rpParticlesToTexture->AddTask([this]() {RenderParticles(); });
 
 	m_rpMain.Create("main");
+	m_rpMain->SetView(&m_view);
 	m_rpMain->AddTask([this]() {RenderBees(); });
 	m_rpMain->AddTask([this]() {RenderRooms(); });
 
@@ -131,9 +138,7 @@ void Application::Update()
 
 	static float time = 0.0f;
 	time += dt;
-	m_beeScale = sinf(time) * 0.1f + 0.11f;
-
-	m_workerFarm.AddTask([this, dt, camMatrix]()
+	m_workerFarm.AddTask([this]()
 		{
 			PROFILE_CPU("PARTICLES");
 			auto& ddr = DefDynamicRenderer::Instance();
@@ -142,26 +147,32 @@ void Application::Update()
 				ddr.BeginRender(0);
 				ddr.StartPrimitive(PrimType_TriangleList);
 				ddr.UseMaterial(m_particleMat);
-				float width = sinf(time) * 0.05f + 0.05f;
-				vec3 right = vec3(camMatrix[0] * width);
-				vec3 up = vec3(camMatrix[1] * width);
-				for (int i = 0; i < 2000; i++)
+				float width = 0.1f;
+				vec3 right{ width,0,0 };
+				vec3 up{ 0,width,0 };
+				for (int i = 0; i < 500; i++)
 				{
-					float rnd = (rand() & 0xff) / 2550.0f;
 					vec3 pos;
-					pos.x = sinf(time * 0.1f + i * 0.111f) + cosf(time * 0.1f + i * 0.111f) + rnd;
-					pos.y = sinf(time * 0.1f + i * 0.112f) + cosf(time * 0.1f + i * 0.112f) + rnd;
-					pos.z = sinf(time * 0.1f + i * 0.113f) + cosf(time * 0.1f + i * 0.113f) + rnd;
-					vec3 pos1 = pos + right;
-					vec3 pos2 = pos - right;
-					vec3 pos3 = pos + up;
+					float pt = time * 5.0f + i * 0.02f;
+					pos.x = sinf(pt) + sinf(pt*1.73f);
+					pos.y = cosf(pt) + cosf(pt * 1.43f);;
+					pos.z = sinf(pt*0.5f) + cosf(pt*0.5f);
+					vec3 pos1 = pos + right - up;
+					vec3 pos2 = pos - right - up;
+					vec3 pos3 = pos + up + right;
+					vec3 pos4 = pos + up - right;
 					vec2 uv1{ 0,0 };
 					vec2 uv2{ 1,0 };
-					vec2 uv3{ 0.5f,1.0f };
+					vec2 uv3{ 0,1 };
+					vec2 uv4{ 1,1 };
 					u32 col = vec4ToR8G8B8A8({ 1,1,1,1 });
 					ddr.AddVert(pos1, uv1, col);
 					ddr.AddVert(pos2, uv2, col);
 					ddr.AddVert(pos3, uv3, col);
+
+					ddr.AddVert(pos4, uv4, col);
+					ddr.AddVert(pos3, uv3, col);
+					ddr.AddVert(pos2, uv2, col);
 				}
 				ddr.EndPrimitive();
 				ddr.EndRender();
@@ -256,7 +267,7 @@ void Application::RenderUI()
 
 	int fps = (int)(1.0f / NeoTimeDelta);
 	int ms = (int)(1000.0f * NeoTimeDelta);
-	m_font->RenderText(STR("{}ms {}fps", ms, fps), rect(20.0f, 680.0f, 500.0f, 20.0f), 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
+	m_font->RenderText(STR("{}ms {}fps", ms, fps), { 20.0f, 680.0f, 500.0f, 20.0f }, 0.0f, Alignment_CenterLeft, { 2.0f,2.0f }, { 1,1,1,1 }, -3.0f);
 }
 
 

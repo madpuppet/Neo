@@ -71,8 +71,8 @@ public:
 class Shader : public Resource
 {
 	virtual void Reload() override;
-	ShaderAssetData* m_assetData;
-	ShaderPlatformData* m_platformData;
+	ShaderAssetData* m_assetData = nullptr;
+	ShaderPlatformData* m_platformData = nullptr;
 
 public:
 	static const string AssetType;

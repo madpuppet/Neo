@@ -58,9 +58,6 @@ public:
 	// execute queue for this frame 
 	void EndFrame();
 
-	// resize frame buffers
-	void ResizeFrameBuffers(int width, int height);
-
 	// graphics functions
 	// create and destroy vertex&indice buffers for use with geometry rendering
 	NeoGeometryBuffer* CreateGeometryBuffer(void* vertData, u32 bufferSize, void* indiceData, u32 indiceSize);
@@ -122,6 +119,13 @@ public:
 	// show message box and return TRUE if user would like to break
 	bool ShowMessageBox(const string& string);
 	float GetJoystickAxis(int idx);
+
+	// request resize of framebuffers
+	// this cascades to reset of all materials since the viewport size changes also
+	void ResizeSwapChain(ivec2 newSize);
+
+	void WaitForGPU();
+
 
 protected:
 	void WaitForMemory();
@@ -190,7 +194,8 @@ protected:
 	std::vector<VkFence> m_inFlightFences;
 	u32 m_currentFrame = 0;		// this toggles 0 <-> 1  for driving double buffered structures
 	u32 m_uniqueFrameidx = 0;	// this just increments every frame so we can tell if a resource has marked as used this frame yet
-	bool m_framebufferResized = false;
+
+	bool m_frameBufferInvalid = false;
 
 	static const int MaxDynamicUniformBufferMemory = 1024 * 1024;
 	// shared memory used for all dynamic uniform buffers each frame

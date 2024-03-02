@@ -152,13 +152,6 @@ void GIL::Shutdown()
 {
 }
 
-void GIL::ResizeFrameBuffers(int width, int height)
-{
-    m_swapChainImageSize.x = width;
-    m_swapChainImageSize.y = height;
-    recreateSwapChain();
-}
-
 void GIL::FrameWait()
 {
     vkWaitForFences(m_device, 1, &m_inFlightFences[m_currentFrame], VK_TRUE, UINT64_MAX);
@@ -166,8 +159,7 @@ void GIL::FrameWait()
     VkResult result = vkAcquireNextImageKHR(m_device, m_swapChain, UINT64_MAX, m_imageAvailableSemaphores[m_currentFrame], VK_NULL_HANDLE, &m_frameSwapImage);
 
     if (result == VK_ERROR_OUT_OF_DATE_KHR) {
-        recreateSwapChain();
-        return;
+        m_frameBufferInvalid = true;
     }
     else if (result != VK_SUCCESS && result != VK_SUBOPTIMAL_KHR)
     {
@@ -202,25 +194,6 @@ void GIL::BeginFrame()
 
     m_swapChainColorLayout = TextureLayout_Undefined;
     m_swapChainDepthLayout = TextureLayout_Undefined;
-
-#if 0
-    // start render pass == TODO: this should be a specific "setup render pass" function
-    VkRenderPassBeginInfo renderPassInfo{};
-    renderPassInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
-    renderPassInfo.renderPass = m_renderPass;
-    renderPassInfo.framebuffer = m_swapChainFramebuffers[m_frameSwapImage];
-    renderPassInfo.renderArea.offset = { 0, 0 };
-    renderPassInfo.renderArea.extent = m_swapChainExtent;
-
-    std::array<VkClearValue, 2> clearValues{};
-    clearValues[0].color = { {0.0f, 0.0f, 0.0f, 1.0f} };
-    clearValues[1].depthStencil = { 1.0f, 0 };
-
-    renderPassInfo.clearValueCount = static_cast<u32>(clearValues.size());
-    renderPassInfo.pClearValues = clearValues.data();
-
-    vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
-#endif
 
     m_boundMaterial = nullptr;
     m_activeRenderPass = nullptr;
@@ -402,33 +375,35 @@ void GIL::EndFrame()
     submitInfo.signalSemaphoreCount = 1;
     submitInfo.pSignalSemaphores = signalSemaphores;
 
-    auto rc = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]);
-    if (rc != VK_SUCCESS)
+    if (!m_frameBufferInvalid)
     {
-        Error(STR("failed to submit draw command buffer! rc {}", (int)rc));
-    }
+        auto rc = vkQueueSubmit(m_graphicsQueue, 1, &submitInfo, m_inFlightFences[m_currentFrame]);
+        if (rc != VK_SUCCESS)
+        {
+            Error(STR("failed to submit draw command buffer! rc {}", (int)rc));
+        }
 
-    VkPresentInfoKHR presentInfo{};
-    presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+        VkPresentInfoKHR presentInfo{};
+        presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
 
-    presentInfo.waitSemaphoreCount = 1;
-    presentInfo.pWaitSemaphores = signalSemaphores;
+        presentInfo.waitSemaphoreCount = 1;
+        presentInfo.pWaitSemaphores = signalSemaphores;
 
-    VkSwapchainKHR swapChains[] = { m_swapChain };
-    presentInfo.swapchainCount = 1;
-    presentInfo.pSwapchains = swapChains;
-    presentInfo.pImageIndices = &m_frameSwapImage;
+        VkSwapchainKHR swapChains[] = { m_swapChain };
+        presentInfo.swapchainCount = 1;
+        presentInfo.pSwapchains = swapChains;
+        presentInfo.pImageIndices = &m_frameSwapImage;
 
-    VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
+        VkResult result = vkQueuePresentKHR(m_presentQueue, &presentInfo);
 
-    if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR || m_framebufferResized)
-    {
-        m_framebufferResized = false;
-        recreateSwapChain();
-    }
-    else if (result != VK_SUCCESS)
-    {
-        Error("Failed to present swap chain image!");
+        if (result == VK_ERROR_OUT_OF_DATE_KHR || result == VK_SUBOPTIMAL_KHR)
+        {
+            m_frameBufferInvalid = true;
+        }
+        else if (result != VK_SUCCESS)
+        {
+            Error("Failed to present swap chain image!");
+        }
     }
 
     m_currentFrame = (m_currentFrame + 1) % MAX_FRAMES_IN_FLIGHT;
@@ -1312,6 +1287,7 @@ void GIL::createDescriptorPool()
     poolInfo.poolSizeCount = static_cast<uint32_t>(poolSizes.size());
     poolInfo.pPoolSizes = poolSizes.data();
     poolInfo.maxSets = static_cast<uint32_t>(MAX_FRAMES_IN_FLIGHT*90);
+    poolInfo.flags = VK_DESCRIPTOR_POOL_CREATE_FREE_DESCRIPTOR_SET_BIT;
 
     if (vkCreateDescriptorPool(m_device, &poolInfo, nullptr, &m_descriptorPool) != VK_SUCCESS) 
     {
@@ -1358,30 +1334,42 @@ void GIL::createSyncObjects()
     }
 }
 
-void GIL::recreateSwapChain() 
+void GIL::WaitForGPU()
 {
     vkDeviceWaitIdle(m_device);
+}
+
+void GIL::recreateSwapChain() 
+{
     cleanupSwapChain();
     createSwapChain();
     createImageViews();
     createDepthResources();
     createFramebuffers();
+    m_frameBufferInvalid = false;
 }
 
-void GIL::cleanupSwapChain() {
-    vkDestroyImageView(m_device, m_depthImageView, nullptr);
-    vkDestroyImage(m_device, m_depthImage, nullptr);
-    vkFreeMemory(m_device, m_depthImageMemory, nullptr);
-
-    for (auto framebuffer : m_swapChainFramebuffers) {
+void GIL::cleanupSwapChain() 
+{
+    for (auto framebuffer : m_swapChainFramebuffers)
         vkDestroyFramebuffer(m_device, framebuffer, nullptr);
-    }
+    m_swapChainFramebuffers.clear();
 
-    for (auto imageView : m_swapChainImageViews) {
+    vkDestroyImageView(m_device, m_depthImageView, nullptr);
+    m_depthImageView = nullptr;
+
+    vkDestroyImage(m_device, m_depthImage, nullptr);
+    m_depthImage = nullptr;
+
+    vkFreeMemory(m_device, m_depthImageMemory, nullptr);
+    m_depthImageMemory = nullptr;
+
+    for (auto imageView : m_swapChainImageViews)
         vkDestroyImageView(m_device, imageView, nullptr);
-    }
+    m_swapChainImageViews.clear();
 
     vkDestroySwapchainKHR(m_device, m_swapChain, nullptr);
+    m_swapChain = nullptr;
 }
 
 VkImageLayout s_textureLayoutToVkImageLayout[] =
@@ -1949,4 +1937,9 @@ void GIL::GetGpuTimeQueryResults(u64*& buffer, int& count)
 }
 #endif
 
-
+void GIL::ResizeSwapChain(ivec2 newsize)
+{
+    m_swapChainImageSize = newsize;
+    cleanupSwapChain();
+    recreateSwapChain();
+}

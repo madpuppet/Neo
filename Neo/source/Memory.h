@@ -4,11 +4,11 @@
 #define NEO_STACK_TRACING 0
 
 // Custom global operator new
-void* operator new(std::size_t size);
+//void* operator new(std::size_t size);
 void operator delete(void* ptr) noexcept;
-void* operator new[](std::size_t size);
+//void* operator new[](std::size_t size);
 void operator delete[](void* ptr) noexcept;
-void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
+//void* operator new(std::size_t size, const std::nothrow_t&) noexcept;
 void operator delete(void* ptr, const std::nothrow_t&) noexcept;
 
 enum MemoryGroup

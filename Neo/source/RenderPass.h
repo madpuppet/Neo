@@ -48,8 +48,8 @@ public:
 class RenderPass : public Resource
 {
 	virtual void Reload() override;
-	RenderPassAssetData* m_assetData;
-	struct RenderPassPlatformData* m_platformData;
+	RenderPassAssetData* m_assetData = nullptr;
+	struct RenderPassPlatformData* m_platformData = nullptr;
 	Mutex m_taskLock;
 	int m_nextTaskHandle = 0;
 	vector<TaskBundle*> m_tasks;
@@ -70,11 +70,20 @@ public:
 
 	void ExecuteTasks();
 
+	void DestroyPlatformData();
+	void CreatePlatformData();
+
 	RenderPassAssetData* GetAssetData() { return m_assetData; }
 	RenderPassPlatformData* GetPlatformData() { return m_platformData; }
 };
 
-class RenderPassFactory : public ResourceFactory<RenderPass>, public Module<RenderPassFactory> {};
+class RenderPassFactory : public ResourceFactory<RenderPass>, public Module<RenderPassFactory>
+{
+public:
+	// rebuild relevant render pass frame buffers because swap chain has resized
+	void DestroyPlatformData();
+	void CreatePlatformData();
+};
 using RenderPassRef = ResourceRef<RenderPass, RenderPassFactory>;
 
 

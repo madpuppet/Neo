@@ -58,6 +58,11 @@ struct UBO_View
 	mat4x4 ortho;
 };
 
+struct UBO_RenderPass
+{
+	i32 viewIndex;
+};
+
 struct UBO_Material
 {
 	vec4 blend;

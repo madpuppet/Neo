@@ -9,6 +9,21 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Asset Files">
+      <UniqueIdentifier>{84e87d77-2648-4258-a3d6-9809912e92e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Asset Files\Shaders">
+      <UniqueIdentifier>{cd64972f-8b5c-4074-91b6-9f3f77cc5eef}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Asset Files\RenderPasses">
+      <UniqueIdentifier>{073297a4-56bc-4424-852f-d14be5e78dc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Asset Files\RenderScenes">
+      <UniqueIdentifier>{05e7816d-a19c-40d5-823a-072d788c4e15}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Asset Files\Materials">
+      <UniqueIdentifier>{45b76d21-2297-45d0-848d-fe165ae028cb}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Application.cpp">
@@ -19,5 +34,46 @@
     <ClInclude Include="source\Application.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\shaders\particle.shader">
+      <Filter>Asset Files\Shaders</Filter>
+    </None>
+    <None Include="assets\shaders\standard.shader">
+      <Filter>Asset Files\Shaders</Filter>
+    </None>
+    <None Include="assets\shaders\standard_ortho.shader">
+      <Filter>Asset Files\Shaders</Filter>
+    </None>
+    <None Include="assets\materials\bee.material">
+      <Filter>Asset Files\Materials</Filter>
+    </None>
+    <None Include="assets\materials\c64_0.material">
+      <Filter>Asset Files\Materials</Filter>
+    </None>
+    <None Include="assets\materials\particles.material">
+      <Filter>Asset Files\Materials</Filter>
+    </None>
+    <None Include="assets\materials\viking_room.material">
+      <Filter>Asset Files\Materials</Filter>
+    </None>
+    <None Include="assets\materials\white.material">
+      <Filter>Asset Files\Materials</Filter>
+    </None>
+    <None Include="assets\materials\white_ortho.material">
+      <Filter>Asset Files\Materials</Filter>
+    </None>
+    <None Include="assets\renderScenes\standard.renderscene">
+      <Filter>Asset Files\RenderScenes</Filter>
+    </None>
+    <None Include="assets\renderPasses\main.renderpass">
+      <Filter>Asset Files\RenderPasses</Filter>
+    </None>
+    <None Include="assets\renderPasses\particles_to_texture.renderpass">
+      <Filter>Asset Files\RenderPasses</Filter>
+    </None>
+    <None Include="assets\renderPasses\ui.renderpass">
+      <Filter>Asset Files\RenderPasses</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -85,7 +85,7 @@ class BitmapFont : public Resource
 {
 	virtual void Reload() override;
 
-	BitmapFontAssetData* m_assetData;
+	BitmapFontAssetData* m_assetData = nullptr;
 
 	MaterialRef m_white;
 

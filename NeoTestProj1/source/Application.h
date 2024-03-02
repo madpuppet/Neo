@@ -39,6 +39,7 @@ protected:
 
 	StaticMeshRef m_vikingRoom;
 	MaterialRef m_vikingRoomMat;
+	View m_renderTargetView;
 	View m_view;
 	vec3 m_cameraPYR = { 0,0,0 };
 	vec3 m_cameraPos = { 0,0,0 };
@@ -46,15 +47,15 @@ protected:
 	BitmapFontRef m_font;
 	MaterialRef m_beeMat;
 	ShaderRef m_shader;
-	
+
 	RenderPassRef m_rpMain;
 	RenderPassRef m_rpParticlesToTexture;
 	RenderPassRef m_rpUI;
 	RenderSceneRef m_renderScene;
 
 	mat4x4 m_cameraMatrix;
-	float m_beeScale;
-	array<Bee, 10000> m_bees;
+	float m_beeScale = 0.1f;
+	array<Bee, 10000> m_bees{};
 
 	static const int roomGridSize = 5;
 	mat4x4 m_roomInstances[roomGridSize * roomGridSize];

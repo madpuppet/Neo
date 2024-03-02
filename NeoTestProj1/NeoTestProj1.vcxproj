@@ -85,6 +85,8 @@
     <LibraryPath>G:\Projects\madpuppet\Neo\Neo\libs;C:\VulkanSDK\1.3.268.0\Lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</IntDir>
+    <RunCodeAnalysis>true</RunCodeAnalysis>
+    <EnableClangTidyCodeAnalysis>true</EnableClangTidyCodeAnalysis>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -172,6 +174,21 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Application.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="assets\materials\bee.material" />
+    <None Include="assets\materials\c64_0.material" />
+    <None Include="assets\materials\particles.material" />
+    <None Include="assets\materials\viking_room.material" />
+    <None Include="assets\materials\white.material" />
+    <None Include="assets\materials\white_ortho.material" />
+    <None Include="assets\renderPasses\main.renderpass" />
+    <None Include="assets\renderPasses\particles_to_texture.renderpass" />
+    <None Include="assets\renderPasses\ui.renderpass" />
+    <None Include="assets\renderScenes\standard.renderscene" />
+    <None Include="assets\shaders\particle.shader" />
+    <None Include="assets\shaders\standard.shader" />
+    <None Include="assets\shaders\standard_ortho.shader" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -26,7 +26,7 @@ void RenderPass::OnAssetDeliver(AssetData* data)
 				dependantResources.emplace_back(colorAttach.texture);
 			}
 		}
-		if (assetData->depthAttachment.name.empty() && !assetData->depthAttachment.useSwapChain)
+		if (!assetData->depthAttachment.name.empty() && !assetData->depthAttachment.useSwapChain)
 		{
 			LOG(RenderPass, STR("Create Depth Render Target {} - {}x{} - format {}", assetData->depthAttachment.name, assetData->size.x, assetData->size.y, (int)assetData->depthAttachment.fmt));
 			assetData->depthAttachment.texture.CreateRenderTarget(assetData->depthAttachment.name, assetData->size.x, assetData->size.y, assetData->depthAttachment.fmt);
@@ -255,3 +255,29 @@ void RenderPass::ExecuteTasks()
 		task->task();
 }
 
+void RenderPassFactory::DestroyPlatformData()
+{
+	for (auto [hash, renderpass] : m_resources)
+	{
+		renderpass->DestroyPlatformData();
+	}
+}
+
+void RenderPassFactory::CreatePlatformData()
+{
+	for (auto [hash, renderpass] : m_resources)
+	{
+		renderpass->CreatePlatformData();
+	}
+}
+
+void RenderPass::DestroyPlatformData()
+{
+	RenderPassPlatformData_Destroy(m_platformData);
+	m_platformData = nullptr;
+}
+
+void RenderPass::CreatePlatformData()
+{
+	m_platformData = RenderPassPlatformData_Create(m_assetData);
+}
