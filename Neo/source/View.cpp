@@ -6,31 +6,41 @@
 
 View::View()
 {
+	m_beginUpdateHandle = NeoAddBeginUpdateTask
+	(
+		[this]()
+		{
+			// copy over last frames data
+			if (!m_firstUpdate)
+				m_viewData[NeoUpdateFrameIdx] = m_viewData[1 - NeoUpdateFrameIdx];
+			m_firstUpdate = false;
+		}, 0
+	);
 }
 
 View::~View()
 {
-
+	NeoRemoveBeginUpdateTask(m_beginUpdateHandle);
 }
 
 void View::SetOrthographic(const OrthographicInfo& info)
 {
-	m_orthographic = info;
+	m_viewData[NeoUpdateFrameIdx].orthographic = info;
 }
 
 void View::SetPerspective(const PerspectiveInfo& info)
 {
-	m_perspective = info;
+	m_viewData[NeoUpdateFrameIdx].perspective = info;
 }
 
 void View::SetLookAt(const vec3& eye, const vec3& target, const vec3& up)
 {
-	m_cameraMatrix = LookAt(eye, target, up);
+	m_viewData[NeoUpdateFrameIdx].cameraMatrix = LookAt(eye, target, up);
 }
 
 void View::SetCameraMatrix(const mat4x4& camMatrix)
 {
-	m_cameraMatrix = camMatrix;
+	m_viewData[NeoUpdateFrameIdx].cameraMatrix = camMatrix;
 }
 
 struct vector3
@@ -52,15 +62,13 @@ struct vector3
 	};
 };
 
-void View::Apply(float aspectRatio)
+void View::InitUBOView(UBO_View &viewData, float aspectRatio)
 {
-	UBO_View viewData;
+	auto& vd = m_viewData[NeoDrawFrameIdx];
 
-	viewData.proj = glm::perspective(m_perspective.fov, aspectRatio, m_perspective.nearPlane, m_perspective.farPlane);
+	viewData.proj = glm::perspective(vd.perspective.fov, aspectRatio, vd.perspective.nearPlane, vd.perspective.farPlane);
 	viewData.proj[1][1] *= -1.0f;
-	viewData.ortho = OrthoProj(m_orthographic.orthoRect, m_orthographic.nearPlane, m_orthographic.farPlane);
-	viewData.view = glm::inverse(m_cameraMatrix);
-	
-	auto viewUBOInstance = ShaderManager::Instance().FindUBO("UBO_View")->dynamicInstance;
-	GIL::Instance().UpdateUBOInstance(viewUBOInstance, &viewData, sizeof(viewData), true);
+	viewData.ortho = OrthoProj(vd.orthographic.orthoRect, vd.orthographic.nearPlane, vd.orthographic.farPlane);
+	viewData.view = glm::inverse(vd.cameraMatrix);
 }
+

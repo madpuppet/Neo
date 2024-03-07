@@ -21,6 +21,7 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_DefDynamicRenderer,
 	NeoModuleInitPri_ImmDynamicRenderer,
 	NeoModuleInitPri_Profiler,
+	NeoModuleInitPri_View,
 
 	NeoModuleInitPri_Application = 1000
 };
@@ -40,6 +41,7 @@ class ModuleBase
 public:
 	virtual void Update() {};
 	virtual void Draw() {};
+
 	virtual ~ModuleBase() {};
 
 	virtual void Startup() {};		// called after constructor is complete
@@ -74,6 +76,10 @@ public:
 		Assert(Exists(), "Requested non-existing module??");
 		return *s_instance;
 	}
+
+	// begin & end module update callbacks
+	virtual void BeginUpdate() {}
+	virtual void EndUpdate() {}
 };
 template<class T> T* Module<T>::s_instance = nullptr;
 

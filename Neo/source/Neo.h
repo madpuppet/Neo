@@ -181,3 +181,7 @@ extern const char* GAME_NAME;
 // global double buffering management
 extern u32 NeoUpdateFrameIdx;		//(0 or 1)
 extern u32 NeoDrawFrameIdx;			//(0 or 1)
+
+int NeoAddBeginUpdateTask(GenericCallback callback, int priority);
+void NeoRemoveBeginUpdateTask(int handle);
+void NeoExecuteBeginUpdateTasks();

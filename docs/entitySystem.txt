@@ -1,0 +1,60 @@
+reflection:
+
+struct Canvas
+{
+   string renderPass;
+   enum AreaMode areaMode;   // absolute, relative
+   rect area;
+   vector<UINode*> nodes;
+};
+
+struct UINode
+{
+    UINode *parent;
+	rect area;	       // relative to parent
+	rect anchor;       // relative to parent
+    vector<Component*> components;
+	vector<UINode*> children;
+};
+
+struct Component
+{
+};
+
+struct CActor : Component
+{
+	CActor_PublicData *publicData;
+
+	//!ReflectFunc
+	void OnPressed();
+};
+
+
+Pair_Reflect
+{
+  string name;
+  enum reflectType;   // struct, f64, f32, u64, u32, u16, u8, i64, i32, i16, u8, vec3, vec4, vec2, ivec3, ivec4, vector, hashtable, map
+  string firstType;
+  string secondType;
+}
+
+==========================================>
+enum Pork
+{
+	V1,
+	V2,
+	V3,
+	V4
+};
+
+hashtable<string, enum__reflect>
+enum__reflect
+{
+	string name;
+	int value;
+}
+Enum "Pork"
+  Entry "V1", 1
+  
+
+

@@ -64,6 +64,9 @@ public:
 	void SetView(View* view) { m_view = view; }
 	void Apply();
 
+	View* GetView() { return m_view; }
+	float GetAspectRatio();
+
 	// add task - returns a handle
 	int AddTask(GenericCallback task, int priority=0);
 	void RemoveTask(int handle);

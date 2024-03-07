@@ -5,6 +5,7 @@
 #include "StaticMesh.h"
 #include "ShaderManager.h"
 #include "RenderPass.h"
+#include "View.h"
 
 DECLARE_MODULE(GIL, NeoModuleInitPri_GIL, NeoModulePri_None);
 
@@ -196,7 +197,9 @@ void GIL::BeginFrame()
     m_swapChainDepthLayout = TextureLayout_Undefined;
 
     m_boundMaterial = nullptr;
-    m_activeRenderPass = nullptr;
+    m_boundRenderPass = nullptr;
+    m_boundView = nullptr;
+
 
     TransitionSwapChainColorImage(TextureLayout_ColorAttachment);
 }
@@ -253,7 +256,7 @@ void GIL::UpdateUBOInstance(UBOInfoInstance *uboInstance, void* uboMem, u32 uboS
             MaterialPlatformRenderPassData* mprp = nullptr;
             for (int i=0; i<materialAD->renderPasses.size(); i++)
             {
-                if (materialAD->renderPasses[i]->renderPass == m_activeRenderPass)
+                if (materialAD->renderPasses[i]->renderPass == m_boundRenderPass)
                 {
                     mrpi = materialAD->renderPasses[i];
                     mprp = materialPD->renderPasses[i];
@@ -348,7 +351,7 @@ void GIL::EndFrame()
 {
     auto commandBuffer = m_commandBuffers[m_currentFrame];
 
-    if (m_activeRenderPass)
+    if (m_boundRenderPass)
         SetRenderPass(nullptr);
     
     // transition swapchain image to present layout
@@ -1620,7 +1623,7 @@ void GIL::BindMaterial(Material* material, bool lines)
         MaterialRenderPassInfo* mrpi = nullptr;
         for (int i = 0; i < materialAD->renderPasses.size(); i++)
         {
-            if (materialAD->renderPasses[i]->renderPass == m_activeRenderPass)
+            if (materialAD->renderPasses[i]->renderPass == m_boundRenderPass)
             {
                 mrpi = materialAD->renderPasses[i];
                 mprpd = materialPD->renderPasses[i];
@@ -1847,16 +1850,16 @@ void GIL::UnmapGeometryBufferMemory(NeoGeometryBuffer* buffer)
 
 void GIL::SetRenderPass(RenderPass* renderPass)
 {
-    if (m_activeRenderPass == renderPass)
+    if (m_boundRenderPass == renderPass)
         return;
 
     auto& commandBuffer = m_commandBuffers[m_currentFrame];
 
     // transition the old renderpass textures back to being shader textures
-    if (m_activeRenderPass)
+    if (m_boundRenderPass)
     {
         vkCmdEndRenderPass(commandBuffer);
-        auto oldAD = m_activeRenderPass->GetAssetData();
+        auto oldAD = m_boundRenderPass->GetAssetData();
         for (auto& col : oldAD->colorAttachments)
         {
             if (col.useSwapChain)
@@ -1870,7 +1873,7 @@ void GIL::SetRenderPass(RenderPass* renderPass)
             oldAD->depthAttachment.texture->SetLayout(TextureLayout_ShaderRead);
     }
 
-    m_activeRenderPass = renderPass;
+    m_boundRenderPass = renderPass;
 
     if (renderPass)
     {
@@ -1902,6 +1905,20 @@ void GIL::SetRenderPass(RenderPass* renderPass)
         renderPassInfo.clearValueCount = static_cast<u32>(renderPassPD->clearValues.size());
         renderPassInfo.pClearValues = renderPassPD->clearValues.data();
         vkCmdBeginRenderPass(commandBuffer, &renderPassInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+        // update the view UBO if this is a new view/aspectRatio combo
+        auto view = renderPass->GetView();
+        auto aspectRatio = renderPass->GetAspectRatio();
+        if (view && view != m_boundView && aspectRatio != m_boundViewAspectRatio)
+        {
+            auto viewUBOInstance = ShaderManager::Instance().FindUBO("UBO_View")->dynamicInstance;
+            UBO_View viewData;
+            view->InitUBOView(viewData, aspectRatio);
+            UpdateUBOInstance(viewUBOInstance, &viewData, sizeof(viewData), true);
+
+            m_boundView = view;
+            m_boundViewAspectRatio = aspectRatio;
+        }
     }
 
     // no bound materials at the start of a render pass

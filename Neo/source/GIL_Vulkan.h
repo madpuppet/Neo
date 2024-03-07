@@ -103,7 +103,7 @@ public:
 	void SetRenderPass(RenderPass *renderPass);
 
 	// get active render pass
-	RenderPass* GetActiveRenderPass() { return m_activeRenderPass; }
+	RenderPass* GetActiveRenderPass() { return m_boundRenderPass; }
 
 	// change layout of a texture
 	void TransitionTexture(Texture *texture, TextureLayout currentLayout, TextureLayout newLayout);
@@ -178,13 +178,14 @@ protected:
 	VkRenderPass m_renderPass;
 	VkCommandPool m_commandPool;
 
-	RenderPass* m_activeRenderPass = nullptr;
-
 	VkImage m_depthImage;
 	VkDeviceMemory m_depthImageMemory;
 	VkImageView m_depthImageView;
 
-	Material* m_boundMaterial;
+	RenderPass* m_boundRenderPass = nullptr;
+	Material* m_boundMaterial = nullptr;
+	View* m_boundView = nullptr;
+	float m_boundViewAspectRatio = 1.0f;
 
 	VkDescriptorPool m_descriptorPool;
 	std::vector<VkCommandBuffer> m_commandBuffers;

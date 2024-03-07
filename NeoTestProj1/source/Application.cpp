@@ -21,10 +21,12 @@ Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Up
 	persp.nearPlane = 0.25f;
 	persp.farPlane = 100.0f;
 	m_view.SetPerspective(persp);
+
+	persp.fov = DegToRad(130.0f);
 	m_renderTargetView.SetPerspective(persp);
 
 	mat4x4 camMat(1);
-	camMat[3].z = -5.0f;
+	camMat[3].z = -3.0f;
 	m_renderTargetView.SetCameraMatrix(camMat);
 
 	m_cameraPYR = { DegToRad(45.0f), 0, 0 };
@@ -111,7 +113,7 @@ void Application::Update()
 				bee.pos += bee.vel * dt;
 				float range = glm::length(bee.pos);
 				if (range > 20.0f)
-					bee.vel = -bee.pos * 0.1f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
+					bee.vel = -bee.pos * 0.02f + vec3(((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f), ((rand() & 0xff) / 255.0f - 0.5f));
 			}
 		}
 	);

@@ -89,6 +89,7 @@ int main(int argc, char* argv[])
 
         auto& dr = DefDynamicRenderer::Instance();
         dr.BeginFrame();
+        NeoExecuteBeginUpdateTasks();
         NeoUpdateModules();
         dr.EndFrame();
 
@@ -140,4 +141,18 @@ CallbackHandle AllocUniqueCallbackHandle()
     return result;
 }
 
+TaskList s_beginUpdateTasks;
+int NeoAddBeginUpdateTask(GenericCallback callback, int priority)
+{
+    return s_beginUpdateTasks.Add(callback, priority);
+}
 
+void NeoRemoveBeginUpdateTask(int handle)
+{
+    s_beginUpdateTasks.Remove(handle);
+}
+
+void NeoExecuteBeginUpdateTasks()
+{
+    s_beginUpdateTasks.Execute();
+}
