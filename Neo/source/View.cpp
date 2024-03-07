@@ -4,13 +4,20 @@
 #include "ShaderManager.h"
 #include "RenderPass.h"
 
+// Views
+//
+// Views are used to set the camera setup for renderpasses
+// a single view can be shared across multiple renderpasses
+// - it will only cost if the renderpass changes the aspect ratio or a different view from the previous render pass
+// - in future views should keep additional data like shadow matrices and lighting
+
 View::View()
 {
+	// we need to bring over the previous update frame data each frame since we don't set all the data each frame
 	m_beginUpdateHandle = NeoAddBeginUpdateTask
 	(
 		[this]()
 		{
-			// copy over last frames data
 			if (!m_firstUpdate)
 				m_viewData[NeoUpdateFrameIdx] = m_viewData[1 - NeoUpdateFrameIdx];
 			m_firstUpdate = false;
