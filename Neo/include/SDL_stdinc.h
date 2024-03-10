@@ -544,19 +544,9 @@ SDL_FORCE_INLINE void SDL_memset4(void *dst, Uint32 val, size_t dwords)
         : "memory"
     );
 #else
-    size_t _n = (dwords + 3) / 4;
-    Uint32 *_p = SDL_static_cast(Uint32 *, dst);
-    Uint32 _val = (val);
-    if (dwords == 0) {
-        return;
-    }
-    switch (dwords % 4) {
-        case 0: do {    *_p++ = _val;   SDL_FALLTHROUGH;
-        case 3:         *_p++ = _val;   SDL_FALLTHROUGH;
-        case 2:         *_p++ = _val;   SDL_FALLTHROUGH;
-        case 1:         *_p++ = _val;
-        } while ( --_n );
-    }
+    Uint32* _p = SDL_static_cast(Uint32*, dst);
+    for (int i = 0; i < dwords; i++)
+        *_p++ = val;
 #endif
 }
 

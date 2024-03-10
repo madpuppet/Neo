@@ -24,6 +24,7 @@ delete pMyThread;
 #define NULL_THREAD thread::id()
 typedef std::thread::id ThreadID;
 
+//<REFLECT>
 enum ThreadGUID
 {
     ThreadGUID_Main,

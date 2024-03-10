@@ -9,6 +9,7 @@
 #include "RenderPass.h"
 #include "RenderScene.h"
 
+//<REFLECT>
 enum ApplicationThreads
 {
 	GameThreadGUID_UpdateWorkerThread = ThreadGUID_MAX

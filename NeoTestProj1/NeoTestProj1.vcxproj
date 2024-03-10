@@ -137,6 +137,9 @@
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
+    <PreBuildEvent>
+      <Command>python $(ProjectDir)..\Neo\tools\reflect.py GameInitReflection $(ProjectDir)generated\reflect $(ProjectDir)source</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -163,6 +166,9 @@
     <ProjectReference>
       <UseLibraryDependencyInputs>true</UseLibraryDependencyInputs>
     </ProjectReference>
+    <PreBuildEvent>
+      <Command>python $(ProjectDir)..\Neo\tools\reflect.py GameInitReflection $(ProjectDir)generated\reflect $(ProjectDir)source</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ProjectReference Include="..\Neo\Neo.vcxproj">
@@ -170,9 +176,11 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="generated\reflect.cpp" />
     <ClCompile Include="source\Application.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="generated\reflect.h" />
     <ClInclude Include="source\Application.h" />
   </ItemGroup>
   <ItemGroup>

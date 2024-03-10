@@ -4,6 +4,7 @@
 #include "zlib.h"
 #include "MemBlock.h"
 
+//<REFLECT>
 enum SerializerError
 {
 	SerializerError_OK,

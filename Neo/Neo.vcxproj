@@ -134,8 +134,7 @@
       <AdditionalOptions>/NODEFAULTLIB:MSVCRT %(AdditionalOptions)</AdditionalOptions>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>python $(ProjectDir)tools\reflect.py NeoInitReflection $(ProjectDir)generated\reflect $(ProjectDir)source</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
@@ -189,8 +188,7 @@
       <AdditionalDependencies>Dbghelp.lib;SDL2.lib;SDL2_ttf.lib;SDL2main.lib;vulkan-1.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PreBuildEvent>
-      <Command>
-      </Command>
+      <Command>python $(ProjectDir)tools\reflect.py NeoInitReflection $(ProjectDir)generated\reflect $(ProjectDir)source</Command>
     </PreBuildEvent>
     <PostBuildEvent>
       <Command>
@@ -308,6 +306,7 @@
     <None Include="include\SDL_config_macosx.h.orig" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="generated\reflect.h" />
     <ClInclude Include="glm\common.hpp" />
     <ClInclude Include="glm\exponential.hpp" />
     <ClInclude Include="glm\ext.hpp" />
@@ -667,6 +666,7 @@
     <ClInclude Include="source\Memory.h" />
     <ClInclude Include="source\DefDynamicRenderer.h" />
     <ClInclude Include="source\Profiler.h" />
+    <ClInclude Include="source\Reflection.h" />
     <ClInclude Include="source\RenderPass.h" />
     <ClInclude Include="source\RenderScene.h" />
     <ClInclude Include="source\Shader.h" />
@@ -683,12 +683,14 @@
     <ClInclude Include="source\ResourceRef.h" />
     <ClInclude Include="source\Serializer.h" />
     <ClInclude Include="source\SHAD.h" />
+    <ClCompile Include="generated\reflect.cpp" />
     <ClCompile Include="source\BitmapFont.cpp" />
     <ClCompile Include="source\CmdLineVar.cpp" />
     <ClCompile Include="source\ImmDynamicRenderer.cpp" />
     <ClCompile Include="source\Log.cpp" />
     <ClCompile Include="source\DefDynamicRenderer.cpp" />
     <ClCompile Include="source\Profiler.cpp" />
+    <ClCompile Include="source\Reflection.cpp" />
     <ClCompile Include="source\RenderPass.cpp" />
     <ClCompile Include="source\RenderScene.cpp" />
     <ClCompile Include="source\Shader.cpp" />

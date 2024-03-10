@@ -13,6 +13,7 @@
 
 struct ShaderPlatformData;
 
+//<REFLECT>
 enum SROType
 {
 	SROType_Unknown=-1,
@@ -21,6 +22,7 @@ enum SROType
 	SROType_Sampler
 };
 
+//<REFLECT>
 enum SROStage
 {
 	SROStage_Geometry = 1,

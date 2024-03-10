@@ -31,6 +31,9 @@
     <Filter Include="source\Debugging">
       <UniqueIdentifier>{9a7e95be-a922-4fd8-9852-f3154ac9f740}</UniqueIdentifier>
     </Filter>
+    <Filter Include="generated">
+      <UniqueIdentifier>{53ee6bc4-ef3e-404a-b325-b09c0fb5594b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="include\SDL_config.h.cmake">
@@ -1532,6 +1535,12 @@
     <ClInclude Include="source\RenderScene.h">
       <Filter>source\Resources</Filter>
     </ClInclude>
+    <ClInclude Include="source\Reflection.h">
+      <Filter>source</Filter>
+    </ClInclude>
+    <ClInclude Include="generated\reflect.h">
+      <Filter>generated</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Main.cpp">
@@ -1671,6 +1680,12 @@
     </ClCompile>
     <ClCompile Include="source\RenderScene.cpp">
       <Filter>source\Resources</Filter>
+    </ClCompile>
+    <ClCompile Include="generated\reflect.cpp">
+      <Filter>generated</Filter>
+    </ClCompile>
+    <ClCompile Include="source\Reflection.cpp">
+      <Filter>source</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

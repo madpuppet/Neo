@@ -35,9 +35,29 @@ u32 NeoDrawFrameIdx = 0;
 
 CmdLineVar<stringlist> CLV_LogFilter("log", "select log filters to show", { "" });
 
+struct TestStruct2
+{
+    void MyFunc()
+    {
+        LOG(Any, "Made It!");
+    }
+};
+struct TestStructDef
+{
+    std::function<void(void*)> CallMe = [](void* obj) { ((TestStruct2*)obj)->MyFunc(); };
+};
+
+
 int main(int argc, char* argv[])
 {
     Thread::RegisterThread(ThreadGUID_Main, "Main");
+
+    TestStructDef def;
+
+    TestStruct st;
+    def.CallMe(&st);
+
+
 
     gMemoryTracker.EnableTracking(true);
     NeoParseCommandLine(argc, argv);

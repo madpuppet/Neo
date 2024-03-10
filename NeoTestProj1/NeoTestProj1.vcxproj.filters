@@ -24,15 +24,24 @@
     <Filter Include="Asset Files\Materials">
       <UniqueIdentifier>{45b76d21-2297-45d0-848d-fe165ae028cb}</UniqueIdentifier>
     </Filter>
+    <Filter Include="generated">
+      <UniqueIdentifier>{bd66a020-cf81-45bc-827e-55f0a7efed58}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\Application.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="generated\reflect.cpp">
+      <Filter>generated</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="source\Application.h">
       <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="generated\reflect.h">
+      <Filter>generated</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

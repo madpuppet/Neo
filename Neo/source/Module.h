@@ -2,8 +2,10 @@
 
 // priority of neo modules - lowest number gets initialised first
 // game should manage its own priorities and should be >= NeoModuleInitPri_Application
+//<REFLECT>
 enum NeoModuleInitPri
 {
+	NeoModuleInitPri_Reflect,
 	NeoModuleInitPri_FileManager,
 	NeoModuleInitPri_AssetManager,
 	NeoModuleInitPri_TimeManager,
@@ -26,6 +28,7 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_Application = 1000
 };
 
+//<REFLECT>
 enum NeoModulePri
 {
 	NeoModulePri_None,

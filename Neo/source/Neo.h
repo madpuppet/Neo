@@ -141,7 +141,6 @@ struct boundingVolume
 using volume = boundingVolume<vec3>;
 using ivolume = boundingVolume<ivec3>;
 
-
 // neo containers... some are renamed from STL for more legibility
 template<typename T> using vector = std::vector<T>;
 template<typename T, size_t S> using array = std::array<T, S>;
@@ -169,6 +168,7 @@ inline void Assert(bool, const string& msg) {};
 inline void Error(const string& msg) {}
 #endif
 
+#include "Reflection.h"
 #include "Memory.h"
 #include "Module.h"
 #include "CmdLineVar.h"

@@ -6,6 +6,7 @@
 #include "Shader.h"
 #include "ShaderManager.h"
 
+//<REFLECT>
 enum MaterialBlendMode
 {
 	MaterialBlendMode_Opaque,			// use src color, no blending
@@ -15,6 +16,7 @@ enum MaterialBlendMode
 	MaterialBlendMode_Subtractive,		// subtract src color from destination
 };
 
+//<REFLECT>
 enum MaterialCullMode
 {
 	MaterialCullMode_None,				// don't cull any triangles
@@ -22,6 +24,7 @@ enum MaterialCullMode
 	MaterialCullMode_Back				// cull back facing triangles
 };
 
+//<REFLECT>
 enum SamplerFilter
 {
 	SamplerFilter_Nearest,
@@ -32,12 +35,14 @@ enum SamplerFilter
 	SamplerFilter_LinearMipLinear,
 };
 
+//<REFLECT>
 enum SamplerWrap
 {
 	SamplerWrap_Clamp,
 	SamplerWrap_Repeat
 };
 
+//<REFLECT>
 enum SamplerCompare
 {
 	SamplerCompare_None,

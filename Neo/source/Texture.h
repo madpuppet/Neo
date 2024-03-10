@@ -13,6 +13,7 @@
 #include "AssetManager.h"
 #include "ResourceRef.h"
 
+//<REFLECT>
 enum TextureLayout
 {
 	TextureLayout_Undefined,		// initial undefined layout
@@ -20,9 +21,10 @@ enum TextureLayout
 	TextureLayout_ColorAttachment,	// render pass color attachment
 	TextureLayout_DepthAttachment,	// render pass depth attachment
 	TextureLayout_ShaderRead,		// shader sampling resource
-	TextureLayout_Present			// presentation (for swapchain images)
+	TextureLayout_Present,
 };
 
+//<REFLECT>
 enum TextureType
 {
 	TextureType_None,
@@ -31,6 +33,7 @@ enum TextureType
 	TextureType_DepthBuffer
 };
 
+//<REFLECT>
 enum TexturePixelFormat
 {
 	PixFmt_Undefined,
@@ -79,7 +82,15 @@ enum TexturePixelFormat
 	PixFmt_D32_SFLOAT,
 	PixFmt_D24_UNORM_S8_UINT
 };
-TexturePixelFormat StringToTexturePixelFormat(const string& str);
+
+//<REFLECT>
+struct TestStruct
+{
+	vec3 pos;
+	f32 time;
+	void OnButtonPress() {}
+};
+
 
 
 // Asset data is the file data for this asset

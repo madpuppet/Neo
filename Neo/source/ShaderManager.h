@@ -1,5 +1,6 @@
 #pragma once
 
+//<REFLECT>
 enum VertexFormat
 {
 	Fmt_R8G8B8A8_UNORM,
@@ -25,7 +26,7 @@ template<> struct std::hash<Vertex_p3f_t2f_c4b>
 	}
 };
 
-
+//<REFLECT>
 enum VertAttribType
 {
 	VertAttribType_f32,

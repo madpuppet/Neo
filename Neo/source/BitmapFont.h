@@ -7,6 +7,7 @@
 
 struct BitmapFontPlatformData;
 
+//<REFLECT>
 enum Alignment
 {
 	Alignment_TopLeft,
