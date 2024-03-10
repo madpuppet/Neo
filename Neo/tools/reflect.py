@@ -2,7 +2,7 @@ import os
 import re
 import sys
 
-supported_types = [ "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "f32", "f64", 'vec2', 'vec3', 'vec4', 'ivec2', 'ivec3', 'ivec4' ]
+supported_types = [ "u8", "u16", "u32", "u64", "i8", "i16", "i32", "i64", "f32", "f64", 'vec2', 'vec3', 'vec4', 'ivec2', 'ivec3', 'ivec4', "mat4x4" ]
 
 def parse_enum(i, lines, out_header, out_body, out_code):
 	# TODO - process any directives on the reflect line
@@ -18,7 +18,7 @@ def parse_enum(i, lines, out_header, out_body, out_code):
 
 	out_header.write(f"enum {enum_name};\n")
 	out_header.write(f"bool {enum_name}_StringToEnum(string name, {enum_name} &value);\n")
-	out_header.write(f"bool {enum_name}_EnumToString({enum_name} value, string &name);\n\n")
+	out_header.write(f"string {enum_name}_EnumToString({enum_name} value);\n\n")
 
 	out_body.write(f"ReflectEnumInfo enumReflect_{enum_name};\n")
 
@@ -33,15 +33,12 @@ def parse_enum(i, lines, out_header, out_body, out_code):
 	out_body.write( "  return false;\n")
 	out_body.write( "}\n")
 
-	out_body.write(f"bool {enum_name}_EnumToString({enum_name} value, string &name)\n")
+	out_body.write(f"string {enum_name}_EnumToString({enum_name} value)\n")
 	out_body.write( "{\n")
 	out_body.write(f"  auto it = enumReflect_{enum_name}.map_intToString.find((int)value);\n")
 	out_body.write(f"  if (it != enumReflect_{enum_name}.map_intToString.end())\n")
-	out_body.write( "  {\n")
-	out_body.write( "    name = it->second;\n")
-	out_body.write( "    return true;\n")
-	out_body.write( "  }\n")
-	out_body.write( "  return false;\n")
+	out_body.write( "    return it->second;\n")
+	out_body.write( "  return \"\";\n")
 	out_body.write( "}\n\n")
 
 	out_code.append(f"  enumReflect_{enum_name}.name=\"{enum_name}\";\n")
@@ -132,7 +129,14 @@ def parse_reflect(i, lines, out_header, out_body, out_code):
 		print("REFLECT is not followed by an enum, struct or class...")
 	return i+1
 
-def parse_enums_and_structs(init_func, output_file, list_of_files):
+def filename_from_path(path):
+		idx = path.rfind('\\')
+		if idx != -1:
+			return path[idx+1:]
+		else:
+			return path
+
+def parse_enums_and_structs(pch, init_func, output_file, list_of_files):
 	output_header = output_file + ".h"
 	output_body = output_file + ".cpp"
 	out_code = []
@@ -141,14 +145,9 @@ def parse_enums_and_structs(init_func, output_file, list_of_files):
 		out_header.write("#pragma once\n")
 		out_header.write(f"void {init_func}();\n\n")
 		out_body.write("#include \"Neo.h\"\n")
-		out_body.write(f"#include \"{output_file}.h\"\n\n")
+		out_body.write(f"#include \"{filename_from_path(output_file)}.h\"\n\n")
 
 		for file_path in list_of_files:
-			idx = file_path.rfind('\\')
-			if idx != -1:
-				filename = file_path[idx+1:]
-			else:
-				filename = file_path
 			found_reflect = 0
 			with open(file_path, 'r') as f:
 				lines = f.readlines()
@@ -157,8 +156,7 @@ def parse_enums_and_structs(init_func, output_file, list_of_files):
 					line = lines[i].strip()
 					if line.startswith("//<REFLECT>"):
 						if not found_reflect:
-							print(f"found reflect in: {filename}")
-							out_body.write(f"#include \"{filename}\"\n")
+							out_body.write(f"#include \"{filename_from_path(file_path)}\"\n")
 							found_reflect = 1
 						i = parse_reflect(i, lines, out_header, out_body, out_code)
 					else:
@@ -170,14 +168,15 @@ def parse_enums_and_structs(init_func, output_file, list_of_files):
 		out_body.write("}\n")
 
 # Example usage
-if len(sys.argv) < 4:
-	print("Usage: python reflect.py <initFunc> <outfile> <directories>...")
+if len(sys.argv) < 5:
+	print("Usage: python reflect.py <pch> <initFunc> <outfile> <directories>...")
 	sys.exit(1)
 
 list_of_dirs = []
-initfunc = sys.argv[1]
-outputfile = sys.argv[2]
-for outputDir in sys.argv[3:]:
+pch = sys.argv[1]
+initfunc = sys.argv[2]
+outputfile = sys.argv[3]
+for outputDir in sys.argv[4:]:
 	list_of_dirs.append(outputDir)
 
 list_of_files = []
@@ -187,7 +186,7 @@ for dir in list_of_dirs:
 			file_path = os.path.join(dir, filename)
 			list_of_files.append(file_path)
 
-print(f"Scanning {len(list_of_files)} files for reflection data...\n")
+print(f"Scanning {len(list_of_files)} file(s) for reflection data...")
 
 dirty = True
 if not os.path.exists(outputfile + ".h") or not os.path.exists(outputfile + ".cpp"):
@@ -203,6 +202,6 @@ else:
 			dirty = True
 			break
 if dirty:
-	parse_enums_and_structs(initfunc, outputfile, list_of_files)
+	parse_enums_and_structs(pch, initfunc, outputfile, list_of_files)
 else:
 	print("No file changes detected!")

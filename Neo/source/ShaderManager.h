@@ -38,18 +38,6 @@ enum VertAttribType
 	VertAttribType_ivec3,
 	VertAttribType_ivec4
 };
-extern hashtable<string, VertAttribType> VertAttribType_Lookup;
-extern hashtable<VertAttribType, string> VertAttribTypeToString_Lookup;
-
-enum UniformType
-{
-	UniformType_vec4,
-	UniformType_ivec4,
-	UniformType_mat4x4,
-	UniformType_f32,
-	UniformType_i32
-};
-extern const char* UniformTypeToString[];
 
 // common View ubo
 struct UBO_View
@@ -77,7 +65,7 @@ struct UBO_Model
 struct UBOMemberInfo
 {
 	string name;
-	UniformType type = UniformType_vec4;
+	VarType type = VarType_vec4;
 	u32 offset = 0;
 	u32 members = 1;
 	u32 datasize = sizeof(vec4);

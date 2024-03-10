@@ -1,5 +1,14 @@
 #pragma once
 
+//<REFLECT>
+enum FSExcludeType
+{
+	FSExcludeType_Dir,
+	FSExcludeType_File,
+	FSExcludeType_Ext,
+	FSExcludeType_MAX
+};
+
 class FileExcludes
 {
 public:
@@ -9,12 +18,5 @@ public:
 	bool IsExcluded(const char *dir, const char *filename, const char *ext);
 
 protected:
-	enum ExcludeType
-	{
-		ExcludeType_Dir,
-		ExcludeType_File,
-		ExcludeType_Ext,
-		ExcludeType_MAX
-	};
-	vector<u64> m_excludes[ExcludeType_MAX];
+	vector<u64> m_excludes[FSExcludeType_MAX];
 };

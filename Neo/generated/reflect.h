@@ -1,81 +1,85 @@
 #pragma once
 void NeoInitReflection();
 
+enum FSExcludeType;
+bool FSExcludeType_StringToEnum(string name, FSExcludeType &value);
+string FSExcludeType_EnumToString(FSExcludeType value);
+
 enum MemoryGroup;
 bool MemoryGroup_StringToEnum(string name, MemoryGroup &value);
-bool MemoryGroup_EnumToString(MemoryGroup value, string &name);
+string MemoryGroup_EnumToString(MemoryGroup value);
 
 enum SerializerError;
 bool SerializerError_StringToEnum(string name, SerializerError &value);
-bool SerializerError_EnumToString(SerializerError value, string &name);
+string SerializerError_EnumToString(SerializerError value);
 
 enum NeoModuleInitPri;
 bool NeoModuleInitPri_StringToEnum(string name, NeoModuleInitPri &value);
-bool NeoModuleInitPri_EnumToString(NeoModuleInitPri value, string &name);
+string NeoModuleInitPri_EnumToString(NeoModuleInitPri value);
 
 enum NeoModulePri;
 bool NeoModulePri_StringToEnum(string name, NeoModulePri &value);
-bool NeoModulePri_EnumToString(NeoModulePri value, string &name);
+string NeoModulePri_EnumToString(NeoModulePri value);
 
-enum VertexFormat;
-bool VertexFormat_StringToEnum(string name, VertexFormat &value);
-bool VertexFormat_EnumToString(VertexFormat value, string &name);
+enum SROType;
+bool SROType_StringToEnum(string name, SROType &value);
+string SROType_EnumToString(SROType value);
 
-enum VertAttribType;
-bool VertAttribType_StringToEnum(string name, VertAttribType &value);
-bool VertAttribType_EnumToString(VertAttribType value, string &name);
+enum SROStage;
+bool SROStage_StringToEnum(string name, SROStage &value);
+string SROStage_EnumToString(SROStage value);
 
 enum TextureLayout;
 bool TextureLayout_StringToEnum(string name, TextureLayout &value);
-bool TextureLayout_EnumToString(TextureLayout value, string &name);
+string TextureLayout_EnumToString(TextureLayout value);
 
 enum TextureType;
 bool TextureType_StringToEnum(string name, TextureType &value);
-bool TextureType_EnumToString(TextureType value, string &name);
+string TextureType_EnumToString(TextureType value);
 
 enum TexturePixelFormat;
 bool TexturePixelFormat_StringToEnum(string name, TexturePixelFormat &value);
-bool TexturePixelFormat_EnumToString(TexturePixelFormat value, string &name);
+string TexturePixelFormat_EnumToString(TexturePixelFormat value);
 
 //#### STRUCT TestStruct ####
 extern ReflectStructInfo reflectStructInfo_TestStruct;
 enum ThreadGUID;
 bool ThreadGUID_StringToEnum(string name, ThreadGUID &value);
-bool ThreadGUID_EnumToString(ThreadGUID value, string &name);
+string ThreadGUID_EnumToString(ThreadGUID value);
 
-enum SROType;
-bool SROType_StringToEnum(string name, SROType &value);
-bool SROType_EnumToString(SROType value, string &name);
+enum VertexFormat;
+bool VertexFormat_StringToEnum(string name, VertexFormat &value);
+string VertexFormat_EnumToString(VertexFormat value);
 
-enum SROStage;
-bool SROStage_StringToEnum(string name, SROStage &value);
-bool SROStage_EnumToString(SROStage value, string &name);
+enum VertAttribType;
+bool VertAttribType_StringToEnum(string name, VertAttribType &value);
+string VertAttribType_EnumToString(VertAttribType value);
 
 enum Alignment;
 bool Alignment_StringToEnum(string name, Alignment &value);
-bool Alignment_EnumToString(Alignment value, string &name);
+string Alignment_EnumToString(Alignment value);
 
 enum MaterialBlendMode;
 bool MaterialBlendMode_StringToEnum(string name, MaterialBlendMode &value);
-bool MaterialBlendMode_EnumToString(MaterialBlendMode value, string &name);
+string MaterialBlendMode_EnumToString(MaterialBlendMode value);
 
 enum MaterialCullMode;
 bool MaterialCullMode_StringToEnum(string name, MaterialCullMode &value);
-bool MaterialCullMode_EnumToString(MaterialCullMode value, string &name);
+string MaterialCullMode_EnumToString(MaterialCullMode value);
 
 enum SamplerFilter;
 bool SamplerFilter_StringToEnum(string name, SamplerFilter &value);
-bool SamplerFilter_EnumToString(SamplerFilter value, string &name);
+string SamplerFilter_EnumToString(SamplerFilter value);
 
 enum SamplerWrap;
 bool SamplerWrap_StringToEnum(string name, SamplerWrap &value);
-bool SamplerWrap_EnumToString(SamplerWrap value, string &name);
+string SamplerWrap_EnumToString(SamplerWrap value);
 
 enum SamplerCompare;
 bool SamplerCompare_StringToEnum(string name, SamplerCompare &value);
-bool SamplerCompare_EnumToString(SamplerCompare value, string &name);
+string SamplerCompare_EnumToString(SamplerCompare value);
 
 enum VarType;
 bool VarType_StringToEnum(string name, VarType &value);
-bool VarType_EnumToString(VarType value, string &name);
+string VarType_EnumToString(VarType value);
 

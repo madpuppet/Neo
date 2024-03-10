@@ -6,6 +6,7 @@
 enum NeoModuleInitPri
 {
 	NeoModuleInitPri_Reflect,
+	NeoModuleInitPri_PlatformUtils,
 	NeoModuleInitPri_FileManager,
 	NeoModuleInitPri_AssetManager,
 	NeoModuleInitPri_TimeManager,

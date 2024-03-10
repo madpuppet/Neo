@@ -81,12 +81,6 @@ protected:
 
 	vector<FileSystem*> m_fileSystems;
 	vector<std::pair<CallbackHandle, FileSystem_FileChangeCallback>> m_onFileChange;
-	enum ExcludeType
-	{
-		ExcludeType_Folder,
-		ExcludeType_Ext,
-		ExcludeType_File
-	};
 	vector<u64> m_excludeFolders;
 	vector<u64> m_excludeExtenstions;
 	u32 m_nextUniqueFileHandle;

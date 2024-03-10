@@ -1,5 +1,5 @@
 #include "Neo.h"
-#include "G:\Projects\madpuppet\Neo\NeoTestProj1\generated\reflect.h"
+#include "reflect.h"
 
 #include "Application.h"
 ReflectEnumInfo enumReflect_ApplicationThreads;
@@ -12,15 +12,12 @@ bool ApplicationThreads_StringToEnum(string name, ApplicationThreads &value)
   }
   return false;
 }
-bool ApplicationThreads_EnumToString(ApplicationThreads value, string &name)
+string ApplicationThreads_EnumToString(ApplicationThreads value)
 {
   auto it = enumReflect_ApplicationThreads.map_intToString.find((int)value);
   if (it != enumReflect_ApplicationThreads.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 void GameInitReflection()

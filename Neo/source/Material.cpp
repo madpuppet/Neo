@@ -11,9 +11,7 @@ DECLARE_MODULE(MaterialFactory, NeoModuleInitPri_MaterialFactory, NeoModulePri_N
 
 const string Material::AssetType = "Material";
 
-const char* UniformTypeToString[] = { "vec4", "ivec4", "mat4x4", "f32", "i32" };
-
-void Material::SetUniform(const string& name, UniformType type, const void *data, bool flush)
+void Material::SetUniform(const string& name, VarType type, const void *data, bool flush)
 {
 	Assert(Thread::GetCurrentThreadGUID() == ThreadGUID_Render, "Must run on render thread because it uses active render pass!");
 	Assert(IsLoaded(), STR("Attempt to use material {} before it finished loading", name));
@@ -255,7 +253,7 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 						void* data = new u8[member->datasize];
 						switch (member->type)
 						{
-							case UniformType_vec4:
+							case VarType_vec4:
 							{
 								vec4 value = uniformNode->GetVector4();
 								memcpy(data, &value, member->datasize);
@@ -263,7 +261,7 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 							}
 							break;
 
-							case UniformType_ivec4:
+							case VarType_ivec4:
 							{
 								ivec4 value = uniformNode->GetVector4i();
 								memcpy(data, &value, member->datasize);
@@ -271,7 +269,7 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 							}
 							break;
 
-							case UniformType_mat4x4:
+							case VarType_mat4x4:
 							{
 								vec3 rot = uniformNode->GetVector3();
 								vec3 scale = uniformNode->GetVector3();
@@ -282,7 +280,7 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 							}
 							break;
 
-							case UniformType_f32:
+							case VarType_f32:
 							{
 								f32 value = uniformNode->GetF32();
 								memcpy(data, &value, member->datasize);
@@ -290,7 +288,7 @@ bool MaterialAssetData::SrcFilesToAsset(vector<MemBlock> &srcFiles, AssetCreateP
 							}
 							break;
 
-							case UniformType_i32:
+							case VarType_i32:
 							{
 								i32 value = uniformNode->GetI32();
 								memcpy(data, &value, member->datasize);

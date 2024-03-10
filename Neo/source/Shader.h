@@ -29,7 +29,6 @@ enum SROStage
 	SROStage_Vertex = 2,
 	SROStage_Fragment = 4
 };
-extern hashtable<string, SROStage> SROStage_Lookup;
 
 // Asset data is the file data for this asset
 // this class managed serializing to and from disk

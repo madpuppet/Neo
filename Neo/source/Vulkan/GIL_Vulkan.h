@@ -115,17 +115,11 @@ public:
 	// query the current size of the frame buffer
 	ivec2 GetSwapChainImageSize() { return m_swapChainImageSize; }
 
-	// TODO: should do a Platform Interface Layer for misc services not graphics related
-	// show message box and return TRUE if user would like to break
-	bool ShowMessageBox(const string& string);
-	float GetJoystickAxis(int idx);
-
 	// request resize of framebuffers
 	// this cascades to reset of all materials since the viewport size changes also
 	void ResizeSwapChain(ivec2 newSize);
 
 	void WaitForGPU();
-
 
 protected:
 	void WaitForMemory();
@@ -143,7 +137,6 @@ protected:
 #endif
 
 	SDL_Window* m_window;
-	SDL_Joystick* m_joystick;
 	ivec2 m_swapChainImageSize{ 1280,720 };
 
 	VkInstance m_instance;
@@ -270,6 +263,7 @@ public:
 	VkDevice Device() { return m_device; }
 	VkCommandPool CommandPool() { return m_commandPool; }
 	VkDescriptorPool DescriptorPool() { return m_descriptorPool; }
+	SDL_Window *Window() { return m_window; }
 
 	// these used by RenderPass
 	VkFormat FindVulkanFormat(TexturePixelFormat format) { return m_neoFormatToVulkanFormat[format]; }

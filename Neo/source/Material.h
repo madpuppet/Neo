@@ -85,7 +85,7 @@ class Material : public Resource
 	// dirty mask gets set if any uniforms are updated (bit 0 is frame 0, bit 1 is frame 1)
 	u32 dirtyMask = 0xf;
 
-	void SetUniform(const string& name, UniformType type, const void* data, bool flush);
+	void SetUniform(const string& name, VarType type, const void* data, bool flush);
 
 public:
 	static const string AssetType;
@@ -93,11 +93,11 @@ public:
 	virtual ~Material() {}
 	void OnAssetDeliver(struct AssetData* data);
 
-	void SetUniform_vec4(const string& name, const vec4& value, bool flush) { SetUniform(name, UniformType_vec4, &value, flush); }
-	void SetUniform_ivec4(const string& name, const ivec4& value, bool flush) { SetUniform(name, UniformType_ivec4, &value, flush); }
-	void SetUniform_f32(const string& name, f32 value, bool flush) { SetUniform(name, UniformType_f32, &value, flush); }
-	void SetUniform_i32(const string& name, i32 value, bool flush) { SetUniform(name, UniformType_ivec4, &value, flush); }
-	void SetUniform_mat4x4(const string& name, const mat4x4& value, bool flush) { SetUniform(name, UniformType_mat4x4, &value, flush); }
+	void SetUniform_vec4(const string& name, const vec4& value, bool flush) { SetUniform(name, VarType_vec4, &value, flush); }
+	void SetUniform_ivec4(const string& name, const ivec4& value, bool flush) { SetUniform(name, VarType_ivec4, &value, flush); }
+	void SetUniform_f32(const string& name, f32 value, bool flush) { SetUniform(name, VarType_f32, &value, flush); }
+	void SetUniform_i32(const string& name, i32 value, bool flush) { SetUniform(name, VarType_ivec4, &value, flush); }
+	void SetUniform_mat4x4(const string& name, const mat4x4& value, bool flush) { SetUniform(name, VarType_mat4x4, &value, flush); }
 
 	void RecreatePlatformData();
 

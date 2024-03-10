@@ -21,6 +21,9 @@ enum VarType
 	VarType_ivec2,
 	VarType_ivec3,
 	VarType_ivec4,
+	VarType_mat4x4,
+	VarType_enum,
+	VarType_struct,
 	VarType_func
 };
 

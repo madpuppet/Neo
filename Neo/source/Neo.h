@@ -173,7 +173,7 @@ inline void Error(const string& msg) {}
 #include "Module.h"
 #include "CmdLineVar.h"
 #include "Log.h"
-#include "GIL_Common.h"
+#include "GIL.h"
 #include "Profiler.h"
 
 extern const char* GAME_NAME;

@@ -7,6 +7,7 @@
 #include "Shader.h"
 #include "ResourceLoadedManager.h"
 #include "Profiler.h"
+#include "PlatformUtils_Common.h"
 
 DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early);
 
@@ -14,7 +15,7 @@ const char* GAME_NAME = "TestGame";
 
 //TextureRef tex;
 
-Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Update Worker", 4, true)
+Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Update Worker", 4, true), m_cameraMatrix(1)
 {
 	View::PerspectiveInfo persp;
 	persp.fov = DegToRad(70.0f);
@@ -25,9 +26,8 @@ Application::Application() : m_workerFarm(GameThreadGUID_UpdateWorkerThread, "Up
 	persp.fov = DegToRad(130.0f);
 	m_renderTargetView.SetPerspective(persp);
 
-	mat4x4 camMat(1);
-	camMat[3].z = -3.0f;
-	m_renderTargetView.SetCameraMatrix(camMat);
+	m_cameraMatrix[3].z = -3.0f;
+	m_renderTargetView.SetCameraMatrix(m_cameraMatrix);
 
 	m_cameraPYR = { DegToRad(45.0f), 0, 0 };
 	m_cameraPos = { 0, 1.5f, -1.0f };
@@ -100,10 +100,11 @@ void Application::Update()
 	float dt = (float)NeoTimeDelta;
 	dt = Min(dt, 0.1f);
 
-	float x = GIL::Instance().GetJoystickAxis(0) * dt * 4.0f;
-	float y = -GIL::Instance().GetJoystickAxis(1) * dt * 4.0f;
-	float yaw = GIL::Instance().GetJoystickAxis(2) * dt;
-	float pitch = GIL::Instance().GetJoystickAxis(3) * dt;
+	auto* utils = PlatformUtils::Instance();
+	float x = utils.GetJoystickAxis(0) * dt * 4.0f;
+	float y = -utils.GetJoystickAxis(1) * dt * 4.0f;
+	float yaw = utils.GetJoystickAxis(2) * dt;
+	float pitch = utils.GetJoystickAxis(3) * dt;
 
 	m_workerFarm.AddTask([this, dt]()
 		{

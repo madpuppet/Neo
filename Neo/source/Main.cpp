@@ -1,4 +1,5 @@
 #include "neo.h"
+#include "PlatformUtils.h"
 
 #include <SDL.h>
 #include <SDL_vulkan.h>
@@ -35,29 +36,9 @@ u32 NeoDrawFrameIdx = 0;
 
 CmdLineVar<stringlist> CLV_LogFilter("log", "select log filters to show", { "" });
 
-struct TestStruct2
-{
-    void MyFunc()
-    {
-        LOG(Any, "Made It!");
-    }
-};
-struct TestStructDef
-{
-    std::function<void(void*)> CallMe = [](void* obj) { ((TestStruct2*)obj)->MyFunc(); };
-};
-
-
 int main(int argc, char* argv[])
 {
     Thread::RegisterThread(ThreadGUID_Main, "Main");
-
-    TestStructDef def;
-
-    TestStruct st;
-    def.CallMe(&st);
-
-
 
     gMemoryTracker.EnableTracking(true);
     NeoParseCommandLine(argc, argv);
@@ -69,43 +50,9 @@ int main(int argc, char* argv[])
     RenderThread::Instance().DoStartupTasks();
 
     bool m_quit = false;
-    SDL_Event e;
     while (!m_quit)
     {
-        while (SDL_PollEvent(&e))
-        {
-            switch (e.type)
-            {
-                case SDL_QUIT:
-                    m_quit = true;
-                    break;
-
-                case SDL_WINDOWEVENT:
-                    if (e.window.event == SDL_WINDOWEVENT_RESIZED)
-                    {
-                        ivec2 newSize{ e.window.data1,e.window.data2 };
-                        if (RenderThread::Exists())
-                        {
-                            // at the start fo the next render frame, we will recreate everything
-                            RenderThread::Instance().AddPreDrawTask([newSize]()
-                            {
-                                    // need to wait for gpu to be idle so its not using any resources we are about to recreate
-                                    GIL::Instance().WaitForGPU();
-                                    // destroy the render pass first since it references the swap chain in its framebuffers
-                                    RenderPassFactory::Instance().DestroyPlatformData();
-                                    // destroy and recreate the swapchain
-                                    GIL::Instance().ResizeSwapChain(newSize);
-                                    // create the render passes
-                                    RenderPassFactory::Instance().CreatePlatformData();
-                                    // finally recreate all the graphics pipelines since they reference viewport sizes of the render passes
-                                    MaterialFactory::Instance().OnSwapChainResize();
-                            });
-                        }
-                    }
-                    break;
-
-            }
-        }
+        m_quit = PlatformUtils::Instance().PollSystemEvents();
 
         auto& dr = DefDynamicRenderer::Instance();
         dr.BeginFrame();
@@ -142,7 +89,7 @@ void Error(const string& msg)
 
     if (Thread::IsOnThread(ThreadGUID_Main) && GIL::Exists())
     {
-        if (GIL::Instance().ShowMessageBox(errorStr))
+        if (PlatformUtils::Instance().ShowMessageBox(errorStr))
             __debugbreak();
     }
     else

@@ -12,9 +12,6 @@
 
 #define SHADER_VERSION 1
 
-hashtable<string, SROType> SROType_Lookup;
-hashtable<string, SROStage> SROStage_Lookup;
-
 DECLARE_MODULE(ShaderFactory, NeoModuleInitPri_ShaderFactory, NeoModulePri_None);
 
 const string Shader::AssetType = "Shader";
@@ -40,7 +37,11 @@ void ParseAttributes(vector<ShaderAssetData::ShaderAttribute> &attribs, stringli
 	{
 		string vertAttribTypeStr = tokens[1];
 		string name = tokens[2];
-		VertAttribType vertAttribType = VertAttribType_Lookup[vertAttribTypeStr];
+		VertAttribType vertAttribType = VertAttribType_f32;
+		if (!VertAttribType_StringToEnum(vertAttribTypeStr, vertAttribType))
+		{
+			Error(STR("Unknown vertex attribute type: {}", vertAttribTypeStr));
+		}
 		int binding = (int)attribs.size();
 		attribs.emplace_back(name, vertAttribType, binding);
 	}
@@ -197,7 +198,7 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 	// output interpolants
 	for (auto& attrib : interpolants)
 	{
-		string attribType = VertAttribTypeToString_Lookup[attrib.type];
+		string attribType = VertAttribType_EnumToString(attrib.type);
 		vertOutputFile << std::format("layout(location = {}) out {} {};\n", attrib.binding, attribType, attrib.name);
 		fragOutputFile << std::format("layout(location = {}) in {} {};\n", attrib.binding, attribType, attrib.name);
 	}
@@ -205,7 +206,7 @@ bool ShaderAssetData::SrcFilesToAsset(vector<MemBlock>& srcFiles, AssetCreatePar
 	// output fragment shader outs
 	for (auto& attrib : fragmentOutputs)
 	{
-		string attribType = VertAttribTypeToString_Lookup[attrib.type];
+		string attribType = VertAttribType_EnumToString(attrib.type);
 		fragOutputFile << std::format("layout(location = {}) out {} {};\n", attrib.binding, attribType, attrib.name);
 	}
 
@@ -386,8 +387,4 @@ template <> ResourceFactory<Shader>::ResourceFactory()
 	ati->assetExt = ".neoshader";
 	ati->sourceExt.push_back({ { ".shader" }, true });		// compile from source
 	AssetManager::Instance().RegisterAssetType(ati);
-
-	SROStage_Lookup["Geometry"] = SROStage_Geometry;
-	SROStage_Lookup["Vertex"] = SROStage_Vertex;
-	SROStage_Lookup["Fragment"] = SROStage_Fragment;
 }

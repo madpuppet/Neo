@@ -50,7 +50,6 @@ void GIL::StartupMainThread()
     }
 
     m_window = SDL_CreateWindow(APP_TITLE "v" VERSION, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, m_swapChainImageSize.x, m_swapChainImageSize.y, SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI | SDL_WINDOW_VULKAN);
-    m_joystick = SDL_JoystickOpen(0);
 }
 
 static VkFormat s_VertexFormatToVk[] =
@@ -1741,38 +1740,6 @@ void GIL::RenderStaticMeshInstances(class StaticMesh* mesh, mat4x4* ltw, u32 ltw
         gil.UpdateUBOInstance(uboInstance, &ltw[i], sizeof(mat4x4), true);
         RenderPrimitive(0, 0, 0, meshPD->indiceCount);
     }
-}
-
-
-bool GIL::ShowMessageBox(const string& string)
-{
-    SDL_MessageBoxButtonData buttons[2];
-    buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
-    buttons[0].buttonid = 1;
-    buttons[0].text = "Break";
-    buttons[1].flags = SDL_MESSAGEBOX_BUTTON_ESCAPEKEY_DEFAULT;
-    buttons[1].buttonid = 0;
-    buttons[1].text = "Ignore";
-
-    SDL_MessageBoxData data;
-    data.flags = SDL_MESSAGEBOX_ERROR;
-    data.window = m_window;
-    data.title = "Neo Assert Hit...";
-    data.message = string.c_str();
-    data.numbuttons = 2;
-    data.buttons = buttons;
-    data.colorScheme = nullptr;
-    int result = 0;
-    SDL_ShowMessageBox(&data, &result);
-    return result == 1;
-}
-
-float GIL::GetJoystickAxis(int idx)
-{
-    float joyval = Clamp(SDL_JoystickGetAxis(m_joystick, idx) / 32767.0f, -1.0f, 1.0f);
-    if (abs(joyval) < 0.1f)
-        joyval = 0.0f;
-    return joyval;
 }
 
 NeoGeometryBuffer* GIL::CreateGeometryBuffer(void* vertData, u32 vertDataSize, void* indexData, u32 indexDataSize)

@@ -18,8 +18,8 @@ inline u32 vec4ToR8G8B8A8(const vec4& col) {
 #if defined(GRAPHICS_Vulkan)
 #include "GIL_Vulkan.h"
 #elif defined(GRAPHICS_NVN)
-//#include "GIL_NVN.h"
+#include "GIL_NVN.h"
 #elif defined(GRAPHICS_Metal)
-//#include "GIL_Metal.h"
+#include "GIL_Metal.h"
 #endif
 

@@ -4,27 +4,19 @@
 
 DECLARE_MODULE(ShaderManager, NeoModuleInitPri_ShaderManager, NeoModulePri_None);
 
-hashtable<string, VertAttribType> VertAttribType_Lookup;
-hashtable<VertAttribType, string> VertAttribTypeToString_Lookup;
-
-// 	UBOMemberInfo mi_view{ "view", UniformType_mat4x4, offsetof(UBO_View, view), 1, sizeof(mat4x4) };
-//  UBOMemberInfo mi_proj{ "proj", UniformType_mat4x4, offsetof(UBO_View, proj), 1, sizeof(mat4x4) };
-//  UBOMemberStructInfo mi_struct_ubo_view{ "UBO_View", {"mi_view","mi_proj"} };
-//  UBOMemberInfo mi_view{ "views", UniformType_struct, offsetof(UBO_Views, view), 4, sizeof(UBO_View), &mi_struct_ubo_view };
-
 ShaderManager::ShaderManager() 
 {
-	UBOMemberInfo mi_view{ "view", UniformType_mat4x4, offsetof(UBO_View, view), 1, sizeof(mat4x4) };
-	UBOMemberInfo mi_proj{ "proj", UniformType_mat4x4, offsetof(UBO_View, proj), 1, sizeof(mat4x4) };
-	UBOMemberInfo mi_ortho{ "ortho", UniformType_mat4x4, offsetof(UBO_View, ortho), 1, sizeof(mat4x4) };
+	UBOMemberInfo mi_view{ "view", VarType_mat4x4, offsetof(UBO_View, view), 1, sizeof(mat4x4) };
+	UBOMemberInfo mi_proj{ "proj", VarType_mat4x4, offsetof(UBO_View, proj), 1, sizeof(mat4x4) };
+	UBOMemberInfo mi_ortho{ "ortho", VarType_mat4x4, offsetof(UBO_View, ortho), 1, sizeof(mat4x4) };
 	auto i_View = new UBOInfo{ "UBO_View", (u32)sizeof(UBO_View), {mi_view,mi_proj,mi_ortho}};
 	RegisterUBO(i_View);
 
-	UBOMemberInfo mi_blend{ "blendColor", UniformType_vec4, offsetof(UBO_Material, blend), 1, sizeof(vec4) };
+	UBOMemberInfo mi_blend{ "blendColor", VarType_vec4, offsetof(UBO_Material, blend), 1, sizeof(vec4) };
 	auto i_Material = new UBOInfo{ "UBO_Material", (u32)sizeof(UBO_Material), {mi_blend} };
 	RegisterUBO(i_Material);
 
-	UBOMemberInfo mi_model{ "model", UniformType_mat4x4, offsetof(UBO_Model, model), 1, sizeof(mat4x4) };
+	UBOMemberInfo mi_model{ "model", VarType_mat4x4, offsetof(UBO_Model, model), 1, sizeof(mat4x4) };
 	auto i_Model = new UBOInfo{ "UBO_Model", (u32)sizeof(UBO_Model), {mi_model} };
 	RegisterUBO(i_Model);
 
@@ -34,24 +26,6 @@ ShaderManager::ShaderManager()
 	InputAttributeInfo attrib_color4b{ "color", 0, 2, Fmt_R8G8B8A8_UNORM, offsetof(Vertex_p3f_t2f_c4b,color) };
 	auto vertex_p3f_t2f_c4b = new InputAttributesDescription{ "Vertex_p3f_t2f_c4b", {attrib_pos3f, attrib_texCoord2f, attrib_color4b}, {attribBinding_p3f_t2f_c4b} };
 	RegisterIAD(vertex_p3f_t2f_c4b);
-
-	VertAttribType_Lookup["f32"] = VertAttribType_f32;
-	VertAttribType_Lookup["i32"] = VertAttribType_i32;
-	VertAttribType_Lookup["vec2"] = VertAttribType_vec2;
-	VertAttribType_Lookup["vec3"] = VertAttribType_vec3;
-	VertAttribType_Lookup["vec4"] = VertAttribType_vec4;
-	VertAttribType_Lookup["ivec2"] = VertAttribType_ivec2;
-	VertAttribType_Lookup["ivec3"] = VertAttribType_ivec3;
-	VertAttribType_Lookup["ivec4"] = VertAttribType_ivec4;
-
-	VertAttribTypeToString_Lookup[VertAttribType_f32] = "f32";
-	VertAttribTypeToString_Lookup[VertAttribType_i32] = "i32";
-	VertAttribTypeToString_Lookup[VertAttribType_vec2] = "vec2";
-	VertAttribTypeToString_Lookup[VertAttribType_vec3] = "vec3";
-	VertAttribTypeToString_Lookup[VertAttribType_vec4] = "vec4";
-	VertAttribTypeToString_Lookup[VertAttribType_ivec2] = "ivec2";
-	VertAttribTypeToString_Lookup[VertAttribType_ivec3] = "ivec3";
-	VertAttribTypeToString_Lookup[VertAttribType_ivec4] = "ivec4";
 }
 
 ShaderManager::~ShaderManager(){}
@@ -68,11 +42,11 @@ string ShaderManager::UBOContentsToString(const UBOInfo &uboInfo)
 	{
 		if (member.members > 1)
 		{
-			outStr += std::format("\t{} {}[{}];\n", UniformTypeToString[member.type], member.name, member.members);
+			outStr += std::format("\t{} {}[{}];\n", VarType_EnumToString(member.type), member.name, member.members);
 		}
 		else
 		{
-			outStr += std::format("\t{} {};\n", UniformTypeToString[member.type], member.name);
+			outStr += std::format("\t{} {};\n", VarType_EnumToString(member.type), member.name);
 		}
 	}
 	return outStr;

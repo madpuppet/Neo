@@ -1,5 +1,24 @@
 #include "Neo.h"
-#include "G:\Projects\madpuppet\Neo\Neo\generated\reflect.h"
+#include "reflect.h"
+
+#include "FileExcludes.h"
+ReflectEnumInfo enumReflect_FSExcludeType;
+bool FSExcludeType_StringToEnum(string name, FSExcludeType &value)
+{
+  auto it = enumReflect_FSExcludeType.map_stringToInt.find(name);
+  if (it != enumReflect_FSExcludeType.map_stringToInt.end())
+  {
+    value = (FSExcludeType)it->second;    return true;
+  }
+  return false;
+}
+string FSExcludeType_EnumToString(FSExcludeType value)
+{
+  auto it = enumReflect_FSExcludeType.map_intToString.find((int)value);
+  if (it != enumReflect_FSExcludeType.map_intToString.end())
+    return it->second;
+  return "";
+}
 
 #include "Memory.h"
 ReflectEnumInfo enumReflect_MemoryGroup;
@@ -12,15 +31,12 @@ bool MemoryGroup_StringToEnum(string name, MemoryGroup &value)
   }
   return false;
 }
-bool MemoryGroup_EnumToString(MemoryGroup value, string &name)
+string MemoryGroup_EnumToString(MemoryGroup value)
 {
   auto it = enumReflect_MemoryGroup.map_intToString.find((int)value);
   if (it != enumReflect_MemoryGroup.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 #include "Serializer.h"
@@ -34,15 +50,12 @@ bool SerializerError_StringToEnum(string name, SerializerError &value)
   }
   return false;
 }
-bool SerializerError_EnumToString(SerializerError value, string &name)
+string SerializerError_EnumToString(SerializerError value)
 {
   auto it = enumReflect_SerializerError.map_intToString.find((int)value);
   if (it != enumReflect_SerializerError.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 #include "Module.h"
@@ -56,15 +69,12 @@ bool NeoModuleInitPri_StringToEnum(string name, NeoModuleInitPri &value)
   }
   return false;
 }
-bool NeoModuleInitPri_EnumToString(NeoModuleInitPri value, string &name)
+string NeoModuleInitPri_EnumToString(NeoModuleInitPri value)
 {
   auto it = enumReflect_NeoModuleInitPri.map_intToString.find((int)value);
   if (it != enumReflect_NeoModuleInitPri.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectEnumInfo enumReflect_NeoModulePri;
@@ -77,58 +87,49 @@ bool NeoModulePri_StringToEnum(string name, NeoModulePri &value)
   }
   return false;
 }
-bool NeoModulePri_EnumToString(NeoModulePri value, string &name)
+string NeoModulePri_EnumToString(NeoModulePri value)
 {
   auto it = enumReflect_NeoModulePri.map_intToString.find((int)value);
   if (it != enumReflect_NeoModulePri.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
-#include "ShaderManager.h"
-ReflectEnumInfo enumReflect_VertexFormat;
-bool VertexFormat_StringToEnum(string name, VertexFormat &value)
+#include "Shader.h"
+ReflectEnumInfo enumReflect_SROType;
+bool SROType_StringToEnum(string name, SROType &value)
 {
-  auto it = enumReflect_VertexFormat.map_stringToInt.find(name);
-  if (it != enumReflect_VertexFormat.map_stringToInt.end())
+  auto it = enumReflect_SROType.map_stringToInt.find(name);
+  if (it != enumReflect_SROType.map_stringToInt.end())
   {
-    value = (VertexFormat)it->second;    return true;
+    value = (SROType)it->second;    return true;
   }
   return false;
 }
-bool VertexFormat_EnumToString(VertexFormat value, string &name)
+string SROType_EnumToString(SROType value)
 {
-  auto it = enumReflect_VertexFormat.map_intToString.find((int)value);
-  if (it != enumReflect_VertexFormat.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+  auto it = enumReflect_SROType.map_intToString.find((int)value);
+  if (it != enumReflect_SROType.map_intToString.end())
+    return it->second;
+  return "";
 }
 
-ReflectEnumInfo enumReflect_VertAttribType;
-bool VertAttribType_StringToEnum(string name, VertAttribType &value)
+ReflectEnumInfo enumReflect_SROStage;
+bool SROStage_StringToEnum(string name, SROStage &value)
 {
-  auto it = enumReflect_VertAttribType.map_stringToInt.find(name);
-  if (it != enumReflect_VertAttribType.map_stringToInt.end())
+  auto it = enumReflect_SROStage.map_stringToInt.find(name);
+  if (it != enumReflect_SROStage.map_stringToInt.end())
   {
-    value = (VertAttribType)it->second;    return true;
+    value = (SROStage)it->second;    return true;
   }
   return false;
 }
-bool VertAttribType_EnumToString(VertAttribType value, string &name)
+string SROStage_EnumToString(SROStage value)
 {
-  auto it = enumReflect_VertAttribType.map_intToString.find((int)value);
-  if (it != enumReflect_VertAttribType.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+  auto it = enumReflect_SROStage.map_intToString.find((int)value);
+  if (it != enumReflect_SROStage.map_intToString.end())
+    return it->second;
+  return "";
 }
 
 #include "Texture.h"
@@ -142,15 +143,12 @@ bool TextureLayout_StringToEnum(string name, TextureLayout &value)
   }
   return false;
 }
-bool TextureLayout_EnumToString(TextureLayout value, string &name)
+string TextureLayout_EnumToString(TextureLayout value)
 {
   auto it = enumReflect_TextureLayout.map_intToString.find((int)value);
   if (it != enumReflect_TextureLayout.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectEnumInfo enumReflect_TextureType;
@@ -163,15 +161,12 @@ bool TextureType_StringToEnum(string name, TextureType &value)
   }
   return false;
 }
-bool TextureType_EnumToString(TextureType value, string &name)
+string TextureType_EnumToString(TextureType value)
 {
   auto it = enumReflect_TextureType.map_intToString.find((int)value);
   if (it != enumReflect_TextureType.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectEnumInfo enumReflect_TexturePixelFormat;
@@ -184,15 +179,12 @@ bool TexturePixelFormat_StringToEnum(string name, TexturePixelFormat &value)
   }
   return false;
 }
-bool TexturePixelFormat_EnumToString(TexturePixelFormat value, string &name)
+string TexturePixelFormat_EnumToString(TexturePixelFormat value)
 {
   auto it = enumReflect_TexturePixelFormat.map_intToString.find((int)value);
   if (it != enumReflect_TexturePixelFormat.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectStructInfo reflectStructInfo_TestStruct
@@ -215,58 +207,49 @@ bool ThreadGUID_StringToEnum(string name, ThreadGUID &value)
   }
   return false;
 }
-bool ThreadGUID_EnumToString(ThreadGUID value, string &name)
+string ThreadGUID_EnumToString(ThreadGUID value)
 {
   auto it = enumReflect_ThreadGUID.map_intToString.find((int)value);
   if (it != enumReflect_ThreadGUID.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
-#include "Shader.h"
-ReflectEnumInfo enumReflect_SROType;
-bool SROType_StringToEnum(string name, SROType &value)
+#include "ShaderManager.h"
+ReflectEnumInfo enumReflect_VertexFormat;
+bool VertexFormat_StringToEnum(string name, VertexFormat &value)
 {
-  auto it = enumReflect_SROType.map_stringToInt.find(name);
-  if (it != enumReflect_SROType.map_stringToInt.end())
+  auto it = enumReflect_VertexFormat.map_stringToInt.find(name);
+  if (it != enumReflect_VertexFormat.map_stringToInt.end())
   {
-    value = (SROType)it->second;    return true;
+    value = (VertexFormat)it->second;    return true;
   }
   return false;
 }
-bool SROType_EnumToString(SROType value, string &name)
+string VertexFormat_EnumToString(VertexFormat value)
 {
-  auto it = enumReflect_SROType.map_intToString.find((int)value);
-  if (it != enumReflect_SROType.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+  auto it = enumReflect_VertexFormat.map_intToString.find((int)value);
+  if (it != enumReflect_VertexFormat.map_intToString.end())
+    return it->second;
+  return "";
 }
 
-ReflectEnumInfo enumReflect_SROStage;
-bool SROStage_StringToEnum(string name, SROStage &value)
+ReflectEnumInfo enumReflect_VertAttribType;
+bool VertAttribType_StringToEnum(string name, VertAttribType &value)
 {
-  auto it = enumReflect_SROStage.map_stringToInt.find(name);
-  if (it != enumReflect_SROStage.map_stringToInt.end())
+  auto it = enumReflect_VertAttribType.map_stringToInt.find(name);
+  if (it != enumReflect_VertAttribType.map_stringToInt.end())
   {
-    value = (SROStage)it->second;    return true;
+    value = (VertAttribType)it->second;    return true;
   }
   return false;
 }
-bool SROStage_EnumToString(SROStage value, string &name)
+string VertAttribType_EnumToString(VertAttribType value)
 {
-  auto it = enumReflect_SROStage.map_intToString.find((int)value);
-  if (it != enumReflect_SROStage.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+  auto it = enumReflect_VertAttribType.map_intToString.find((int)value);
+  if (it != enumReflect_VertAttribType.map_intToString.end())
+    return it->second;
+  return "";
 }
 
 #include "BitmapFont.h"
@@ -280,15 +263,12 @@ bool Alignment_StringToEnum(string name, Alignment &value)
   }
   return false;
 }
-bool Alignment_EnumToString(Alignment value, string &name)
+string Alignment_EnumToString(Alignment value)
 {
   auto it = enumReflect_Alignment.map_intToString.find((int)value);
   if (it != enumReflect_Alignment.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 #include "Material.h"
@@ -302,15 +282,12 @@ bool MaterialBlendMode_StringToEnum(string name, MaterialBlendMode &value)
   }
   return false;
 }
-bool MaterialBlendMode_EnumToString(MaterialBlendMode value, string &name)
+string MaterialBlendMode_EnumToString(MaterialBlendMode value)
 {
   auto it = enumReflect_MaterialBlendMode.map_intToString.find((int)value);
   if (it != enumReflect_MaterialBlendMode.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectEnumInfo enumReflect_MaterialCullMode;
@@ -323,15 +300,12 @@ bool MaterialCullMode_StringToEnum(string name, MaterialCullMode &value)
   }
   return false;
 }
-bool MaterialCullMode_EnumToString(MaterialCullMode value, string &name)
+string MaterialCullMode_EnumToString(MaterialCullMode value)
 {
   auto it = enumReflect_MaterialCullMode.map_intToString.find((int)value);
   if (it != enumReflect_MaterialCullMode.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectEnumInfo enumReflect_SamplerFilter;
@@ -344,15 +318,12 @@ bool SamplerFilter_StringToEnum(string name, SamplerFilter &value)
   }
   return false;
 }
-bool SamplerFilter_EnumToString(SamplerFilter value, string &name)
+string SamplerFilter_EnumToString(SamplerFilter value)
 {
   auto it = enumReflect_SamplerFilter.map_intToString.find((int)value);
   if (it != enumReflect_SamplerFilter.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectEnumInfo enumReflect_SamplerWrap;
@@ -365,15 +336,12 @@ bool SamplerWrap_StringToEnum(string name, SamplerWrap &value)
   }
   return false;
 }
-bool SamplerWrap_EnumToString(SamplerWrap value, string &name)
+string SamplerWrap_EnumToString(SamplerWrap value)
 {
   auto it = enumReflect_SamplerWrap.map_intToString.find((int)value);
   if (it != enumReflect_SamplerWrap.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 ReflectEnumInfo enumReflect_SamplerCompare;
@@ -386,15 +354,12 @@ bool SamplerCompare_StringToEnum(string name, SamplerCompare &value)
   }
   return false;
 }
-bool SamplerCompare_EnumToString(SamplerCompare value, string &name)
+string SamplerCompare_EnumToString(SamplerCompare value)
 {
   auto it = enumReflect_SamplerCompare.map_intToString.find((int)value);
   if (it != enumReflect_SamplerCompare.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 #include "Reflection.h"
@@ -408,19 +373,25 @@ bool VarType_StringToEnum(string name, VarType &value)
   }
   return false;
 }
-bool VarType_EnumToString(VarType value, string &name)
+string VarType_EnumToString(VarType value)
 {
   auto it = enumReflect_VarType.map_intToString.find((int)value);
   if (it != enumReflect_VarType.map_intToString.end())
-  {
-    name = it->second;
-    return true;
-  }
-  return false;
+    return it->second;
+  return "";
 }
 
 void NeoInitReflection()
 {
+  enumReflect_FSExcludeType.name="FSExcludeType";
+  enumReflect_FSExcludeType.map_intToString.insert({ 0,"Dir" });
+  enumReflect_FSExcludeType.map_stringToInt.insert({ "Dir",0 });
+  enumReflect_FSExcludeType.map_intToString.insert({ 1,"File" });
+  enumReflect_FSExcludeType.map_stringToInt.insert({ "File",1 });
+  enumReflect_FSExcludeType.map_intToString.insert({ 2,"Ext" });
+  enumReflect_FSExcludeType.map_stringToInt.insert({ "Ext",2 });
+  enumReflect_FSExcludeType.map_intToString.insert({ 3,"MAX" });
+  enumReflect_FSExcludeType.map_stringToInt.insert({ "MAX",3 });
   enumReflect_MemoryGroup.name="MemoryGroup";
   enumReflect_MemoryGroup.map_intToString.insert({ 0,"General" });
   enumReflect_MemoryGroup.map_stringToInt.insert({ "General",0 });
@@ -462,42 +433,44 @@ void NeoInitReflection()
   enumReflect_NeoModuleInitPri.name="NeoModuleInitPri";
   enumReflect_NeoModuleInitPri.map_intToString.insert({ 0,"Reflect" });
   enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "Reflect",0 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 1,"FileManager" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "FileManager",1 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 2,"AssetManager" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "AssetManager",2 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 3,"TimeManager" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "TimeManager",3 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 4,"ResourceLoadedManager" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ResourceLoadedManager",4 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 5,"TextureFactory" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "TextureFactory",5 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 6,"ShaderFactory" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ShaderFactory",6 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 7,"MaterialFactory" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "MaterialFactory",7 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 8,"StaticMeshFactory" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "StaticMeshFactory",8 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 9,"BitmapFontFactory" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "BitmapFontFactory",9 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 10,"RenderPassFactory" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "RenderPassFactory",10 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 11,"RenderSceneFactory" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "RenderSceneFactory",11 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 12,"GIL" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "GIL",12 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 13,"RenderThread" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "RenderThread",13 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 14,"ShaderManager" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ShaderManager",14 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 15,"DefDynamicRenderer" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "DefDynamicRenderer",15 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 16,"ImmDynamicRenderer" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ImmDynamicRenderer",16 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 17,"Profiler" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "Profiler",17 });
-  enumReflect_NeoModuleInitPri.map_intToString.insert({ 18,"View" });
-  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "View",18 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 1,"PlatformUtils" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "PlatformUtils",1 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 2,"FileManager" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "FileManager",2 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 3,"AssetManager" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "AssetManager",3 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 4,"TimeManager" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "TimeManager",4 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 5,"ResourceLoadedManager" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ResourceLoadedManager",5 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 6,"TextureFactory" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "TextureFactory",6 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 7,"ShaderFactory" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ShaderFactory",7 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 8,"MaterialFactory" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "MaterialFactory",8 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 9,"StaticMeshFactory" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "StaticMeshFactory",9 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 10,"BitmapFontFactory" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "BitmapFontFactory",10 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 11,"RenderPassFactory" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "RenderPassFactory",11 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 12,"RenderSceneFactory" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "RenderSceneFactory",12 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 13,"GIL" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "GIL",13 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 14,"RenderThread" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "RenderThread",14 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 15,"ShaderManager" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ShaderManager",15 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 16,"DefDynamicRenderer" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "DefDynamicRenderer",16 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 17,"ImmDynamicRenderer" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "ImmDynamicRenderer",17 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 18,"Profiler" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "Profiler",18 });
+  enumReflect_NeoModuleInitPri.map_intToString.insert({ 19,"View" });
+  enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "View",19 });
   enumReflect_NeoModuleInitPri.map_intToString.insert({ 1000 + 0,"Application" });
   enumReflect_NeoModuleInitPri.map_stringToInt.insert({ "Application",1000 + 0 });
   enumReflect_NeoModulePri.name="NeoModulePri";
@@ -513,30 +486,20 @@ void NeoInitReflection()
   enumReflect_NeoModulePri.map_stringToInt.insert({ "Late",400 + 0 });
   enumReflect_NeoModulePri.map_intToString.insert({ 500 + 0,"Last" });
   enumReflect_NeoModulePri.map_stringToInt.insert({ "Last",500 + 0 });
-  enumReflect_VertexFormat.name="VertexFormat";
-  enumReflect_VertexFormat.map_intToString.insert({ 0,"R8G8B8A8_UNORM" });
-  enumReflect_VertexFormat.map_stringToInt.insert({ "R8G8B8A8_UNORM",0 });
-  enumReflect_VertexFormat.map_intToString.insert({ 1,"R32G32_SFLOAT" });
-  enumReflect_VertexFormat.map_stringToInt.insert({ "R32G32_SFLOAT",1 });
-  enumReflect_VertexFormat.map_intToString.insert({ 2,"R32G32B32_SFLOAT" });
-  enumReflect_VertexFormat.map_stringToInt.insert({ "R32G32B32_SFLOAT",2 });
-  enumReflect_VertAttribType.name="VertAttribType";
-  enumReflect_VertAttribType.map_intToString.insert({ 0,"f32" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "f32",0 });
-  enumReflect_VertAttribType.map_intToString.insert({ 1,"i32" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "i32",1 });
-  enumReflect_VertAttribType.map_intToString.insert({ 2,"vec2" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "vec2",2 });
-  enumReflect_VertAttribType.map_intToString.insert({ 3,"vec3" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "vec3",3 });
-  enumReflect_VertAttribType.map_intToString.insert({ 4,"vec4" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "vec4",4 });
-  enumReflect_VertAttribType.map_intToString.insert({ 5,"ivec2" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "ivec2",5 });
-  enumReflect_VertAttribType.map_intToString.insert({ 6,"ivec3" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "ivec3",6 });
-  enumReflect_VertAttribType.map_intToString.insert({ 7,"ivec4" });
-  enumReflect_VertAttribType.map_stringToInt.insert({ "ivec4",7 });
+  enumReflect_SROType.name="SROType";
+  enumReflect_SROType.map_intToString.insert({ 0,"Unknown=-1" });
+  enumReflect_SROType.map_stringToInt.insert({ "Unknown=-1",0 });
+  enumReflect_SROType.map_intToString.insert({ 1,"UBO" });
+  enumReflect_SROType.map_stringToInt.insert({ "UBO",1 });
+  enumReflect_SROType.map_intToString.insert({ 2,"Sampler" });
+  enumReflect_SROType.map_stringToInt.insert({ "Sampler",2 });
+  enumReflect_SROStage.name="SROStage";
+  enumReflect_SROStage.map_intToString.insert({ 1 + 0,"Geometry" });
+  enumReflect_SROStage.map_stringToInt.insert({ "Geometry",1 + 0 });
+  enumReflect_SROStage.map_intToString.insert({ 2 + 0,"Vertex" });
+  enumReflect_SROStage.map_stringToInt.insert({ "Vertex",2 + 0 });
+  enumReflect_SROStage.map_intToString.insert({ 4 + 0,"Fragment" });
+  enumReflect_SROStage.map_stringToInt.insert({ "Fragment",4 + 0 });
   enumReflect_TextureLayout.name="TextureLayout";
   enumReflect_TextureLayout.map_intToString.insert({ 0,"Undefined" });
   enumReflect_TextureLayout.map_stringToInt.insert({ "Undefined",0 });
@@ -643,20 +606,30 @@ void NeoInitReflection()
   enumReflect_ThreadGUID.map_stringToInt.insert({ "Render",3 });
   enumReflect_ThreadGUID.map_intToString.insert({ 4,"MAX" });
   enumReflect_ThreadGUID.map_stringToInt.insert({ "MAX",4 });
-  enumReflect_SROType.name="SROType";
-  enumReflect_SROType.map_intToString.insert({ 0,"Unknown=-1" });
-  enumReflect_SROType.map_stringToInt.insert({ "Unknown=-1",0 });
-  enumReflect_SROType.map_intToString.insert({ 1,"UBO" });
-  enumReflect_SROType.map_stringToInt.insert({ "UBO",1 });
-  enumReflect_SROType.map_intToString.insert({ 2,"Sampler" });
-  enumReflect_SROType.map_stringToInt.insert({ "Sampler",2 });
-  enumReflect_SROStage.name="SROStage";
-  enumReflect_SROStage.map_intToString.insert({ 1 + 0,"Geometry" });
-  enumReflect_SROStage.map_stringToInt.insert({ "Geometry",1 + 0 });
-  enumReflect_SROStage.map_intToString.insert({ 2 + 0,"Vertex" });
-  enumReflect_SROStage.map_stringToInt.insert({ "Vertex",2 + 0 });
-  enumReflect_SROStage.map_intToString.insert({ 4 + 0,"Fragment" });
-  enumReflect_SROStage.map_stringToInt.insert({ "Fragment",4 + 0 });
+  enumReflect_VertexFormat.name="VertexFormat";
+  enumReflect_VertexFormat.map_intToString.insert({ 0,"R8G8B8A8_UNORM" });
+  enumReflect_VertexFormat.map_stringToInt.insert({ "R8G8B8A8_UNORM",0 });
+  enumReflect_VertexFormat.map_intToString.insert({ 1,"R32G32_SFLOAT" });
+  enumReflect_VertexFormat.map_stringToInt.insert({ "R32G32_SFLOAT",1 });
+  enumReflect_VertexFormat.map_intToString.insert({ 2,"R32G32B32_SFLOAT" });
+  enumReflect_VertexFormat.map_stringToInt.insert({ "R32G32B32_SFLOAT",2 });
+  enumReflect_VertAttribType.name="VertAttribType";
+  enumReflect_VertAttribType.map_intToString.insert({ 0,"f32" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "f32",0 });
+  enumReflect_VertAttribType.map_intToString.insert({ 1,"i32" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "i32",1 });
+  enumReflect_VertAttribType.map_intToString.insert({ 2,"vec2" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "vec2",2 });
+  enumReflect_VertAttribType.map_intToString.insert({ 3,"vec3" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "vec3",3 });
+  enumReflect_VertAttribType.map_intToString.insert({ 4,"vec4" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "vec4",4 });
+  enumReflect_VertAttribType.map_intToString.insert({ 5,"ivec2" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "ivec2",5 });
+  enumReflect_VertAttribType.map_intToString.insert({ 6,"ivec3" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "ivec3",6 });
+  enumReflect_VertAttribType.map_intToString.insert({ 7,"ivec4" });
+  enumReflect_VertAttribType.map_stringToInt.insert({ "ivec4",7 });
   enumReflect_Alignment.name="Alignment";
   enumReflect_Alignment.map_intToString.insert({ 0,"TopLeft" });
   enumReflect_Alignment.map_stringToInt.insert({ "TopLeft",0 });
@@ -752,6 +725,12 @@ void NeoInitReflection()
   enumReflect_VarType.map_stringToInt.insert({ "ivec3",14 });
   enumReflect_VarType.map_intToString.insert({ 15,"ivec4" });
   enumReflect_VarType.map_stringToInt.insert({ "ivec4",15 });
-  enumReflect_VarType.map_intToString.insert({ 16,"func" });
-  enumReflect_VarType.map_stringToInt.insert({ "func",16 });
+  enumReflect_VarType.map_intToString.insert({ 16,"mat4x4" });
+  enumReflect_VarType.map_stringToInt.insert({ "mat4x4",16 });
+  enumReflect_VarType.map_intToString.insert({ 17,"enum" });
+  enumReflect_VarType.map_stringToInt.insert({ "enum",17 });
+  enumReflect_VarType.map_intToString.insert({ 18,"struct" });
+  enumReflect_VarType.map_stringToInt.insert({ "struct",18 });
+  enumReflect_VarType.map_intToString.insert({ 19,"func" });
+  enumReflect_VarType.map_stringToInt.insert({ "func",19 });
 }
