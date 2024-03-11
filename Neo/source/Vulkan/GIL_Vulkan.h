@@ -40,7 +40,7 @@ class GIL : public Module<GIL>
 {
 public:
 	// startup procedures that need to run on the main thread... creates window for message polling on main thread
-	void StartupMainThread();
+	void Startup();
 
 	// initial basic global rendering systems
 	// these run on the RenderThread

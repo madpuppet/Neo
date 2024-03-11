@@ -38,6 +38,8 @@ class RenderThread : public Module<RenderThread>, public Thread
 	RenderSceneRef m_activeRenderScene;
 
 public:
+	void Startup();
+
 	RenderThread();
 	~RenderThread();
 

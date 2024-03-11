@@ -7,7 +7,7 @@
 #include "Shader.h"
 #include "ResourceLoadedManager.h"
 #include "Profiler.h"
-#include "PlatformUtils_Common.h"
+#include "PIL.h"
 
 DECLARE_MODULE(Application, NeoModuleInitPri_Application, NeoModulePri_Early);
 
@@ -100,7 +100,7 @@ void Application::Update()
 	float dt = (float)NeoTimeDelta;
 	dt = Min(dt, 0.1f);
 
-	auto* utils = PlatformUtils::Instance();
+	auto &utils = PIL::Instance();
 	float x = utils.GetJoystickAxis(0) * dt * 4.0f;
 	float y = -utils.GetJoystickAxis(1) * dt * 4.0f;
 	float yaw = utils.GetJoystickAxis(2) * dt;

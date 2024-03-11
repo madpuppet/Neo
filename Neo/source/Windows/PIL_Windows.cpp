@@ -1,12 +1,12 @@
 #include "Neo.h"
-#include "PlatformUtils_Windows.h"
+#include "PIL_Windows.h"
 #include <SDL.h>
 #include "RenderThread.h"
 #include "GIL.h"
 
-DECLARE_MODULE(PlatformUtils, NeoModuleInitPri_PlatformUtils, NeoModulePri_None)
+DECLARE_MODULE(PIL, NeoModuleInitPri_PIL, NeoModulePri_None)
 
-bool PlatformUtils::PollSystemEvents()
+bool PIL::PollSystemEvents()
 {
     SDL_Event e;
     while (SDL_PollEvent(&e))
@@ -45,7 +45,7 @@ bool PlatformUtils::PollSystemEvents()
     return false;
 }
 
-bool PlatformUtils::ShowMessageBox(const string& string)
+bool PIL::ShowMessageBox(const string& string)
 {
     SDL_MessageBoxButtonData buttons[2];
     buttons[0].flags = SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT;
@@ -68,7 +68,7 @@ bool PlatformUtils::ShowMessageBox(const string& string)
     return result == 1;
 }
 
-float PlatformUtils::GetJoystickAxis(int idx)
+float PIL::GetJoystickAxis(int idx)
 {
     float joyval = Clamp(SDL_JoystickGetAxis(m_joystick, idx) / 32767.0f, -1.0f, 1.0f);
     if (abs(joyval) < 0.1f)
@@ -76,7 +76,7 @@ float PlatformUtils::GetJoystickAxis(int idx)
     return joyval;
 }
 
-void PlatformUtils::Startup()
+void PIL::Startup()
 {
     m_window = GIL::Instance().Window();
     m_joystick = SDL_JoystickOpen(0);

@@ -6,7 +6,8 @@
 enum NeoModuleInitPri
 {
 	NeoModuleInitPri_Reflect,
-	NeoModuleInitPri_PlatformUtils,
+	NeoModuleInitPri_GIL,
+	NeoModuleInitPri_PIL,
 	NeoModuleInitPri_FileManager,
 	NeoModuleInitPri_AssetManager,
 	NeoModuleInitPri_TimeManager,
@@ -18,7 +19,6 @@ enum NeoModuleInitPri
 	NeoModuleInitPri_BitmapFontFactory,
 	NeoModuleInitPri_RenderPassFactory,
 	NeoModuleInitPri_RenderSceneFactory,
-	NeoModuleInitPri_GIL,
 	NeoModuleInitPri_RenderThread,
 	NeoModuleInitPri_ShaderManager,
 	NeoModuleInitPri_DefDynamicRenderer,

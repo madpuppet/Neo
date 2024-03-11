@@ -1,5 +1,5 @@
 #include "neo.h"
-#include "PlatformUtils.h"
+#include "PIL.h"
 
 #include <SDL.h>
 #include <SDL_vulkan.h>
@@ -52,7 +52,7 @@ int main(int argc, char* argv[])
     bool m_quit = false;
     while (!m_quit)
     {
-        m_quit = PlatformUtils::Instance().PollSystemEvents();
+        m_quit = PIL::Instance().PollSystemEvents();
 
         auto& dr = DefDynamicRenderer::Instance();
         dr.BeginFrame();
@@ -89,7 +89,7 @@ void Error(const string& msg)
 
     if (Thread::IsOnThread(ThreadGUID_Main) && GIL::Exists())
     {
-        if (PlatformUtils::Instance().ShowMessageBox(errorStr))
+        if (PIL::Instance().ShowMessageBox(errorStr))
             __debugbreak();
     }
     else

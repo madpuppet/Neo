@@ -449,10 +449,10 @@
     <ClInclude Include="source\Vulkan\PlatformData_Vulkan.h">
       <Filter>source\vulkan</Filter>
     </ClInclude>
-    <ClInclude Include="source\Windows\PlatformUtils_Windows.h">
+    <ClInclude Include="source\Windows\PIL_Windows.h">
       <Filter>source\windows</Filter>
     </ClInclude>
-    <ClInclude Include="source\PlatformUtils.h">
+    <ClInclude Include="source\PIL.h">
       <Filter>source</Filter>
     </ClInclude>
     <ClInclude Include="source\ThirdParty\glm\common.hpp">
@@ -667,7 +667,7 @@
     <ClCompile Include="source\Vulkan\PlatformData_Vulkan.cpp">
       <Filter>source\vulkan</Filter>
     </ClCompile>
-    <ClCompile Include="source\Windows\PlatformUtils_Windows.cpp">
+    <ClCompile Include="source\Windows\PIL_Windows.cpp">
       <Filter>source\windows</Filter>
     </ClCompile>
     <ClCompile Include="source\ThirdParty\zlib\adler32.c">

@@ -75,13 +75,13 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(ProjectDir)source;$(ProjectDir)..\Neo\source;$(ProjectDir)..\Neo;$(ProjectDir)..\Neo\include;$(ProjectDir)..\Neo\source\zlib;C:\VulkanSDK\1.3.268.0\Include;$(ProjectDir)..\Neo\source\windows;$(ProjectDir)..\Neo\source\vulkan;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)source;$(ProjectDir)..\Neo\source;$(ProjectDir)..\Neo;$(ProjectDir)..\Neo\include;$(ProjectDir)..\Neo\source\ThirdParty\zlib;C:\VulkanSDK\1.3.268.0\Include;$(ProjectDir)..\Neo\source\windows;$(ProjectDir)..\Neo\source\vulkan;$(IncludePath)</IncludePath>
     <LibraryPath>G:\Projects\madpuppet\Neo\Neo\libs;C:\VulkanSDK\1.3.268.0\Lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(ProjectDir)source;$(ProjectDir)..\Neo\source;$(ProjectDir)..\Neo;$(ProjectDir)..\Neo\include;$(ProjectDir)..\Neo\source\zlib;C:\VulkanSDK\1.3.268.0\Include;$(ProjectDir)..\Neo\source\windows;$(ProjectDir)..\Neo\source\vulkan;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)source;$(ProjectDir)..\Neo\source;$(ProjectDir)..\Neo;$(ProjectDir)..\Neo\include;$(ProjectDir)..\Neo\source\ThirdParty\zlib;C:\VulkanSDK\1.3.268.0\Include;$(ProjectDir)..\Neo\source\windows;$(ProjectDir)..\Neo\source\vulkan;$(IncludePath)</IncludePath>
     <LibraryPath>G:\Projects\madpuppet\Neo\Neo\libs;C:\VulkanSDK\1.3.268.0\Lib;$(LibraryPath)</LibraryPath>
     <OutDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</OutDir>
     <IntDir>$(ProjectDir)Intermediate\$(Platform)\$(Configuration)\</IntDir>
